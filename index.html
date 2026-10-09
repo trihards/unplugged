@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>unplugged</title>
+<meta name="description" content="A wellness retreat gone offline. Trade contraband at a Big Sur digital detox, pay off Dale, and keep your zen around Guide Saffron.">
+<meta name="theme-color" content="#22382B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="unplugged">
+<meta property="og:title" content="unplugged">
+<meta property="og:description" content="A wellness retreat gone offline. Be the plug. Keep your zen.">
+<meta property="og:url" content="https://trihards.github.io/unplugged/">
+<meta property="og:image" content="https://trihards.github.io/unplugged/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Playpen+Sans:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+/* Palette taken from the retreat art: forest green, linen cream, sash sage, poppy, rust */
+:root {
+  --fog: #F4ECDD;
+  --mist: #FFF9EF;
+  --ink: #22382B;
+  --ink2: #56695B;
+  --line: rgba(34, 56, 43, .14);
+  --poppy: #EE8A2E;
+  --poppy-soft: #FBE0C2;
+  --poppy-ink: #6B3300;
+  --sea: #4F7A4B;
+  --sea-soft: #DCE7D3;
+  --urchin: #A3472A;
+  --urchin-soft: #F5DCCF;
+  --cta: #22382B;
+  --cta-ink: #FBEBD3;
+  --lift: 0 1px 0 rgba(34, 56, 43, .05), 0 10px 28px rgba(34, 56, 43, .14);
+  --serif: "Playpen Sans", "Chalkboard SE", "Comic Sans MS", system-ui, sans-serif;
+  --sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --sky-top: var(--fog);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fog: #141F19; --mist: #1C2A22; --ink: #F3E7D3; --ink2: #B6C0B2; --line: rgba(243, 231, 211, .14);
+    --poppy: #F2A055; --poppy-soft: #3D2A16; --poppy-ink: #FBD3A4;
+    --sea: #A3C49A; --sea-soft: #26382C; --urchin: #E79B7E; --urchin-soft: #3B241B;
+    --cta: #F3E7D3; --cta-ink: #14201A;
+    --lift: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
+  }
+}
+:root[data-theme="dark"] {
+  --fog: #141F19; --mist: #1C2A22; --ink: #F3E7D3; --ink2: #B6C0B2; --line: rgba(243, 231, 211, .14);
+  --poppy: #F2A055; --poppy-soft: #3D2A16; --poppy-ink: #FBD3A4;
+  --sea: #A3C49A; --sea-soft: #26382C; --urchin: #E79B7E; --urchin-soft: #3B241B;
+  --cta: #F3E7D3; --cta-ink: #14201A;
+  --lift: 0 1px 0 rgba(0, 0, 0, .3), 0 10px 28px rgba(0, 0, 0, .35);
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+html {
+  height: 100%;
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+  background: linear-gradient(var(--sky-top) 50%, var(--sky-bottom, var(--mist)) 50%);
+}
+body {
+  height: 100%; margin: 0;
+  background: var(--fog); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; line-height: 1.4;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 3px solid var(--poppy); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+#app { height: 100%; display: flex; flex-direction: column; max-width: 560px; margin: 0 auto; position: relative; }
+
+/* ---------- welcome ---------- */
+.welcome {
+  flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 26px 20px 0; overflow-x: hidden; overflow-y: auto; position: relative;
+  background: #E9B877 var(--img-welcome) center 32% / cover no-repeat;
+  color: #22382B;
+}
+.welcome > * { position: relative; }
+.logo-big { width: min(82%, 340px); aspect-ratio: 640 / 217; border: 0; padding: 0; margin-top: 10px; background-color: #22382B; -webkit-mask: var(--img-logo) center / contain no-repeat; mask: var(--img-logo) center / contain no-repeat; }
+.tagline { display: block; width: min(76%, 300px); aspect-ratio: 620 / 59; margin: 12px 0 0; background-color: #22382B; -webkit-mask: var(--img-tagline) center / contain no-repeat; mask: var(--img-tagline) center / contain no-repeat; }
+.wbtns { display: flex; flex-direction: column; gap: 12px; width: min(100%, 320px); margin-top: 22px; }
+.wbtns .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lineup { margin: auto -20px 0; width: calc(100% + 40px); max-width: none; height: auto; flex: 0 0 auto; display: block; pointer-events: none; }
+.breath { position: relative; width: 180px; height: 180px; margin: 22px 0 18px; display: grid; place-items: center; }
+.breath .orb {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.85), rgba(255,255,255,.25) 60%, rgba(255,255,255,0) 72%);
+  box-shadow: 0 0 0 1px rgba(30,58,47,.08) inset;
+  animation: breathe 8s ease-in-out infinite;
+}
+.breath .cue { position: relative; font-family: var(--serif); font-size: 20px; color: #4F665B; }
+.breath .cue span { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; animation: cueA 8s ease-in-out infinite; }
+.breath .cue span + span { animation-name: cueB; }
+@keyframes breathe { 0%, 100% { transform: scale(.78); } 50% { transform: scale(1); } }
+@keyframes cueA { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes cueB { 0%, 45% { opacity: 0; } 50%, 95% { opacity: 1; } 100% { opacity: 0; } }
+
+.stack { display: flex; flex-direction: column; gap: 10px; width: min(100%, 340px); }
+
+
+/* ---------- buttons ---------- */
+.btn {
+  min-height: 52px; border-radius: 18px; border: 2.5px solid var(--ink); padding: 0 16px;
+  font-family: var(--serif); font-weight: 600; font-size: 17px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--mist); color: var(--ink); box-shadow: 0 3px 0 var(--ink);
+  transition: transform .06s ease, box-shadow .06s ease;
+}
+.btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.btn svg { width: 22px; height: 22px; flex: 0 0 auto; }
+.btn.primary { background: var(--cta); color: var(--cta-ink); }
+.btn.quiet { background: var(--mist); color: var(--ink); }
+.btn.soft { background: var(--sea-soft); color: var(--ink); }
+.btn.warn { background: var(--urchin); color: var(--mist); }
+.btn:disabled { opacity: .4; box-shadow: none; }
+.welcome .btn { border-color: #22382B; box-shadow: 0 3px 0 #22382B; background: #FBEBD3; color: #22382B; }
+.welcome .btn.primary { background: #22382B; color: #FBEBD3; }
+.welcome .btn:active { box-shadow: 0 1px 0 #22382B; }
+.link { background: none; border: 0; padding: 6px 2px; font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; color: inherit; }
+
+/* ---------- game: sky hero ---------- */
+.hero {
+  position: relative; overflow: hidden;
+  padding: 2px 16px 10px; min-height: 148px;
+  display: flex; flex-direction: column;
+  background: #C9C3CF var(--img-header) center 64% / cover no-repeat;
+  color: var(--h-ink);
+  flex: 0 0 auto;
+}
+.hero::before { content: ""; position: absolute; inset: 0; background: var(--tint); transition: background .6s ease; }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(18, 28, 22, .8) 0%, rgba(18, 28, 22, .35) 42%, rgba(18, 28, 22, 0) 70%); }
+.hero > * { position: relative; z-index: 1; }
+.logo-mark { display: block; width: 96px; aspect-ratio: 640 / 217; background-color: currentColor; -webkit-mask: var(--img-logo) left center / contain no-repeat; mask: var(--img-logo) left center / contain no-repeat; }
+.topbar { position: relative; display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.topbar .mark { background: none; border: 0; padding: 6px 4px 6px 0; color: inherit; }
+.topbar .spacer { flex: 1; }
+.placeline { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; color: #FBEBD3; }
+.placeline .clock { flex: 0 0 auto; font-weight: 600; font-size: 13.5px; padding: 4px 10px; border-radius: 999px; background: rgba(251, 235, 211, .92); color: #22382B; }
+.iconbtn { width: 40px; height: 40px; border-radius: 12px; border: 0; background: none; display: grid; place-items: center; color: inherit; }
+.iconbtn svg { width: 22px; height: 22px; }
+.hero h1 { position: relative; font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0; min-width: 0; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.hero .flavor { position: relative; margin: 3px 0 0; font-size: 14px; line-height: 1.35; color: #FBEBD3; opacity: .92; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+
+/* ---------- stats ---------- */
+.stats {
+  display: grid; grid-template-columns: 44px 1fr 1fr 1.15fr; gap: 0 12px; align-items: center;
+  padding: 8px 18px; background: var(--mist); border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.zen { position: relative; width: 44px; height: 44px; }
+.zen svg { width: 44px; height: 44px; display: block; }
+.zen .trk { fill: none; stroke: var(--line); stroke-width: 5; }
+.zen .val { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+.zen b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+.stat { min-width: 0; }
+.stat .k { font-size: 12.5px; color: var(--ink2); white-space: nowrap; }
+.stat .v { font-size: clamp(15px, 4.4vw, 17px); font-weight: 600; white-space: nowrap; }
+.stat .x { font-size: 12.5px; color: var(--ink2); white-space: nowrap; }
+.stat .v.dale { color: var(--urchin); }
+.stat .x.dale { color: var(--urchin); }
+
+/* ---------- list ---------- */
+.list { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 2px 0 6px; }
+.row {
+  width: 100%; display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+  background: none; border: 0; padding: 6px 18px; text-align: left; min-height: 46px;
+  border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: 0; }
+.row:active { background: var(--mist); }
+.row .nm { font-size: 16.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.row .hv { font-size: 13.5px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.row .pr { font-size: 17px; font-weight: 600; padding: 3px 0; border-radius: 999px; white-space: nowrap; }
+.row .pr.hot { background: var(--poppy-soft); color: var(--poppy-ink); padding: 3px 10px; }
+.row .pr.calm { background: var(--sea-soft); color: var(--sea); padding: 3px 10px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.legend { display: flex; gap: 14px; padding: 8px 18px 2px; font-size: 13px; color: var(--ink2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.row.na .pr, .row.na .nm { color: var(--ink2); }
+.pill { font-size: 12.5px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.pill.hot { background: var(--poppy-soft); color: var(--poppy-ink); }
+.pill.calm { background: var(--sea-soft); color: var(--sea); }
+.empty { padding: 18px; color: var(--ink2); }
+
+/* ---------- bottom bar ---------- */
+.bar {
+  flex: 0 0 auto; display: flex; gap: 10px; padding: 8px 14px 10px;
+  background: var(--mist); border-top: 1px solid var(--line);
+}
+.bar .btn { flex: 1; }
+.bar .btn.primary { flex: 1.4; }
+.bar .btn { padding: 0 10px; white-space: nowrap; }
+
+/* ---------- sheets ---------- */
+#scrim { position: fixed; inset: 0; z-index: 20; background: rgba(15, 26, 22, .38); display: flex; align-items: flex-end; justify-content: center; }
+#scrim[hidden] { display: none; }
+#sheet {
+  position: relative;
+  width: min(100%, 560px); max-height: 90%; overflow-y: auto;
+  background: var(--mist); color: var(--ink);
+  border-radius: 26px 26px 0 0; box-shadow: var(--lift);
+  padding: 8px 20px calc(18px + env(safe-area-inset-bottom, 0px));
+  animation: rise .26s cubic-bezier(.2, .8, .2, 1);
+}
+#sheet.alert { box-shadow: 0 -4px 0 var(--urchin), var(--lift); }
+@keyframes rise { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+.xbtn { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--fog); color: var(--ink2); display: grid; place-items: center; }
+.xbtn svg { width: 18px; height: 18px; }
+.grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 2px auto 12px; }
+#sheet h3 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 4px; }
+#sheet p { margin: 6px 0; }
+#sheet .muted { color: var(--ink2); font-size: 15px; }
+.sheet-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.sheet-actions.two { flex-direction: row; }
+.sheet-actions.two .btn { flex: 1; }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--fog); border-radius: 14px; padding: 4px; margin: 14px 0 6px; }
+.seg.four { grid-template-columns: repeat(4, 1fr); }
+.seg button { border: 0; background: none; min-height: 40px; border-radius: 11px; font-weight: 600; font-size: 15px; color: var(--ink2); padding: 0 4px; }
+.seg button[aria-pressed="true"] { background: var(--mist); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg button:disabled { opacity: .35; }
+.qtybig { display: flex; align-items: baseline; justify-content: space-between; margin: 12px 0 2px; }
+.qtybig .n { font-family: var(--serif); font-size: 44px; line-height: 1; }
+.qtybig .t { font-size: 15px; color: var(--ink2); }
+input[type=range] { width: 100%; height: 44px; margin: 0; background: none; -webkit-appearance: none; appearance: none; }
+input[type=range]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--ink) var(--fill, 0%), var(--line) var(--fill, 0%)); }
+input[type=range]::-moz-range-track { height: 8px; border-radius: 4px; background: var(--line); }
+input[type=range]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--ink); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; border-radius: 50%; background: var(--mist); box-shadow: 0 0 0 2px var(--ink), 0 2px 6px rgba(0,0,0,.2); margin-top: -11px; }
+input[type=range]::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--mist); border: 2px solid var(--ink); }
+input[type=range]:disabled { opacity: .35; }
+.chips { display: flex; gap: 8px; margin: 4px 0 2px; }
+.chip { border: 0; background: var(--fog); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 14px; min-height: 36px; }
+.ledger { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 8px 0; font-size: 15px; }
+.ledger .v { font-weight: 600; text-align: right; }
+.ledger .dale { color: var(--urchin); }
+.note-err { color: var(--urchin); font-weight: 600; min-height: 1.4em; font-size: 14.5px; }
+.note-err.ok { color: var(--sea); }
+
+/* journey map */
+.map { position: relative; width: 100%; aspect-ratio: 100 / 104; margin: 10px 0 2px; border-radius: 20px; overflow: hidden; background: var(--fog); }
+.map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map .ocean { fill: var(--sea-soft); }
+.map .trail { stroke: var(--ink2); stroke-width: .5; stroke-dasharray: 1.4 1.4; opacity: .55; fill: none; }
+.node {
+  position: absolute; transform: translate(-50%, -14px); display: flex; flex-direction: column; align-items: center;
+  background: none; border: 0; padding: 0; min-width: 88px; color: var(--ink);
+}
+.node .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--mist); box-shadow: 0 0 0 2px var(--ink); display: block; }
+.node .lbl { margin-top: 4px; font-size: 13.5px; font-weight: 700; line-height: 1.15; text-align: center; white-space: nowrap; }
+.node .eta { font-size: 12.5px; color: var(--ink2); font-weight: 500; white-space: nowrap; }
+.node.here .dot { background: var(--poppy); box-shadow: 0 0 0 2px var(--ink), 0 0 0 7px rgba(240, 138, 36, .25); }
+.node.van .dot { background: var(--sea-soft); }
+.node:disabled { opacity: .38; }
+.node.here:disabled { opacity: 1; }
+.node:not(:disabled) .dot { background: var(--cta); }
+.node:not(:disabled).van .dot { background: var(--sea); }
+
+/* encounter */
+.enc-log p { margin: 4px 0; font-size: 15.5px; }
+.enc-log .bad { color: var(--urchin); font-weight: 600; }
+.enc-log .good { color: var(--sea); font-weight: 600; }
+
+/* lists inside sheets */
+.picklist { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.pick {
+  text-align: left; border: 0; border-radius: 18px; padding: 14px 16px; background: var(--fog);
+  display: grid; gap: 2px;
+}
+.pick .t { font-family: var(--serif); font-size: 20px; }
+.pick .d { color: var(--ink2); font-size: 14.5px; }
+.pick.last { box-shadow: 0 0 0 2px var(--ink) inset; }
+.board { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 12px; margin: 8px 0 14px; font-size: 15px; }
+.board .s { font-weight: 600; text-align: right; }
+.board .t { grid-column: 2 / 4; color: var(--ink2); font-size: 13.5px; margin-top: -4px; }
+.board .me { color: var(--sea); }
+.journal p { margin: 0 0 8px; font-size: 15px; }
+
+/* ---------- toasts ---------- */
+#toasts { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 8px); width: min(94%, 520px); display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+#toasts.top { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 10px); flex-direction: column; }
+.toast {
+  pointer-events: auto; background: var(--mist); color: var(--ink); border-radius: 16px; box-shadow: var(--lift);
+  padding: 11px 14px 11px 14px; display: grid; grid-template-columns: 10px 1fr; gap: 10px; align-items: start;
+  font-size: 15px; line-height: 1.35; border: 0; text-align: left; width: 100%;
+  animation: drop .22s ease-out;
+}
+.toast i { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: var(--ink2); }
+.toast.hot i { background: var(--poppy); }
+.toast.good i { background: var(--sea); }
+.toast.bad i { background: var(--urchin); }
+@keyframes drop { from { transform: translateY(-10px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- night veil (rest) ---------- */
+#veil { position: fixed; inset: 0; z-index: 25; pointer-events: none; opacity: 0; transition: opacity .55s ease;
+  background: radial-gradient(circle at 70% 22%, rgba(255,255,240,.9) 0 18px, rgba(255,255,240,0) 19px), linear-gradient(180deg, #141C33, #2C3A5A); }
+#veil.on { opacity: 1; pointer-events: auto; }
+
+/* ---------- over ---------- */
+.over { flex: 1; overflow-y: auto; padding: 26px 22px 24px; }
+.over h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.1; margin: 0 0 8px; }
+.over .lede { color: var(--ink2); margin: 0 0 16px; max-width: 36ch; }
+.over .take { font-family: var(--serif); font-size: 24px; margin: 14px 0 4px; color: var(--sea); }
+.sign { display: flex; gap: 10px; margin: 14px 0 6px; }
+.sign input { flex: 1; min-width: 0; min-height: 52px; border-radius: 16px; border: 0; padding: 0 16px; background: var(--mist); box-shadow: 0 0 0 1.5px var(--line) inset; font-size: 17px; }
+.over h2 { font-family: var(--serif); font-weight: 600; font-size: 20px; margin: 22px 0 4px; }
+
+/* ---------- DOS easter egg ---------- */
+#dos { position: fixed; inset: 0; z-index: 50; background: #0000AA; color: #AAAAAA; font-family: "VT323", "Lucida Console", monospace; font-size: 21px; line-height: 1.2; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); cursor: pointer; }
+#dos:focus { outline: none; }
+#dos[hidden] { display: none; }
+#dos .mb { background: #AAAAAA; color: #000; padding: 2px 8px; white-space: nowrap; overflow: hidden; }
+#dos fieldset { flex: 1; margin: 6px; border: 2px solid #AAAAAA; padding: 4px 10px; min-width: 0; overflow: hidden; }
+#dos legend { margin: 0 auto; background: #AAAAAA; color: #0000AA; padding: 0 8px; }
+#dos pre { margin: 0; font: inherit; white-space: pre-wrap; }
+#dos .err { color: #FFFFFF; }
+#dos .sl { background: #00AAAA; color: #FFFFFF; padding: 2px 8px; display: flex; justify-content: space-between; }
+#dos .sl span:last-child { color: #000; }
+
+
+/* ---------- Guide Saffron: carob ---------- */
+#scrim.carob { background: rgba(38, 25, 17, .7); align-items: stretch; }
+#sheet.carob {
+  max-height: 100%; height: 100%; border-radius: 0; box-shadow: none;
+  display: flex; flex-direction: column;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: radial-gradient(120% 55% at 50% 10%, #7B5A42 0%, #4C3527 55%, #33241A 100%);
+  color: #F2E4CF;
+  animation: seep .5s ease;
+}
+@keyframes seep { from { opacity: 0; } to { opacity: 1; } }
+.saf-top { display: flex; flex-direction: column; align-items: center; }
+.saf-port { position: relative; width: 150px; height: 150px; display: flex; align-items: flex-end; justify-content: center; }
+.saf-port::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: radial-gradient(circle at 50% 42%, #B98E6A 0%, #87613F 52%, rgba(135, 97, 63, 0) 71%); animation: breathe 6s ease-in-out infinite; }
+.saf-port img { position: relative; height: 150px; width: auto; -webkit-mask-image: linear-gradient(#000 78%, transparent 100%); mask-image: linear-gradient(#000 78%, transparent 100%); }
+.vols { display: flex; justify-content: center; gap: 6px; margin: 2px 0 2px; }
+.vols img { width: 36px; height: 36px; border-radius: 50%; box-shadow: 0 0 0 2px #F2E4CF; transition: opacity .3s, filter .3s; }
+.vols img.gone { opacity: .3; filter: grayscale(1); box-shadow: 0 0 0 2px rgba(242, 228, 207, .3); }
+#sheet.carob .says { text-align: center; margin: 6px 0 2px; }
+.saf-card { background: rgba(242, 228, 207, .09); border: 1.5px solid rgba(242, 228, 207, .22); border-radius: 18px; padding: 8px 14px; margin: 10px 0 6px; }
+.saf-card p { margin: 5px 0; font-size: 15px; line-height: 1.4; }
+.saf-card .tot { border-top: 1px solid rgba(242, 228, 207, .2); margin-top: 8px; padding-top: 7px; font-size: 14px; color: #E2C7A6; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; padding-top: 10px; }
+.choice { display: flex; flex-direction: column; gap: 3px; text-align: left; min-height: 78px; padding: 10px 12px; border-radius: 16px; border: 2px solid rgba(242, 228, 207, .45); background: rgba(242, 228, 207, .08); color: #F2E4CF; }
+.choice b { font-family: var(--serif); font-weight: 600; font-size: 16.5px; line-height: 1.2; }
+.choice span { font-size: 13px; line-height: 1.3; color: #DCC3A3; }
+.choice.primary { background: #F2E4CF; border-color: #F2E4CF; color: #33241A; box-shadow: 0 3px 0 #1E140E; }
+.choice.primary span { color: #6E523F; }
+.choice:active:not(:disabled) { transform: translateY(2px); }
+.choice:disabled { opacity: .35; }
+#sheet.carob .carry { margin-top: auto; width: 100%; background: #F2E4CF; color: #33241A; border-color: #F2E4CF; box-shadow: 0 3px 0 #1E140E; }
+#sheet.carob h3 { text-align: center; color: #F2E4CF; font-size: 24px; margin: 2px 0 2px; }
+#sheet.carob .meta { text-align: center; color: #D2B394; font-size: 14.5px; margin: 4px 0; }
+#sheet.carob .enc-log { margin: 8px 0 4px; }
+#sheet.carob .enc-log p { text-align: center; margin: 6px 0; }
+#sheet.carob .says { font-family: var(--serif); font-size: 18px; font-weight: 500; line-height: 1.35; color: #F7EBDA; }
+#sheet.carob .bad { color: #FFC796; font-weight: 700; }
+#sheet.carob .good { color: #CFE8C9; font-weight: 600; }
+#sheet.carob .btn.primary { background: #F2E4CF; color: #33241A; }
+#sheet.carob .btn.soft { background: rgba(242, 228, 207, .14); color: #F2E4CF; }
+#sheet.carob .btn.quiet { background: transparent; color: #F2E4CF; box-shadow: 0 0 0 1.5px rgba(242, 228, 207, .35) inset; }
+#sheet.carob :focus-visible { outline-color: #F2E4CF; }
+
+/* ---------- music ---------- */
+.wtop { position: absolute; top: 10px; right: 12px; color: #1E3A2F; }
+.welcome { position: relative; }
+.eq svg { width: 22px; height: 22px; transform-origin: 50% 80%; }
+.eq.on svg { animation: note 1.1s ease-in-out infinite; }
+@keyframes note { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-2px); } }
+@keyframes eqb { 0%, 100% { height: 5px; } 50% { height: 17px; } }
+.dalefi {
+  position: relative; margin: 14px 0 10px; padding: 16px 64px 30px 16px; border-radius: 30px;
+  display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center;
+  background: linear-gradient(160deg, rgba(127, 198, 179, .55), rgba(47, 122, 104, .55)), repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, rgba(0,0,0,0) 2px 6px), #5E9E8E;
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 -3px 0 rgba(0,0,0,.12) inset, var(--lift);
+  color: #12261F;
+}
+.lcd {
+  background: linear-gradient(180deg, #C9D9A6, #B4C78E); color: #26331A; border-radius: 10px; padding: 7px 9px 8px;
+  font-family: "VT323", "Lucida Console", monospace; font-size: 19px; line-height: 1.05;
+  box-shadow: 0 0 0 3px #20352D, 0 2px 0 3px rgba(255,255,255,.25), inset 0 2px 6px rgba(0,0,0,.18);
+  min-width: 0;
+}
+.lcd .lr { display: flex; justify-content: space-between; gap: 6px; white-space: nowrap; }
+.lcd .batt { width: 22px; height: 11px; border: 2px solid #26331A; border-radius: 2px; position: relative; align-self: center; }
+.lcd .batt::after { content: ""; position: absolute; right: -5px; top: 2px; width: 2px; height: 4px; background: #26331A; }
+.lcd .batt i { position: absolute; inset: 1px 5px 1px 1px; background: #26331A; }
+.marq { overflow: hidden; white-space: nowrap; margin: 4px 0 2px; font-size: 22px; }
+.mq { display: inline-flex; animation: marq 9s linear infinite; }
+@keyframes marq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.bars { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin: 2px 0 4px; }
+.bars i { flex: 1; background: #26331A; height: 8%; border-radius: 1px; }
+.prog { height: 8px; border: 2px solid #26331A; border-radius: 2px; margin: 2px 0 4px; cursor: pointer; position: relative; }
+.prog::before { content: ""; position: absolute; inset: -12px 0; }
+#lcdFill { height: 100%; width: 0; background: #26331A; }
+.keys { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dk { border: 0; border-radius: 50%; display: grid; place-items: center; color: #F7F2E8; background: #1F3A31; box-shadow: 0 3px 0 #0E1F19, 0 1px 0 rgba(255,255,255,.25) inset; }
+.dk:active { transform: translateY(2px); box-shadow: 0 1px 0 #0E1F19; }
+.dk.sm { width: 44px; height: 44px; }
+.dk.big { width: 60px; height: 60px; background: #F08A24; color: #3A1C00; box-shadow: 0 3px 0 #A85A10, 0 1px 0 rgba(255,255,255,.4) inset; }
+.dk svg { width: 22px; height: 22px; }
+.dk.big svg { width: 28px; height: 28px; }
+.rocker { position: absolute; right: -6px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; border-radius: 12px 0 0 12px; overflow: hidden; box-shadow: var(--lift); }
+.rocker button { width: 52px; height: 48px; border: 0; background: #1F3A31; color: #F7F2E8; font-size: 22px; font-weight: 700; }
+.rocker button + button { border-top: 1px solid rgba(255,255,255,.15); }
+.stamp { position: absolute; left: 22px; bottom: 9px; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; color: rgba(18, 38, 31, .7); }
+.tracks { display: flex; flex-direction: column; margin-top: 6px; }
+.trk { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 10px 2px; text-align: left; min-height: 56px; }
+.trk:last-child { border-bottom: 0; }
+.trk .n { color: var(--ink2); font-weight: 600; }
+.trk .tt { display: block; font-weight: 600; font-size: 16.5px; }
+.trk .ta { display: block; font-size: 13.5px; color: var(--ink2); }
+.trk .pl { display: none; align-items: flex-end; gap: 2px; height: 16px; color: var(--sea); }
+.trk .pl i { width: 3px; height: 5px; background: currentColor; border-radius: 1px; }
+.trk.cur .tt { color: var(--sea); }
+.trk.cur .pl { display: flex; }
+.trk.locked { cursor: default; }
+.trk.locked .tt { color: var(--ink2); font-weight: 500; font-style: normal; }
+.trk.locked .n { opacity: .5; }
+.eq { position: relative; }
+.eq .newdot { position: absolute; top: 6px; right: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--poppy); box-shadow: 0 0 0 2px var(--mist); }
+.cdoffer { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--fog); border-radius: 14px; padding: 8px 8px 8px 12px; margin: 8px 0 2px; font-size: 14.5px; }
+.cdoffer .chip, .trk .chip { background: var(--cta); color: var(--cta-ink); white-space: nowrap; flex: 0 0 auto; }
+.chip:disabled { opacity: .4; }
+.toast.song i { background: var(--sea); box-shadow: 0 0 0 3px var(--sea-soft); }
+@media (prefers-reduced-motion: reduce) {
+  .saf-port::before, .mq, .eq.on svg, #sheet.carob { animation: none; }
+}
+
+
+/* ---------- characters in sheets ---------- */
+.dale-head { display: flex; align-items: flex-end; gap: 14px; margin: 0 40px 6px 0; }
+.dale-head img { flex: 0 0 auto; display: block; }
+.dale-head img.bust { height: 104px; -webkit-mask-image: linear-gradient(#000 80%, transparent 100%); mask-image: linear-gradient(#000 80%, transparent 100%); }
+.dale-head img.pose { height: 132px; }
+.dale-head h3 { margin: 0 0 2px; }
+.dale-head p { margin: 0 0 8px; }
+.toast.withface { grid-template-columns: 34px 1fr; align-items: center; }
+.toast .tface { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: top; background: var(--fog); }
+.hbimg { float: right; height: 96px; margin: 0 0 8px 12px; shape-outside: margin-box; }
+
+.row .nm { display: flex; align-items: center; gap: 10px; }
+.row .ico { width: 30px; height: 30px; flex: 0 0 auto; object-fit: contain; }
+.item-head { display: flex; align-items: center; gap: 12px; margin-right: 44px; }
+.item-head img { width: 54px; height: 54px; object-fit: contain; flex: 0 0 auto; }
+.item-head h3 { margin: 0; }
+.toast .ticon { width: 34px; height: 34px; object-fit: contain; }
+
+/* ---------- first-paint loader ---------- */
+#loader { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #F4E3C6; color: #22382B; font-family: "Playpen Sans", "Chalkboard SE", system-ui, sans-serif; font-size: 18px; }
+#loader p { margin: 0; }
+.ld-dot { width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 45% 40%, #F7C46B, #E58A3A 70%); animation: breathe 3s ease-in-out infinite; }
+
+/* ---------- report card ---------- */
+.reportbtn { width: 100%; margin: 6px 0 4px; }
+.cardwrap { margin-top: 8px; border-radius: 14px; overflow: hidden; box-shadow: var(--lift); background: #F6E9D2; min-height: 120px; display: grid; place-items: center; }
+.cardwrap img { display: block; width: 100%; height: auto; -webkit-touch-callout: default; user-select: auto; }
+.cardwrap .muted { padding: 40px 16px; text-align: center; }
+/* ---------- handbook ---------- */
+.hbwrap { margin-top: 8px; border-bottom: 1px solid var(--line); }
+.hb { border-top: 1px solid var(--line); }
+.hb summary { list-style: none; cursor: pointer; padding: 14px 36px 14px 0; font-family: var(--serif); font-size: 19px; position: relative; min-height: 48px; }
+.hb summary::-webkit-details-marker { display: none; }
+.hb summary::after { content: "+"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-family: var(--sans); font-size: 24px; font-weight: 500; color: var(--ink2); }
+.hb[open] summary::after { content: "\2212"; }
+.hbb { padding: 0 0 12px; font-size: 15.5px; line-height: 1.5; }
+.hbb p { margin: 0 0 10px; }
+.hbb ul { margin: 0 0 10px; padding-left: 20px; }
+.hbb li { margin: 0 0 8px; }
+.hbb b { font-weight: 700; }
+.hbt { width: 100%; border-collapse: collapse; font-size: 15px; margin: 2px 0 12px; }
+.hbt th { text-align: left; font-weight: 600; color: var(--ink2); font-size: 13.5px; padding: 4px 0; }
+.hbt td { padding: 6px 0; border-top: 1px solid var(--line); }
+.hbt .num { text-align: right; font-variant-numeric: tabular-nums; padding-left: 12px; white-space: nowrap; }
+.hbscroll { overflow-x: auto; margin: 0 -2px; }
+.hbt.ranks { font-size: 14px; }
+.hbt.ranks td:first-child { padding-right: 6px; }
+.hbt.ranks .num { padding-left: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .breath .orb, .breath .cue span { animation: none; }
+  .breath .cue span + span { display: none; }
+  #sheet, .toast { animation: none; }
+  #veil { transition: none; }
+}
+@media (min-width: 700px) {
+  #app { box-shadow: 0 0 0 1px var(--line); }
+}
+</style>
+</head>
+<body>
+<div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
+<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp"};</script>
+<div id="app"></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="veil" aria-hidden="true"></div>
+<div id="scrim" hidden><div id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div></div>
+<div id="dos" hidden role="button" tabindex="0" aria-label="Return to the app"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= data ================= */
+const WAKE = 7, LIGHTS = 22;
+const START_CASH = 400, START_DEBT = 1100, MAXDEBT = 5000, START_CAP = 100, MAXCAP = 420, MAXDECOY = 4;
+
+/* Retreat lengths. Dale's hourly rate makes debt grow about 16x over any length.
+   k scales per-walk event odds. Rank thresholds were calibrated per length by simulating
+   thousands of runs with a casual bot (always runs from Saffron) and an expert bot. */
+const MODES = [
+  { id: 'weekend', name: 'A weekend reset', short: 'Weekend', days: 3, rate: 0.045, k: 1.25, rest: 10, ranks: [0, 5000, 25000, 120000, 450000], extra: '' },
+  { id: 'five', name: 'Five-day immersion', short: 'Five days', days: 5, rate: 0.025, k: 1.0, rest: 10, ranks: [0, 20000, 150000, 600000, 1300000], extra: '' },
+  { id: 'week', name: 'The full week', short: 'Full week', days: 7, rate: 0.0175, k: 0.85, rest: 10, ranks: [0, 50000, 400000, 1100000, 2200000], extra: '' },
+  { id: 'intensive', name: '30-day intensive', short: '30-day intensive', days: 30, rate: 0.004, k: 0.45, rest: 15, ranks: [0, 1000000, 5500000, 9000000, 14000000], extra: ' Clear your evening.' },
+];
+const pct = r => `${+(r * 100).toFixed(2)}%`;
+
+const ITEMS = [
+  { id: 'burner', name: 'Burner phones', plural: 'burner phones', min: 1500, max: 3500,
+    up: "A guest's startup is getting acquired today and she needs a phone now.",
+    down: 'Dale made a Costco run. Burners are piling up in the van.' },
+  { id: 'charger', name: 'Phone chargers', plural: 'phone chargers', min: 300, max: 900,
+    up: 'Every smuggled phone hit 0% at once. Chargers are priceless.',
+    down: 'A founder bailed on day nine and left a duffel full of cables.' },
+  { id: 'wifi', name: 'Wifi passwords', plural: 'wifi password slips', min: 120, max: 400,
+    up: 'Staff changed the wifi password. Whoever has the new one names their price.',
+    down: 'Someone raked the wifi password into the zen garden. Everyone has it.' },
+  { id: 'wine', name: 'Natural wine', plural: 'bottles of natural wine', min: 35, max: 110,
+    up: 'Full moon sound bath tonight. Everyone wants a bottle.',
+    down: 'A sommelier on week three is quietly unloading her stash.' },
+  { id: 'doritos', name: 'Triangle Chips', plural: 'bags of Triangle Chips', min: 12, max: 40,
+    up: 'Post-breathwork munchies. Guests will pay anything for the ranch ones.',
+    down: "Somebody's husband mailed twelve family-size bags. Triangle Chips everywhere." },
+  { id: 'coke', name: 'Diet Kola', plural: 'cans of Diet Kola', min: 6, max: 20,
+    up: "It's 94 degrees in the labyrinth. A cold Diet Kola is worth a fortune.",
+    down: 'Someone found a whole case behind the yoga bolsters.' },
+  { id: 'choc', name: 'Dark chocolate', plural: 'chocolate bars', min: 3, max: 12,
+    up: 'A sugar-withdrawal meltdown during Noble Silence. Chocolate is gold.',
+    down: 'A care package of 70% cacao slipped past the front desk.' },
+  { id: 'espresso', name: 'Espresso shots', plural: 'espresso shots', min: 1, max: 5,
+    up: 'The 4am sits started. Everyone is nodding off and begging for espresso.',
+    down: 'The staff espresso machine got liberated. Shots everywhere.' },
+];
+const BYID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const itemIcon = id => IMG[`it_${id}`];
+
+/* x/y place each spot on the journey map (percent of the map) */
+const PLACES = [
+  { name: 'Yurt Village', via: 'You shuffle back to the yurts. Someone is playing a singing bowl.', bias: { wine: .85, doritos: 1.15 }, x: 26, y: 55 },
+  { name: 'Meditation Hall', via: 'You slip into the meditation hall mid-sit.', bias: { espresso: 1.35, burner: 1.2, charger: 1.15 }, x: 56, y: 36 },
+  { name: 'Hot Springs', via: 'A man named River explains breathwork to you, unprompted.', bias: { wine: 1.3, doritos: 1.2, wifi: 1.2 }, x: 56, y: 86 },
+  { name: 'The Labyrinth', via: 'You walk the labyrinth. It takes forty minutes to go nowhere.', bias: { coke: 1.2, choc: 1.15 }, x: 80, y: 58 },
+  { name: 'Kitchen Garden', via: 'You weed kale in silence for your work-study hours.', bias: { espresso: .7, choc: .75, coke: .8 }, x: 20, y: 25 },
+  { name: 'Parking Lot', via: 'One bar of signal flickers. Dale is asleep in the van.', bias: { burner: .75, charger: .8, wifi: .8 }, van: true, x: 54, y: 8 },
+];
+const VAN_IX = PLACES.findIndex(p => p.van);
+const HOURS = [
+  /*          Yurt Hall Spr  Lab  Gdn  Lot */
+  /* Yurt */ [0,   1,   2,   1,   1,   2],
+  /* Hall */ [1,   0,   2,   1,   1,   2],
+  /* Spr  */ [2,   2,   0,   1,   2,   3],
+  /* Lab  */ [1,   1,   1,   0,   2,   3],
+  /* Gdn  */ [1,   1,   2,   2,   0,   1],
+  /* Lot  */ [2,   2,   3,   3,   1,   0],
+];
+
+const RAIDS = [
+  'Room inspection. Volunteers found $X in your cushion and donated it to the scholarship fund.',
+  'You left $X in your robe at the hot springs. Gone. Nonattachment, I guess.',
+  'A guest guilted you into sponsoring her vision quest. $X.',
+  'You paid $X for a private session that was just a man holding eye contact.',
+];
+const FINDS = ['a hollow log', 'the lost-and-found basket', 'a yoga bolster', 'the props closet'];
+const CALM = ['A deer walks right up to you at dawn.', 'The fog burns off the Pacific and you forget your inbox exists.', 'You accidentally enjoy a sound bath.'];
+const CITES = [
+  'They make you share in circle.', 'They assign you a 4am silent walk.', "They make you journal about why you're like this.",
+  'They make you hug a stranger for twenty seconds.', 'They sign you up for kitchen duty.',
+  'They make you write a letter to your inner child.', 'They hold eye contact with you for five minutes.',
+];
+const ESCAPES = ['You disappear into the redwoods.', 'You merge into a walking meditation. Nobody can tell.', "She can't call after you. It's Noble Silence."];
+const RANKS = [
+  [-Infinity, 'Owes Dale forever'], [0, 'Broke but centered'], [10000, 'Side hustle sage'],
+  [100000, 'Bought a yurt'], [1000000, 'Wellness entrepreneur'], [5000000, 'Opened your own retreat'],
+];
+/* sky by hour: [from hour, top, bottom, text, sun, glow, chip] */
+const SKIES = [
+  [0, '#1A2136', 'rgba(14, 20, 48, .62)', '#F3E7D3'],
+  [7, '#E9C9B6', 'rgba(255, 186, 150, .16)', '#22382B'],
+  [9, '#C9CDD6', 'rgba(185, 212, 228, .32)', '#22382B'],
+  [16, '#CDC3C8', 'rgba(0, 0, 0, 0)', '#22382B'],
+  [19, '#E2AE8C', 'rgba(232, 112, 64, .18)', '#22382B'],
+  [21, '#3B4064', 'rgba(36, 40, 92, .5)', '#F3E7D3'],
+  [22, '#1A2136', 'rgba(14, 20, 48, .62)', '#F3E7D3'],
+];
+
+/* ================= utils ================= */
+const $ = s => document.querySelector(s);
+const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const rf = (a, b) => Math.random() * (b - a) + a;
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const fmt = n => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+const clock = h => { const hh = h % 24; return `${hh % 12 === 0 ? 12 : hh % 12}${hh < 12 ? 'am' : 'pm'}`; };
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const short = n => { const a = Math.abs(n), sg = n < 0 ? '-' : ''; if (a >= 1e6) return `${sg}$${+(a / 1e6).toFixed(a >= 1e7 ? 1 : 2)}M`; if (a >= 1e5) return `${sg}$${Math.round(a / 1e3)}k`; return fmt(n); };
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* storage unavailable */ } },
+};
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) { /* no haptics */ } };
+
+/* ================= sound: soft sine chimes ================= */
+let ac = null;
+let soundOn = store.get('unpw.sound', true);
+function chime(notes, decay = 0.7, gain = 0.05) {
+  if (!soundOn) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    const t0 = ac.currentTime + 0.01;
+    for (const [f, at] of notes) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + at);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + at + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + decay);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t0 + at); o.stop(t0 + at + decay + 0.05);
+    }
+  } catch (e) { /* no audio */ }
+}
+const SND = {
+  receive: () => chime([[660, 0], [880, .07]], .5),
+  letgo: () => chime([[523, 0], [659, .07], [784, .14]], .6),
+  walk: () => chime([[392, 0], [330, .1]], .6, .035),
+  rest: () => chime([[784, 0], [659, .14], [523, .28], [392, .42]], 1.3, .04),
+  bowl: () => chime([[196, 0], [294, .02], [392, .04]], 2.2, .04),
+  whisper: () => chime([[1046, 0]], .35, .025),
+  bad: () => chime([[233, 0], [220, .1]], .5, .05),
+  good: () => chime([[523, 0], [784, .09]], .6, .04),
+  tap: () => chime([[1318, 0]], .12, .015),
+};
+
+/* ================= state ================= */
+let screen = 'welcome';
+let S = null;
+let queue = [];
+let enc = null;
+let lastSaved = null;
+let trade = null;
+let vanMode = 'pay';
+let sheetKind = null;
+
+function startGame(m) {
+  store.set('unpw.mode', m.id);
+  S = {
+    mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
+    day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, zen: 100,
+    loc: 0, prices: {}, inv: {}, paid: {}, log: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
+    flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
+  };
+  ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; });
+  queue = []; enc = null; lastSaved = null; trade = null;
+  closeSheet(true);
+  screen = 'game';
+  if (M.cur !== 's0') { const was = musicPlaying(); musicLoad('s0'); if (was) M.audio.play().catch(() => {}); }
+  log(`Day 1, ${clock(WAKE)}. ${m.name}. You owe Dale the shuttle driver ${fmt(START_DEBT)} and his meter runs ${pct(m.rate)} an hour.`);
+  const news = genPrices();
+  render();
+  setTimeout(() => toast(`You owe Dale ${fmt(START_DEBT)}, and his meter runs ${pct(m.rate)} an hour. His van is in the parking lot.`, 'bad', 6500), 250);
+  news.forEach(n => whisper(n));
+}
+
+const used = () => ITEMS.reduce((a, i) => a + S.inv[i.id], 0);
+const free = () => S.cap - used();
+function log(t) { S.log.push(t); if (S.log.length > 80) S.log.shift(); }
+
+function genPrices() {
+  const P = PLACES[S.loc];
+  const avail = ITEMS.filter(() => Math.random() < 0.7);
+  while (avail.length < 4) { const c = pick(ITEMS); if (!avail.includes(c)) avail.push(c); }
+  const prices = {};
+  avail.forEach(it => { prices[it.id] = Math.max(1, Math.round(rf(it.min, it.max) * (P.bias[it.id] || 1))); });
+  const news = [];
+  if (Math.random() < 0.35) {
+    const it = pick(avail);
+    if (Math.random() < 0.5) { prices[it.id] = Math.round(prices[it.id] * rf(2, 3.5)); news.push({ text: it.up, kind: 'up', id: it.id }); }
+    else { prices[it.id] = Math.max(1, Math.round(prices[it.id] / rf(2, 4))); news.push({ text: it.down, kind: 'down', id: it.id }); }
+  }
+  S.prices = prices;
+  return news;
+}
+function whisper(n) {
+  log(n.text);
+  setTimeout(() => { SND.whisper(); toast(n.text, 'hot', 5200, null, itemIcon(n.id)); }, 120);
+}
+
+/* ================= time ================= */
+function accrue(h) { if (S.debt > 0) S.debt = Math.ceil(S.debt * Math.pow(1 + S.rate, h)); ST().peakDebt = Math.max(ST().peakDebt, S.debt); }
+const canReach = ix => ix !== S.loc && S.hour + HOURS[S.loc][ix] <= LIGHTS;
+function walk(ix) {
+  if (!S || S.over || !canReach(ix)) return;
+  const h = HOURS[S.loc][ix];
+  accrue(h); S.hour += h; S.loc = ix;
+  { const st = ST(); st.walks++; st.hours += h; st.visits[ix] = (st.visits[ix] || 0) + 1; if (S.hour >= 20) st.lateNights++; }
+  S.flavor = PLACES[ix].via;
+  closeSheet(true);
+  SND.walk(); buzz(8);
+  log(`${clock(S.hour)}. ${PLACES[ix].name}. ${PLACES[ix].via}`);
+  const news = genPrices();
+  rollEvents();
+  songEvents();
+  render();
+  $('.list') && ($('.list').scrollTop = 0);
+  news.forEach(n => whisper(n));
+  if (S.hour >= LIGHTS - 2) toast(`Quiet hours begin at ${clock(LIGHTS)}. Rest when you're done.`, '', 4500);
+  runQueue();
+}
+/* Resting skips the rest of the day, so it asks first and says what it will cost. */
+function restSheet() {
+  if (!S || S.over) return;
+  if (S.day >= S.days) return checkoutSheet();
+  const hrs = 24 - S.hour + WAKE;
+  const more = S.debt > 0 ? Math.ceil(S.debt * Math.pow(1 + S.rate, hrs)) - S.debt : 0;
+  const left = LIGHTS - S.hour;
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">Rest until morning?</h3>
+    <p class="muted">It's ${clock(S.hour)}. You'll sleep at ${PLACES[S.loc].name} and wake at ${clock(WAKE)} on day ${S.day + 1}.${left > 0 ? ` That leaves ${plural(left, 'hour', 'hours')} of today unused.` : ''}${more ? ` Dale's meter runs all night, about ${fmt(more)} more.` : ''}</p>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="restgo">Rest until morning</button>
+    <button type="button" class="btn quiet" data-act="close">Not yet</button></div>`, 'rest');
+}
+function rest() {
+  if (!S || S.over) return;
+  if (S.day >= S.days) return checkoutSheet();
+  closeSheet(true);
+  const veil = $('#veil');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  veil.classList.add('on');
+  SND.rest();
+  setTimeout(() => {
+    accrue(24 - S.hour + WAKE);
+    S.day += 1; S.hour = WAKE; ST().rests++;
+    const md = MODES.find(m => m.id === S.mode) || MODES[2];
+    const g = Math.min(md.rest, 100 - S.zen); S.zen += g;
+    S.flavor = `Morning. ${pick(['The fog is in.', 'Someone is chanting at the sunrise.', 'A gong goes off somewhere.', 'Your cushion is right where you left it.'])}`;
+    log(`Day ${S.day}, ${clock(WAKE)}. You slept at ${PLACES[S.loc].name}.${g ? ` Zen +${g}.` : ''}`);
+    const news = genPrices();
+    render();
+    veil.classList.remove('on');
+    toast(`Day ${S.day}. ${g ? `You slept well. Zen +${g}. ` : ''}Dale's meter ran all night: you owe ${fmt(S.debt)}.`, g ? 'good' : 'bad', 5000);
+    news.forEach(n => whisper(n));
+    if (S.day === S.days) toast('Last day. Checkout is at quiet hours tonight, and the front desk searches every cushion. Let go of everything.', 'hot', 7000);
+    runQueue();
+  }, reduce ? 0 : 1100);
+}
+
+function rollEvents() {
+  const load = used() / S.cap, k = S.k, prog = S.day / S.days, vf = valueFactor();
+  const chase = (0.03 + 0.06 * load + 0.16 * vf * vf + 0.04 * prog) * k;
+  if (used() > 0 && Math.random() < chase) {
+    queue.push(startEncounter);
+  } else {
+    const r = Math.random();
+    if (r < 0.06 * k && S.cash > 50) {
+      const amt = Math.round(S.cash * rf(0.1, 0.25));
+      S.cash -= amt; ST().raided += amt; SND.bad();
+      const t = pick(RAIDS).replace('$X', fmt(amt));
+      log(t); setTimeout(() => toast(t, 'bad', 5500), 300);
+    } else if (r < 0.12 * k) {
+      const it = BYID[pick(['espresso', 'choc', 'coke', 'doritos'])];
+      const q = Math.min(ri(3, 10), free());
+      if (q > 0) {
+        S.inv[it.id] += q; ST().found += q;
+        const t = `You find ${q} ${it.plural} in ${pick(FINDS)}.`;
+        log(t); setTimeout(() => { SND.good(); toast(t, 'good', 4500, null, itemIcon(it.id)); }, 300);
+      }
+    } else if (r < 0.17 * k && S.cap < MAXCAP) {
+      const price = Math.round(120 * Math.pow(2, Math.round((S.cap - START_CAP) / 40)) * rf(0.85, 1.15));
+      queue.push(() => {
+        if (S.cash < price) return runQueue();
+        offerSheet('A bigger cushion', `A guest is selling a bigger meditation cushion with a hidden zipper. It holds 40 more.`, `Buy it for ${fmt(price)}`, () => {
+          S.cash -= price; S.cap += 40; SND.receive();
+          log(`Bought a bigger cushion. Room for ${S.cap}.`); toast(`New cushion. Room for ${S.cap}.`, 'good');
+        });
+      });
+    } else if (r < 0.22 * k && S.decoys < MAXDECOY) {
+      const price = Math.round(150 * Math.pow(1.8, S.decoys) * rf(0.85, 1.15));
+      queue.push(() => {
+        if (S.cash < price) return runQueue();
+        offerSheet('A decoy for hire', `A guest from Marin offers to be your decoy if Guide Saffron comes around. She cries on cue.`, `Hire her for ${fmt(price)}`, () => {
+          S.cash -= price; S.decoys += 1; SND.receive();
+          log(`Hired a decoy. You have ${S.decoys}.`); toast(`Decoy hired. You have ${plural(S.decoys, 'decoy', 'decoys')}.`, 'good');
+        });
+      });
+    } else if (r < 0.26 * k && S.zen < 100) {
+      const g = Math.min(ri(10, 25), 100 - S.zen);
+      S.zen += g;
+      const t = `${pick(CALM)} Zen +${g}.`;
+      log(t); setTimeout(() => { SND.bowl(); toast(t, 'good', 4500); }, 300);
+    }
+  }
+  if (S.debt > 2 * START_DEBT && prog > 0.2 && Math.random() < 0.08 * k) {
+    const d = ri(5, 12);
+    S.zen -= d;
+    const t = `Dale left a note on your yurt. It's just a number: ${fmt(S.debt)}. Zen -${d}.`;
+    log(t); setTimeout(() => { SND.bad(); toast(t, 'bad', 5500, IMG.daleMad); }, 400);
+    if (S.zen <= 0) { S.zen = 0; queue.unshift(() => snap()); }
+  }
+}
+
+/* ================= trading ================= */
+const canBuy = id => { const p = S.prices[id]; return p ? Math.max(0, Math.min(Math.floor(S.cash / p), free())) : 0; };
+function openTrade(id) {
+  if (!S || S.over) return;
+  const p = S.prices[id], have = S.inv[id];
+  const avg = have ? S.paid[id] / have : 0;
+  let mode = 'buy';
+  if (have && (!canBuy(id) || (p && p > avg))) mode = 'sell';
+  trade = { id, mode, q: 0 };
+  trade.q = tradeMax();
+  SND.tap();
+  tradeSheet();
+}
+function tradeMax() { return trade.mode === 'buy' ? canBuy(trade.id) : S.inv[trade.id]; }
+function tradeSheet() {
+  const it = BYID[trade.id], p = S.prices[trade.id], have = S.inv[trade.id];
+  const avg = have ? Math.round(S.paid[trade.id] / have) : 0;
+  const held = have ? `You have ${have}${avg ? `, ${fmt(avg)} each on average` : ', all found for free'}.` : 'You have none.';
+  if (!p) {
+    openSheet(`<div class="grab"></div><div class="item-head"><img src="${itemIcon(it.id)}" alt=""><h3 id="sheetTitle">${it.name}</h3></div>
+      <p class="muted">No one at ${PLACES[S.loc].name} is trading ${it.plural} right now. ${held}</p>
+      <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Close</button></div>`, 'trade');
+    return;
+  }
+  const max = tradeMax();
+  trade.q = Math.min(Math.max(trade.q, max ? 1 : 0), max);
+  openSheet(`<div class="grab"></div>
+    <div class="item-head"><img src="${itemIcon(it.id)}" alt=""><h3 id="sheetTitle">${it.name}</h3></div>
+    <p class="muted"><span class="num">${fmt(p)}</span> each here. ${held} Room for ${free()} more in your cushion.</p>
+    <div class="seg" role="group" aria-label="Trade">
+      <button type="button" data-tmode="buy" aria-pressed="${trade.mode === 'buy'}" ${canBuy(trade.id) ? '' : 'disabled'}>Receive</button>
+      <button type="button" data-tmode="sell" aria-pressed="${trade.mode === 'sell'}" ${have ? '' : 'disabled'}>Let go</button>
+    </div>
+    <div class="qtybig"><span class="n num" id="tq">${trade.q}</span><span class="t num" id="tt"></span></div>
+    <input type="range" id="tslider" min="${max ? 1 : 0}" max="${max}" step="1" value="${trade.q}" aria-label="How many" ${max ? '' : 'disabled'}>
+    <div class="chips">
+      <button type="button" class="chip" data-tset="1" ${max ? '' : 'disabled'}>One</button>
+      <button type="button" class="chip" data-tset="half" ${max > 1 ? '' : 'disabled'}>Half</button>
+      <button type="button" class="chip" data-tset="max" ${max ? '' : 'disabled'}>All ${max}</button>
+    </div>
+    <div class="sheet-actions"><button type="button" class="btn primary" id="tgo" data-act="trade" ${max ? '' : 'disabled'}></button></div>`, 'trade');
+  updateTrade();
+}
+function updateTrade() {
+  const p = S.prices[trade.id], q = trade.q, it = BYID[trade.id];
+  const sl = $('#tslider'); if (!sl) return;
+  const max = +sl.max, min = +sl.min;
+  sl.value = q;
+  sl.style.setProperty('--fill', `${max > min ? ((q - min) / (max - min)) * 100 : 100}%`);
+  $('#tq').textContent = q;
+  const go = $('#tgo');
+  if (trade.mode === 'buy') {
+    $('#tt').textContent = `${fmt(p * q)} of your ${fmt(S.cash)}`;
+    go.textContent = q ? `Receive ${q} for ${fmt(p * q)}` : (S.cash < p ? `Not enough cash for one` : `Your cushion is full`);
+  } else {
+    const have = S.inv[trade.id];
+    const gain = have ? p * q - S.paid[trade.id] * (q / have) : 0;
+    $('#tt').textContent = q ? `${gain >= 0 ? '+' : ''}${fmt(gain)} on what you paid` : '';
+    go.textContent = q ? `Let go of ${q} for ${fmt(p * q)}` : `You have none to let go of`;
+  }
+  go.disabled = !q;
+  if (!q) go.setAttribute('aria-label', go.textContent); else go.removeAttribute('aria-label');
+}
+function doTrade() {
+  const it = BYID[trade.id], p = S.prices[trade.id], q = trade.q;
+  if (!p || !q) return;
+  if (trade.mode === 'buy') {
+    if (q > canBuy(it.id)) return;
+    S.cash -= p * q; S.inv[it.id] += q; S.paid[it.id] += p * q; ST().bought += q;
+    SND.receive(); buzz(12);
+    log(`Received ${q} ${it.plural} for ${fmt(p * q)}.`);
+    toast(`Received ${q} ${it.plural} for ${fmt(p * q)}.`, '', 2600);
+  } else {
+    const have = S.inv[it.id]; if (q > have) return;
+    const basis = S.paid[it.id] * (q / have), gain = p * q - basis;
+    S.cash += p * q; S.inv[it.id] -= q; S.paid[it.id] -= basis;
+    { const st = ST(); st.sold += q; st.profit += gain; if (!st.best || gain > st.best.gain) st.best = { id: it.id, q, gain }; if (TECH.includes(it.id)) st.tech += q; if (it.id === 'coke') st.coke += q; }
+    if (!S.inv[it.id]) S.paid[it.id] = 0;
+    SND.letgo(); buzz([10, 40, 10]);
+    log(`Let go of ${q} ${it.plural} for ${fmt(p * q)} (${gain >= 0 ? '+' : ''}${fmt(gain)}).`);
+    toast(`Let go of ${q} ${it.plural} for ${fmt(p * q)}. ${gain >= 0 ? `${fmt(gain)} gained.` : `${fmt(-gain)} lost.`}`, gain >= 0 ? 'good' : 'bad', 3000);
+  }
+  trade = null;
+  closeSheet();
+}
+
+/* ================= encounter ================= */
+/* Guide Saffron: wellness on the outside, carob on the inside.
+   Every round she's still with you, she confiscates part of your most valuable stash.
+   The check-in screen spells out what each attempt cost and what each option will cost next. */
+const SAY_OPEN = [
+  'Hi, friend. Can we check in about your cushion?',
+  "I'm noticing your cushion is holding a lot of energy.",
+  "Let's pause. Your cushion seems heavy today.",
+];
+const SAY_TAKE = [
+  "Let's let go of that together.",
+  "I'll hold this for you. Forever.",
+  "This isn't serving you.",
+  'Thank you for releasing this.',
+  'Notice how light you feel now.',
+];
+const SAY_ESCAPED = ["Wait. Where did you go?", "I was holding space for you!", "Running is also a feeling. We'll process it later."];
+const SAY_DECOYED = ['Is everyone okay?', 'Okay. Who needs to be held?', 'That was a lot of energy.'];
+const SAY_PAID = ["That's so generous.", 'I feel your heart opening.', 'See? Lighter already.'];
+const HER_ZEN = ['she held your gaze', 'she kept a hand on your shoulder', 'she asked how that made you feel'];
+const VOL_ZEN = ['a volunteer made you share in circle', 'a volunteer assigned you a 4am silent walk', "a volunteer made you journal about why you're like this",
+  'a volunteer hugged you for twenty seconds', 'a volunteer signed you up for kitchen duty', 'a volunteer made you write to your inner child'];
+const TAKE_LO = 0.12, TAKE_HI = 0.25, TAKE_PER_VOL = 0.02, HAND_FRAC = 1 / 3, DONATE_FRAC = 0.15;
+
+function itemValue(it) { return S.prices[it.id] || (it.min + it.max) / 2; }
+function cushionValue() { return ITEMS.reduce((a, it) => a + S.inv[it.id] * itemValue(it), 0); }
+/* 0 to 1: how tempting your cushion is, on a log scale ($1k is about half, $300k and up is everything) */
+function valueFactor() { const v = cushionValue(); return v <= 1 ? 0 : Math.min(1, Math.log10(v) / 5.5); }
+function topItem() {
+  let best = null, bv = 0;
+  for (const it of ITEMS) { const v = S.inv[it.id] * itemValue(it); if (v > bv) { bv = v; best = it; } }
+  return best;
+}
+const shareOf = (have, frac) => Math.min(have, Math.max(1, Math.round(have * frac)));
+function confiscate(frac) {
+  const it = topItem(); if (!it) return null;
+  const have = S.inv[it.id], q = shareOf(have, frac), value = q * itemValue(it);
+  S.paid[it.id] -= S.paid[it.id] * (q / have);
+  S.inv[it.id] -= q;
+  if (!S.inv[it.id]) S.paid[it.id] = 0;
+  enc.lostValue += value;
+  enc.lostGoods[it.id] = (enc.lostGoods[it.id] || 0) + q;
+  { const st = ST(); st.confUnits += q; st.confValue += value; st.conf[it.id] = (st.conf[it.id] || 0) + q; }
+  return { it, q, value };
+}
+const nameOf = (it, q) => (q === 1 ? it.name.toLowerCase().replace(/s$/, '') : it.plural);
+const roundPct = p => `${Math.round(p * 20) * 5}%`;
+function startEncounter() {
+  const n = 1 + ri(0, Math.min(4, Math.round(4 * (0.5 * S.day / S.days + 0.5 * valueFactor()))));
+  const vols = ['vol1', 'vol2', 'vol3', 'vol4'].sort(() => Math.random() - 0.5).slice(0, n - 1);
+  enc = { n, left: n, vols, gone: [], face: 'calm', say: pick(SAY_OPEN), round: [], lostValue: 0, lostGoods: {}, lostZen: 0, tries: 0, done: false };
+  ST().checkins++;
+  themeStart();
+  enc.round.push({ t: n === 1 ? 'She found you alone.' : `She brought ${plural(n - 1, 'silent volunteer', 'silent volunteers')}.`, c: '' });
+  $('#toasts').innerHTML = ''; heldToasts = [];
+  musicDuck(true);
+  SND.bowl(); buzz([30, 60, 30]);
+  encSheet();
+}
+const donation = () => Math.max(50, Math.round(S.cash * DONATE_FRAC));
+const runOdds = () => Math.min(0.85, Math.max(0.15, 0.66 - 0.05 * enc.left - 0.3 * (used() / S.cap)));
+function encFinishIfEmpty() {
+  if (used() > 0) return false;
+  enc.say = 'Your cushion is empty. I see you.';
+  enc.round.push({ t: 'With nothing left to take, she drifts away.', c: 'good' });
+  enc.face = 'calm'; enc.done = true;
+  return true;
+}
+/* One round of Saffron holding space: she takes a share of your most valuable goods and some zen. */
+function saffronTurn() {
+  const c = confiscate(rf(TAKE_LO, TAKE_HI) + TAKE_PER_VOL * (enc.left - 1));
+  if (c) {
+    enc.round.push({ t: `She took ${c.q} ${nameOf(c.it, c.q)}, about ${fmt(c.value)}.`, c: 'bad' });
+    log(`Guide Saffron confiscated ${c.q} ${c.it.plural}.`);
+  }
+  const own = ri(1, 3); let total = own;
+  const parts = [`${pick(HER_ZEN)} (-${own})`];
+  const vols = enc.vols.filter(v => !enc.gone.includes(v));
+  for (let i = 0; i < vols.length; i++) {
+    if (Math.random() < 0.3) { const d = ri(3, 8); total += d; parts.push(`${pick(VOL_ZEN)} (-${d})`); }
+  }
+  S.zen -= total; enc.lostZen += total;
+  enc.round.push({ t: `Zen -${total}: ${parts.join(', ')}.`, c: 'bad' });
+  enc.face = 'side'; enc.say = pick(SAY_TAKE);
+  SND.bad(); buzz(25);
+  if (S.zen <= 0) { S.zen = 0; enc = null; snap(); return false; }
+  encFinishIfEmpty();
+  return true;
+}
+function staffUSB() {
+  if (hasSong('w0') || Math.random() > 0.6) return;
+  enc.round.push({ t: 'In the scramble, a volunteer dropped a USB stick labeled STAFF LOUNGE.', c: 'good' });
+  unlockSong('w0', 'You plug the STAFF LOUNGE stick into your Dale-Fi.');
+}
+function encRun() {
+  const odds = runOdds();
+  enc.round = []; enc.tries++;
+  if (Math.random() < odds) {
+    enc.round.push({ t: `You tried to slip away (${roundPct(odds)} chance) and made it. ${pick(ESCAPES)}`, c: 'good' });
+    staffUSB(); ST().escapes++;
+    enc.done = true; enc.face = 'puzzled'; enc.say = pick(SAY_ESCAPED); SND.good();
+  } else {
+    enc.round.push({ t: `You tried to slip away (${roundPct(odds)} chance). She was quicker.`, c: '' }); ST().failedRuns++;
+    if (!saffronTurn()) return;
+  }
+  encSheet();
+}
+function encDecoy() {
+  enc.round = []; enc.tries++;
+  let pulled = 0;
+  for (let i = 0; i < S.decoys && enc.left > 0; i++) {
+    if (Math.random() < 0.5) {
+      enc.left -= 1; pulled++;
+      const v = enc.vols.find(x => !enc.gone.includes(x)); if (v) enc.gone.push(v);
+    }
+  }
+  if (enc.left === 0) {
+    const found = ri(100, 400) * enc.n; ST().decoyWins++;
+    S.cash += found;
+    enc.round.push({ t: `Your decoys pulled everyone away, Guide Saffron included. Someone dropped a fanny pack with ${fmt(found)} in it.`, c: 'good' });
+    log(`Found ${fmt(found)} in a fanny pack.`);
+    staffUSB();
+    enc.done = true; enc.face = 'shock'; enc.say = pick(SAY_DECOYED); SND.good();
+  } else {
+    enc.round.push({ t: pulled ? `Your decoys pulled ${plural(pulled, 'person', 'people')} away. ${enc.left === 1 ? 'Guide Saffron is still with you.' : `${enc.left} are still with you.`}` : 'Your decoys just stood there, awkwardly.', c: pulled ? 'good' : '' });
+    if (!saffronTurn()) return;
+  }
+  encSheet();
+}
+function encHand() {
+  const it = topItem(); if (!it) return;
+  enc.round = [];
+  const c = confiscate(HAND_FRAC);
+  const g = Math.min(4, 100 - S.zen); S.zen += g;
+  ST().handed += c.q; ST().handedValue += c.value;
+  enc.round.push({ t: `You handed over ${c.q} ${nameOf(c.it, c.q)}, about ${fmt(c.value)}. Honestly, it felt kind of good.${g ? ` Zen +${g}.` : ''}`, c: '' });
+  log(`Handed Guide Saffron ${c.q} ${c.it.plural}.`);
+  enc.done = true; enc.face = 'joy'; enc.say = pick(SAY_PAID); SND.bowl();
+  encSheet();
+}
+function encDonate() {
+  const c = donation(); if (S.cash < c) return;
+  enc.round = [];
+  S.cash -= c; ST().donated += c;
+  enc.round.push({ t: `You donated ${fmt(c)} to the scholarship fund.`, c: '' });
+  log(`Donated ${fmt(c)} to the scholarship fund.`);
+  enc.done = true; enc.face = 'joy'; enc.say = pick(SAY_PAID); SND.bowl();
+  encSheet();
+}
+const FACES = {
+  calm: [IMG.saffronCalm, 'smiling serenely'], side: [IMG.saffronSide, 'giving you the side-eye'],
+  shock: [IMG.saffronShock, 'caught off guard'], joy: [IMG.saffronJoy, 'absolutely delighted'],
+  puzzled: [IMG.saffronPuzzled, 'puzzled, looking around for you'],
+};
+function encSheet() {
+  render();
+  const top = topItem();
+  const handQ = top ? shareOf(S.inv[top.id], HAND_FRAC) : 0;
+  const handV = top ? handQ * itemValue(top) : 0;
+  const don = donation();
+  const odds = runOdds();
+  const lost = Object.entries(enc.lostGoods).map(([id, q]) => `${q} ${nameOf(BYID[id], q)}`);
+  const tally = enc.lostValue || enc.lostZen
+    ? `${enc.done ? 'In all' : 'So far'}, she's taken ${lost.length ? `${lost.join(' and ')} (about ${fmt(enc.lostValue)})` : 'nothing'}${enc.lostZen ? ` and ${enc.lostZen} zen` : ''}.`
+    : '';
+  const vols = enc.vols.map(v => `<img src="${IMG[v]}" alt="" class="${enc.gone.includes(v) ? 'gone' : ''}">`).join('');
+  const status = enc.done
+    ? `Zen ${S.zen}. ${used() ? `Your cushion holds about ${fmt(cushionValue())}.` : 'Your cushion is empty.'}`
+    : `Zen ${S.zen}. Your cushion holds about ${fmt(cushionValue())}${used() / S.cap > 0.6 ? ' and it is heavy to run with' : ''}.`;
+  const choices = enc.done
+    ? `<button type="button" class="btn primary carry" data-act="encdone">Carry on</button>`
+    : `<div class="choices">
+        <button type="button" class="choice primary" data-act="encrun"><b>Slip away</b><span>About a ${roundPct(odds)} chance. If it fails, she takes more.</span></button>
+        <button type="button" class="choice" data-act="encdecoy" ${S.decoys ? '' : 'disabled'}><b>${S.decoys ? `Send ${plural(S.decoys, 'decoy', 'decoys')}` : 'No decoys'}</b><span>${S.decoys ? 'Each has an even chance to pull someone away.' : 'Hire one when a guest offers.'}</span></button>
+        <button type="button" class="choice" data-act="enchand" ${top ? '' : 'disabled'}><b>Hand over ${handQ} ${top ? nameOf(top, handQ) : ''}</b><span>About ${fmt(handV)}. She leaves for sure.</span></button>
+        <button type="button" class="choice" data-act="encdonate" ${S.cash >= don ? '' : 'disabled'}><b>Donate ${fmt(don)}</b><span>${S.cash >= don ? 'To the scholarship fund. She leaves for sure.' : 'You don\'t have enough cash on you.'}</span></button>
+      </div>`;
+  openSheet(`
+    <div class="saf-top">
+      <div class="saf-port"><img src="${FACES[enc.face][0]}" alt="Guide Saffron, ${FACES[enc.face][1]}"></div>
+      <h3 id="sheetTitle">Guide Saffron</h3>
+      ${enc.vols.length ? `<div class="vols" role="img" aria-label="${plural(enc.vols.length - enc.gone.length, 'volunteer', 'volunteers')} still with her">${vols}</div>` : ''}
+      <p class="says">“${enc.say}”</p>
+    </div>
+    <div class="saf-card" aria-live="polite">
+      ${enc.round.map(l => `<p class="${l.c}">${l.t}</p>`).join('')}
+      ${tally ? `<p class="tot">${tally}</p>` : ''}
+    </div>
+    <p class="meta">${status}</p>
+    ${choices}`, 'enc', 'carob', false);
+}
+
+/* ================= van ================= */
+function vanMax(mode) {
+  if (mode === 'pay') return Math.min(S.cash, S.debt);
+  if (mode === 'borrow') return Math.max(0, MAXDEBT - S.debt);
+  if (mode === 'stash') return S.cash;
+  return S.van;
+}
+let vanAmt = 0;
+let daleCounting = false;
+function vanSheet(msg, ok) {
+  if (!S || S.over) return;
+  if (!PLACES[S.loc].van) {
+    openSheet(`<div class="grab"></div><div class="dale-head"><img src="${IMG.daleCalm}" alt="Dale" class="bust"><div><h3 id="sheetTitle">Dale's van</h3></div></div>
+      <p class="muted">Dale's van is up in the parking lot, ${HOURS[S.loc][VAN_IX]} hours from here. That's where you pay him, borrow more, or stash cash in the glovebox, where room inspections can't reach it.</p>
+      <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Close</button></div>`, 'van');
+    return;
+  }
+  if (!vanMax(vanMode)) vanMode = ['pay', 'stash', 'take', 'borrow'].find(m => vanMax(m) > 0) || 'pay';
+  const max = vanMax(vanMode);
+  vanAmt = vanMode === 'borrow' ? 0 : max;
+  const labels = { pay: 'Pay Dale', borrow: 'Borrow', stash: 'Stash', take: 'Take out' };
+  openSheet(`<div class="grab"></div>
+    <div class="dale-head">${daleCounting || S.debt === 0
+      ? `<img src="${IMG.daleCash}" alt="Dale counting cash" class="pose"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">${S.debt === 0 ? 'Dale counts it twice. You are square.' : 'Dale counts it twice and almost smiles.'}</p></div>`
+      : S.debt > 2 * START_DEBT
+      ? `<img src="${IMG.daleMad}" alt="Dale, glaring" class="bust"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">Dale looks up from his crossword. He is not thrilled about the ${fmt(S.debt)}.</p></div>`
+      : `<img src="${IMG.daleCross}" alt="Dale doing his crossword" class="pose"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">Dale doesn't look up from his crossword.</p></div>`}</div>
+    ${hasSong('w2') ? '' : `<div class="cdoffer"><span>Dale's burned CD, “Late Night Record Shop”</span><button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button></div>`}
+    <div class="ledger">
+      <span>On you</span><span class="v num">${fmt(S.cash)}</span>
+      <span>In the glovebox</span><span class="v num">${fmt(S.van)}</span>
+      <span>Owed to Dale, growing ${pct(S.rate)} an hour</span><span class="v num dale">${fmt(S.debt)}</span>
+    </div>
+    <div class="seg four" role="group" aria-label="What to do">
+      ${Object.entries(labels).map(([m, l]) => `<button type="button" data-vmode="${m}" aria-pressed="${vanMode === m}" ${vanMax(m) ? '' : 'disabled'}>${l}</button>`).join('')}
+    </div>
+    <div class="qtybig"><span class="n num" id="vq">${fmt(vanAmt)}</span></div>
+    <input type="range" id="vslider" min="0" max="${max}" step="1" value="${vanAmt}" aria-label="Amount" ${max ? '' : 'disabled'}>
+    <div class="chips">
+      <button type="button" class="chip" data-vset="quarter" ${max ? '' : 'disabled'}>Quarter</button>
+      <button type="button" class="chip" data-vset="half" ${max ? '' : 'disabled'}>Half</button>
+      <button type="button" class="chip" data-vset="max" ${max ? '' : 'disabled'}>All</button>
+    </div>
+    <p class="note-err ${ok ? 'ok' : ''}" aria-live="polite">${msg || ''}</p>
+    <div class="sheet-actions two">
+      <button type="button" class="btn quiet" data-act="close">Done</button>
+      <button type="button" class="btn primary" id="vgo" data-act="vango"></button>
+    </div>`, 'van');
+  updateVan();
+}
+function updateVan() {
+  const sl = $('#vslider'); if (!sl) return;
+  const max = +sl.max;
+  sl.value = vanAmt;
+  sl.style.setProperty('--fill', `${max ? (vanAmt / max) * 100 : 0}%`);
+  $('#vq').textContent = fmt(vanAmt);
+  const verb = { pay: 'Pay Dale', borrow: 'Borrow', stash: 'Stash', take: 'Take out' }[vanMode];
+  const go = $('#vgo');
+  go.textContent = `${verb} ${fmt(vanAmt)}`;
+  go.disabled = !vanAmt;
+}
+function vanGo() {
+  const a = vanAmt; if (!(a > 0) || a > vanMax(vanMode)) return;
+  let msg = '';
+  if (vanMode === 'pay') { daleCounting = true; S.cash -= a; S.debt -= a; if (!S.debt && ST().paidDay == null) ST().paidDay = S.day; msg = S.debt ? `Paid Dale ${fmt(a)}. You still owe ${fmt(S.debt)}.` : `Paid Dale ${fmt(a)}. You're square.`; }
+  else if (vanMode === 'borrow') { S.cash += a; S.debt += a; ST().borrowed += a; msg = `Borrowed ${fmt(a)} at ${pct(S.rate)} an hour.`; }
+  else if (vanMode === 'stash') { S.cash -= a; S.van += a; msg = `Stashed ${fmt(a)} in the glovebox.`; }
+  else { S.van -= a; S.cash += a; msg = `Took ${fmt(a)} out of the glovebox.`; }
+  log(msg); SND.letgo(); buzz(12);
+  render();
+  vanSheet(msg, vanMode !== 'borrow');
+}
+
+/* ================= end ================= */
+const netWorth = () => S.cash + S.van - S.debt;
+function rankFor(n, reason) {
+  if (reason === 'zen') return 'Snapped. Started a podcast';
+  const md = MODES.find(m => m.id === S.mode) || MODES[2];
+  let t = RANKS[0][1];
+  md.ranks.forEach((min, i) => { if (n >= min) t = RANKS[i + 1][1]; });
+  return t;
+}
+function endGame(reason) {
+  S.over = true; S.reason = reason; cardWho = null;
+  store.del('unpw.save');
+  $('#toasts').innerHTML = '';
+  queue = []; enc = null; trade = null;
+  closeSheet(true);
+  screen = 'over';
+  if (reason !== 'zen') SND.rest();
+  render();
+}
+function snap() {
+  themeStop();
+  musicDuck(false);
+  if (S && S.stats) S.stats.zenMin = 0;
+  closeSheet(true);
+  queue = [];
+  S.zen = 0;
+  showDos(true);
+}
+function saveScore() {
+  if (!S || S.saved) return;
+  const name = ($('#signname')?.value || '').trim().slice(0, 14) || 'Anonymous';
+  S.signedName = name === 'Anonymous' ? '' : name;
+  const entry = { i: name, s: netWorth(), t: rankFor(netWorth(), S.reason), at: Date.now(), m: S.mode };
+  const list = store.get('unpw.scores', []);
+  list.push(entry);
+  store.set('unpw.scores', MODES.flatMap(md => list.filter(e => e.m === md.id).sort((a, b) => b.s - a.s).slice(0, 10)));
+  S.saved = true; lastSaved = entry.at;
+  SND.good();
+  render();
+}
+function boardHTML(modeId) {
+  const list = store.get('unpw.scores', []).filter(e => e.m === modeId).sort((a, b) => b.s - a.s);
+  if (!list.length) return '<p class="muted">No one has signed the guestbook for this length yet.</p>';
+  return `<div class="board">${list.map((e, i) => {
+    const me = e.at === lastSaved ? ' me' : '';
+    return `<span class="${me}">${i + 1}</span><span class="${me}">${esc(e.i)}</span><span class="s num${me}">${fmt(e.s)}</span><span class="t">${e.t}</span>`;
+  }).join('')}</div>`;
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ================= save ================= */
+function savedRun() { const r = store.get('unpw.save', null); return r && !r.over && r.days ? r : null; }
+function saveRun() { if (S && !S.over && screen === 'game') store.set('unpw.save', S); }
+function continueRun() {
+  const r = savedRun(); if (!r) return;
+  S = r; if (!Array.isArray(S.songs)) S.songs = ['s0'];
+  if (!S.stats) S.stats = newStats();
+  S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
+  queue = []; enc = null; lastSaved = null; trade = null;
+  screen = 'game';
+  closeSheet(true);
+  render();
+}
+
+/* ================= music: Dale-Fi pocket player ================= */
+/* Each retreat starts with the retreat's spa track. Other songs turn up along the way;
+   anything you've ever found stays in your collection on the welcome screen. */
+const TRACKS = [
+  { id: 's0', title: 'thank you for your grounding presence', artist: 'TORiTiA', hint: 'Preloaded by the retreat.' },
+  { id: 'w0', title: 'Wellness Lounge Groove', artist: 'TORiTiA', hint: "Guide Saffron's volunteers carry the good stuff. Get away from them." },
+  { id: 'w1', title: 'meditate this way', artist: 'TORiTiA', hint: 'Somebody in the meditation hall has good taste.' },
+  { id: 'w2', title: 'Late Night Record Shop', artist: 'TORiTiA', hint: 'Dale keeps a burned CD in his van.' },
+];
+const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
+const CD_PRICE = 150;
+const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null };
+const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
+const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
+const inRun = () => screen === 'game' && S && !S.over;
+const avail = () => (inRun() ? S.songs : collected()).filter(id => TBYID[id]);
+const hasSong = id => S && S.songs && S.songs.includes(id);
+
+function unlockSong(id, how) {
+  if (!S || hasSong(id)) return;
+  S.songs.push(id);
+  const c = collected(); if (!c.includes(id)) { c.push(id); store.set('unpw.collected', c); }
+  S.newSong = true;
+  const t = TBYID[id];
+  log(`New song on your Dale-Fi: ${t.title}.`);
+  setTimeout(() => { chime([[659, 0], [988, .1], [1319, .2]], .7, .04); toast(`${how} New on your Dale-Fi: “${t.title}.”`, 'song', 6500); }, 350);
+  render();
+}
+function songEvents() {
+  const P = PLACES[S.loc];
+  if (!hasSong('w1') && P.name === 'Meditation Hall' && Math.random() < 0.45) {
+    unlockSong('w1', 'The sound-bath guy left his laptop open on the gong. You sideload a song.');
+  } else if (P.van && !hasSong('w2') && !S.cdHint && !queue.length) {
+    S.cdHint = true;
+    setTimeout(() => toast("Something good is playing in Dale's van. He'll sell you the CD.", 'song', 5500), 500);
+  }
+}
+function buyCD() {
+  if (!S || hasSong('w2') || S.cash < CD_PRICE) return;
+  S.cash -= CD_PRICE;
+  log(`Bought Dale's burned CD for ${fmt(CD_PRICE)}.`);
+  unlockSong('w2', `Dale hands over a burned CD for ${fmt(CD_PRICE)}.`);
+}
+
+function trackURL(id) { return `assets/audio/${id}.m4a`; }
+const canPlayAAC = () => { try { return !!new Audio().canPlayType('audio/mp4; codecs="mp4a.40.2"'); } catch (e) { return false; } };
+function ensureAudio() {
+  if (M.audio) return;
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
+  M.audio = new Audio();
+  M.audio.preload = 'auto';
+  M.audio.addEventListener('ended', () => musicStep(1, true));
+  M.audio.addEventListener('play', musicUI);
+  M.audio.addEventListener('pause', musicUI);
+  M.audio.addEventListener('loadedmetadata', musicUI);
+  if (ac) {
+    try {
+      const src = ac.createMediaElementSource(M.audio);
+      M.an = ac.createAnalyser(); M.an.fftSize = 64; M.an.smoothingTimeConstant = 0.75;
+      M.bins = new Uint8Array(M.an.frequencyBinCount);
+      M.gain = ac.createGain();
+      src.connect(M.an); M.an.connect(M.gain); M.gain.connect(ac.destination);
+    } catch (e) { M.an = null; M.gain = null; }
+  }
+  musicVol();
+  clearMediaSession();
+}
+/* Keep the game's music off the lock screen and out of system media controls. */
+function clearMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = null;
+    ['play', 'pause', 'nexttrack', 'previoustrack', 'seekto', 'seekbackward', 'seekforward', 'stop'].forEach(a => { try { navigator.mediaSession.setActionHandler(a, null); } catch (e) { /* unsupported action */ } });
+  } catch (e) { /* not supported */ }
+}
+/* Leaving the game (another app, lock screen, another tab) pauses and fully unloads the song,
+   so nothing keeps playing or shows up in system controls. Coming back picks up where it left off. */
+function musicAway() {
+  if (T.el && !T.el.paused) { clearTimeout(T.stopTimer); T.el.pause(); T.away = true; }
+  if (!M.audio || !musicPlaying()) return;
+  M.away = { id: M.cur, t: M.audio.currentTime };
+  M.audio.pause();
+  M.audio.removeAttribute('src'); M.audio.load(); M.loaded = null;
+  clearMediaSession();
+  musicUI();
+}
+function musicBack() {
+  if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(); }
+  const a = M.away; M.away = null;
+  if (!a || !soundOn) return;
+  if (!musicLoad(a.id)) return;
+  M.audio.addEventListener('loadedmetadata', () => { try { M.audio.currentTime = a.t; } catch (e) { /* ignore */ } }, { once: true });
+  const go = () => M.audio.play().then(musicUI).catch(musicUI);
+  if (ac && ac.state === 'suspended') ac.resume().then(go).catch(musicUI); else go();
+}
+document.addEventListener('visibilitychange', () => (document.hidden ? musicAway() : musicBack()));
+window.addEventListener('pagehide', musicAway);
+function musicVol() {
+  const v = M.vol * M.duck;
+  if (M.gain && ac) M.gain.gain.setTargetAtTime(v, ac.currentTime, 0.12);
+  else if (M.audio) M.audio.volume = v;
+}
+function musicDuck(on) { M.duck = on ? (themeReady() ? 0 : 0.3) : 1; if (M.audio) musicVol(); }
+/* Guide Saffron's theme: plays once as she shows up. The Dale-Fi drops out for it, then comes back quietly until she leaves. */
+const T = { el: null, gain: null, stopTimer: null };
+const themeReady = () => soundOn && canPlayAAC();
+function themeStart() {
+  if (!themeReady()) return;
+  ensureAudio();
+  if (!T.el) {
+    const url = trackURL('saffron'); if (!url) return;
+    T.el = new Audio(); T.el.loop = false; T.el.src = url;
+    T.el.addEventListener('ended', () => { if (enc && M.duck === 0) { M.duck = 0.3; if (M.audio) musicVol(); } });
+    if (ac) { try { const src = ac.createMediaElementSource(T.el); T.gain = ac.createGain(); T.gain.gain.value = 0; src.connect(T.gain); T.gain.connect(ac.destination); } catch (e) { T.gain = null; } }
+  }
+  clearTimeout(T.stopTimer);
+  if (ac && ac.state === 'suspended') ac.resume();
+  T.el.currentTime = 0;
+  if (T.gain) { T.gain.gain.cancelScheduledValues(ac.currentTime); T.gain.gain.setValueAtTime(0, ac.currentTime); T.gain.gain.linearRampToValueAtTime(0.9 * M.vol, ac.currentTime + 0.5); }
+  T.el.play().catch(() => {});
+  clearMediaSession();
+}
+function themeStop() {
+  if (!T.el || T.el.paused) return;
+  if (T.gain && ac) { T.gain.gain.cancelScheduledValues(ac.currentTime); T.gain.gain.setValueAtTime(T.gain.gain.value, ac.currentTime); T.gain.gain.linearRampToValueAtTime(0, ac.currentTime + 0.6); }
+  clearTimeout(T.stopTimer);
+  T.stopTimer = setTimeout(() => { T.el.pause(); }, 650);
+}
+const musicPlaying = () => !!(M.audio && !M.audio.paused);
+function musicLoad(id) {
+  ensureAudio();
+  const list = avail();
+  if (!list.includes(id)) id = list[0];
+  M.cur = id; store.set('unpw.cur', id);
+  if (!canPlayAAC()) { toast("This browser can't play the Dale-Fi's songs. The game works fine without them.", '', 4500); return false; }
+  const url = trackURL(id);
+  if (!url) { toast('The music is still arriving. Try again in a few seconds.', '', 3000); return false; }
+  M.audio.src = url;
+  M.loaded = id;
+  clearMediaSession();
+  return true;
+}
+function musicToggle(force) {
+  ensureAudio();
+  if (ac && ac.state === 'suspended') ac.resume();
+  const play = force != null ? force : !musicPlaying();
+  if (play && !soundOn) setSound(true, true);
+  if (play) {
+    if ((M.loaded !== M.cur || !avail().includes(M.cur)) && !musicLoad(M.cur)) return;
+    M.audio.play().catch(() => toast('Tap play again to start the music.', '', 3000));
+  } else M.audio.pause();
+  musicUI();
+}
+function musicStep(d, auto) {
+  const list = avail();
+  const i = Math.max(0, list.indexOf(M.cur));
+  const was = musicPlaying() || auto || d > 0;
+  if (!musicLoad(list[(i + d + list.length) % list.length])) return;
+  if (was) M.audio.play().catch(() => {});
+  musicUI();
+}
+function musicPick(id) {
+  if (id === M.cur && M.loaded === id) return musicToggle();
+  if (!soundOn) setSound(true, true);
+  if (!musicLoad(id)) return;
+  if (ac && ac.state === 'suspended') ac.resume();
+  M.audio.play().catch(() => {});
+  musicUI();
+}
+/* One switch: muting stops the music and the effects; unmuting brings back the song you were playing. */
+function setSound(on, quiet) {
+  soundOn = on; store.set('unpw.sound', on);
+  if (!on) {
+    if (T.el) { clearTimeout(T.stopTimer); T.el.pause(); }
+    M.mutedPlaying = musicPlaying();
+    if (M.mutedPlaying) M.audio.pause();
+  } else {
+    if (!quiet) SND.tap();
+    if (M.mutedPlaying && M.audio && M.loaded) M.audio.play().catch(() => {});
+    M.mutedPlaying = false;
+  }
+  musicUI();
+}
+function musicNudge(d) {
+  M.vol = Math.round(Math.min(1, Math.max(0, M.vol + d)) * 10) / 10;
+  store.set('unpw.vol', M.vol);
+  ensureAudio(); musicVol(); musicUI();
+}
+function eqHTML() {
+  const fresh = inRun() && S.newSong;
+  return `<button type="button" class="iconbtn eq ${musicPlaying() ? 'on' : ''}" data-act="music" aria-label="${fresh ? 'Dale-Fi music player, new song' : 'Dale-Fi music player'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3v11.6a3.4 3.4 0 11-2-3.1V7.3l-8 1.8v7.5a3.4 3.4 0 11-2-3.1V6.6z"/></svg>${fresh ? '<b class="newdot" aria-hidden="true"></b>' : ''}</button>`;
+}
+function musicUI() {
+  document.querySelectorAll('.eq').forEach(b => b.classList.toggle('on', musicPlaying()));
+  if (sheetKind !== 'music') return;
+  const list = avail();
+  const t = TBYID[M.cur] || TBYID[list[0]];
+  const play = $('#mplay'); if (play) { play.setAttribute('aria-label', musicPlaying() ? 'Pause' : 'Play'); play.innerHTML = musicPlaying() ? ICON.pause : ICON.play; }
+  const ti = $('#lcdTitle'); if (ti && ti.dataset.id !== t.id) { ti.dataset.id = t.id; ti.innerHTML = `<span>${t.title} - ${t.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span><span aria-hidden="true">${t.title} - ${t.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span>`; }
+  const no = $('#lcdNo'); if (no) no.textContent = `${String(Math.max(1, list.indexOf(t.id) + 1)).padStart(2, '0')}/${String(list.length).padStart(2, '0')}`;
+  const vo = $('#lcdVol'); if (vo) vo.textContent = `VOL ${Math.round(M.vol * 10)}`;
+  document.querySelectorAll('[data-track]').forEach(r => r.classList.toggle('cur', r.dataset.track === t.id));
+  if (!M.raf) M.raf = requestAnimationFrame(lcdLoop);
+}
+function lcdLoop() {
+  if (sheetKind !== 'music') { M.raf = null; return; }
+  const a = M.audio;
+  const cur = a ? a.currentTime : 0, dur = a && isFinite(a.duration) ? a.duration : 0;
+  const bar = $('#lcdFill'); if (bar) bar.style.width = `${dur ? (cur / dur) * 100 : 0}%`;
+  const tm = $('#lcdTime'); if (tm) tm.textContent = `${mmss(cur)} / ${mmss(dur)}`;
+  const vis = document.querySelectorAll('#lcdBars i');
+  if (vis.length) {
+    if (M.an && musicPlaying()) {
+      M.an.getByteFrequencyData(M.bins);
+      vis.forEach((el, i) => { const v = M.bins[Math.min(M.bins.length - 1, 1 + i * 2)] / 255; el.style.height = `${Math.max(8, v * 100)}%`; });
+    } else vis.forEach(el => { el.style.height = '8%'; });
+  }
+  M.raf = requestAnimationFrame(lcdLoop);
+}
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>',
+  prev: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="6" width="2.4" height="12" rx="1"/><path d="M19 6v12L8.5 12z"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="16.6" y="6" width="2.4" height="12" rx="1"/><path d="M5 6v12l10.5-6z"/></svg>',
+};
+function musicSheet() {
+  ensureAudio();
+  if (inRun()) S.newSong = false;
+  const list = avail();
+  if (!list.includes(M.cur)) M.cur = list[0];
+  const run = inRun();
+  const rows = TRACKS.map((t, i) => list.includes(t.id)
+    ? `<button type="button" class="trk ${t.id === M.cur ? 'cur' : ''}" data-track="${t.id}">
+        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${t.artist}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>`
+    : `<div class="trk locked"><span class="n num">${i + 1}</span><span><span class="tt">Not found yet</span><span class="ta">${run ? t.hint : 'Turns up somewhere on a retreat.'}</span></span>
+        ${run && t.id === 'w2' && PLACES[S.loc].van ? `<button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button>` : ''}</div>`).join('');
+  openSheet(`<div class="grab"></div>
+    <h3 id="sheetTitle">Dale-Fi</h3>
+    <p class="muted">${run ? (list.length === 1 ? "It came preloaded with the retreat's spa track. Dale says there's better stuff out there." : `${list.length} of ${TRACKS.length} songs found this retreat.`) : `Your collection: ${list.length} of ${TRACKS.length} songs.`}</p>
+    <div class="dalefi">
+      <div class="lcd" aria-hidden="true">
+        <div class="lr"><span id="lcdNo">01/01</span><span id="lcdVol"></span><span class="batt"><i></i></span></div>
+        <div class="marq"><div id="lcdTitle" class="mq"></div></div>
+        <div id="lcdBars" class="bars">${'<i></i>'.repeat(12)}</div>
+        <div class="prog" id="lcdProg"><div id="lcdFill"></div></div>
+        <div class="lr"><span id="lcdTime">0:00 / 0:00</span></div>
+      </div>
+      <div class="keys">
+        <button type="button" class="dk sm" data-act="mprev" aria-label="Previous song">${ICON.prev}</button>
+        <button type="button" class="dk big" id="mplay" data-act="mplay" aria-label="Play">${ICON.play}</button>
+        <button type="button" class="dk sm" data-act="mnext" aria-label="Next song">${ICON.next}</button>
+      </div>
+      <div class="rocker" role="group" aria-label="Volume">
+        <button type="button" data-act="mvolup" aria-label="Volume up">+</button>
+        <button type="button" data-act="mvoldn" aria-label="Volume down">-</button>
+      </div>
+      <span class="stamp">DALE-FI 256MB</span>
+    </div>
+    <div class="tracks">${rows}</div>`, 'music');
+  M.raf = null;
+  document.querySelectorAll('.eq .newdot').forEach(d => d.remove());
+  musicUI();
+}
+
+/* ================= rendering ================= */
+function skyFor(h) { let s = SKIES[0]; for (const k of SKIES) if (h >= k[0]) s = k; return s; }
+function render() {
+  const app = $('#app');
+  const listTop = $('.list')?.scrollTop || 0;
+  document.getElementById('loader')?.remove();
+  document.documentElement.style.setProperty('--sky-bottom', screen === 'welcome' ? '#DC9D55' : 'var(--mist)');
+  if (screen === 'welcome') { app.innerHTML = welcomeHTML(); document.documentElement.style.setProperty('--sky-top', '#C9CEDA'); }
+  else if (screen === 'game') {
+    if (S.stats) S.stats.zenMin = Math.min(S.stats.zenMin, S.zen);
+    app.innerHTML = gameHTML();
+    document.documentElement.style.setProperty('--sky-top', skyFor(S.hour)[1]);
+    const l = $('.list'); if (l) l.scrollTop = listTop;
+  } else { app.innerHTML = overHTML(); document.documentElement.style.setProperty('--sky-top', 'var(--fog)'); }
+  saveRun();
+}
+
+const ICONS = {
+  tree: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l4.2 5.2h-2l3.6 4.6h-2.2l4 5.2H13.5V22h-3v-5H4.4l4-5.2H6.2l3.6-4.6h-2z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5c3-1.4 6-1.4 9 .8v13c-3-2.2-6-2.2-9-.8zM21 5.5c-3-1.4-6-1.4-9 .8v13c3-2.2 6-2.2 9-.8z"/></svg>',
+  sprout: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.3 21c-.4-3.4.2-6.4 1.9-9 1.8-2.8 4.6-4.4 8.3-4.8-.3 3.8-1.8 6.6-4.6 8.2-1.7 1-3.4 1.3-5 1.1M10.6 15.6C8.4 15.9 6.4 15.2 5 13.7 3.6 12.2 3 10.2 3.2 7.8c2.4.1 4.4 1 5.8 2.6.9 1 1.4 2.3 1.6 3.7"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.2 2h3.6l.5 2.6 1.9.8 2.2-1.5 2.5 2.5-1.5 2.2.8 1.9 2.6.5v3.6l-2.6.5-.8 1.9 1.5 2.2-2.5 2.5-2.2-1.5-1.9.8-.5 2.6h-3.6l-.5-2.6-1.9-.8-2.2 1.5-2.5-2.5 1.5-2.2-.8-1.9L2 13.8v-3.6l2.6-.5.8-1.9-1.5-2.2 2.5-2.5 2.2 1.5 1.9-.8zM12 8.6a3.4 3.4 0 100 6.8 3.4 3.4 0 000-6.8z"/></svg>',
+};
+function welcomeHTML() {
+  const r = savedRun();
+  return `<div class="welcome">
+    <div class="wtop">${eqHTML()}</div>
+    <button type="button" class="logo-big" data-egg="1" aria-label="unplugged"></button>
+    <span class="tagline" role="img" aria-label="a wellness retreat gone offline"></span>
+    <div class="wbtns">
+      ${r ? `<button type="button" class="btn" data-act="continue">${ICONS.book}Continue day ${r.day}</button>` : ''}
+      <button type="button" class="btn primary" data-act="begin">${ICONS.tree}Begin Retreat</button>
+      <div class="pair">
+        <button type="button" class="btn" data-act="handbook">${ICONS.sprout}Handbook</button>
+        <button type="button" class="btn" data-act="options">${ICONS.gear}Options</button>
+      </div>
+    </div>
+    <img class="lineup" src="${IMG.lineup}" alt="Dale leaning on his van with a coffee, Guide Saffron with her clipboard, and four silent volunteers">
+  </div>`;
+}
+function optionsSheet() {
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">Options</h3>
+    <div class="sheet-actions">
+      <button type="button" class="btn soft" data-act="how">How it works</button>
+      <button type="button" class="btn soft" data-act="scores">Guestbook</button>
+      <button type="button" class="btn soft" data-act="music">Dale-Fi music player</button>
+      <button type="button" class="btn soft" data-act="soundopt">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
+    </div>
+    <p class="muted" style="margin-top:16px">After Drug Wars by John E. Dell, 1984. Music by TORiTiA.</p>`, 'options');
+}
+
+function gameHTML() {
+  const P = PLACES[S.loc];
+  const sk = skyFor(S.hour);
+  const zcol = S.zen > 50 ? 'var(--sea)' : S.zen > 25 ? 'var(--poppy)' : 'var(--urchin)';
+  const C = 2 * Math.PI * 21;
+  const vis = ITEMS.filter(it => S.prices[it.id] || S.inv[it.id] > 0);
+  let anyHot = false, anyCalm = false;
+  const rows = vis.map(it => {
+    const p = S.prices[it.id], have = S.inv[it.id];
+    const cls = !p ? '' : p > it.max ? 'hot' : p < it.min ? 'calm' : '';
+    if (cls === 'hot') anyHot = true; if (cls === 'calm') anyCalm = true;
+    const note = cls === 'hot' ? '<span class="sr">, in demand</span>' : cls === 'calm' ? '<span class="sr">, abundant</span>' : !p ? '<span class="sr">, not traded here</span>' : '';
+    return `<button type="button" class="row ${p ? '' : 'na'}" data-item="${it.id}">
+      <span class="nm"><img class="ico" src="${itemIcon(it.id)}" alt="">${it.name}</span><span class="hv num">${have ? `${have} held` : ''}</span>
+      <span class="pr num ${cls}">${p ? fmt(p) : '—'}${note}</span></button>`;
+  }).join('');
+  const last = S.day >= S.days;
+  const anyReach = PLACES.some((_, i) => canReach(i));
+  return `
+  <header class="hero" style="--tint:${sk[2]};--h-ink:${sk[3]}">
+    <div class="topbar">
+      <button type="button" class="mark" data-egg="1" aria-label="unplugged"><span class="logo-mark"></span></button>
+      <span class="spacer"></span>
+      ${eqHTML()}
+      <button type="button" class="iconbtn" data-act="menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div class="placeline"><h1>${P.name}</h1><span class="clock num">Day ${S.day} of ${S.days}, ${clock(S.hour)}</span></div>
+    <p class="flavor">${S.flavor}</p>
+  </header>
+  <section class="stats" aria-label="Your situation">
+    <div class="zen" role="img" aria-label="Zen ${S.zen} of 100">
+      <svg viewBox="0 0 52 52" aria-hidden="true"><circle class="trk" cx="26" cy="26" r="21"/><circle class="val" cx="26" cy="26" r="21" transform="rotate(-90 26 26)" style="stroke:${zcol};stroke-dasharray:${C};stroke-dashoffset:${C * (1 - S.zen / 100)}"/></svg>
+      <b class="num" aria-hidden="true">${S.zen}</b>
+    </div>
+    <div class="stat"><div class="k">On you</div><div class="v num">${short(S.cash)}</div><div class="x num">${S.van ? `${short(S.van)} in van` : '&nbsp;'}</div></div>
+    <div class="stat"><div class="k">Cushion</div><div class="v num">${used()}/${S.cap}</div><div class="x">${S.decoys ? plural(S.decoys, 'decoy', 'decoys') : '&nbsp;'}</div></div>
+    <div class="stat"><div class="k">Owed to Dale</div><div class="v num dale">${short(S.debt)}</div><div class="x dale">${S.debt ? `+${pct(S.rate)} an hour` : 'Square'}</div></div>
+  </section>
+  <main class="list">
+    ${rows || '<p class="empty">No one is trading here right now.</p>'}
+    ${anyHot || anyCalm ? `<p class="legend">${anyHot ? '<span><i style="background:var(--poppy)"></i>In demand</span>' : ''}${anyCalm ? '<span><i style="background:var(--sea)"></i>Abundant</span>' : ''}</p>` : ''}
+  </main>
+  <nav class="bar" aria-label="Actions">
+    <button type="button" class="btn primary" data-act="journey" ${anyReach ? '' : 'disabled'}>${anyReach ? 'Journey' : 'Quiet hours'}</button>
+    ${last ? `<button type="button" class="btn quiet" data-act="checkout">Check out</button>`
+      : `<button type="button" class="btn quiet" data-act="rest">Rest</button>`}
+    ${P.van ? `<button type="button" class="btn soft" data-act="van">Dale's van</button>` : ''}
+  </nav>`;
+}
+
+function overHTML() {
+  const n = netWorth();
+  const zen = S.reason === 'zen';
+  const head = zen ? 'You snapped.' : 'Your retreat is complete.';
+  const lede = zen
+    ? `On day ${S.day} you broke Noble Silence, screamed at a volunteer, and left to start a podcast about it.`
+    : used() > 0 ? 'The front desk confiscated what was left in your cushion. Nonattachment.' : 'You leave with an empty cushion and a full heart.';
+  return `<div class="over">
+    <h1>${head}</h1>
+    <p class="lede">${lede}</p>
+    <div class="ledger">
+      <span>On you</span><span class="v num">${fmt(S.cash)}</span>
+      <span>In the glovebox</span><span class="v num">${fmt(S.van)}</span>
+      <span>Owed to Dale</span><span class="v num dale">${fmt(-S.debt)}</span>
+      <span><b>Net worth</b></span><span class="v num"><b>${fmt(n)}</b></span>
+    </div>
+    <p class="take">${rankFor(n, S.reason)}</p>
+    <button type="button" class="btn primary reportbtn" data-act="report">${ICONS.sprout}Get your report card</button>
+    ${S.saved ? '' : `<div class="sign">
+      <input id="signname" maxlength="14" autocomplete="off" placeholder="Your name" aria-label="Your name for the guestbook">
+      <button type="button" class="btn primary" data-act="sign">Sign the guestbook</button></div>`}
+    <h2>${S.modeName}, guestbook</h2>
+    ${boardHTML(S.mode)}
+    <div class="stack" style="width:100%">
+      <button type="button" class="btn" data-act="begin">Begin another retreat</button>
+      <button type="button" class="btn quiet" data-act="welcome">Back to the welcome screen</button>
+    </div>
+  </div>`;
+}
+
+/* ================= report card ================= */
+/* A shareable report card from the retreat: six ironic grades, a yearbook superlative,
+   and comments from a randomly chosen staff member. Drawn on a canvas so it saves as an image. */
+function newStats() {
+  return { bought: 0, sold: 0, profit: 0, best: null, tech: 0, coke: 0, conf: {}, confUnits: 0, confValue: 0, handed: 0, handedValue: 0,
+    donated: 0, checkins: 0, escapes: 0, failedRuns: 0, decoyWins: 0, raided: 0, found: 0, borrowed: 0, paidDay: null,
+    peakDebt: START_DEBT, walks: 0, hours: 0, visits: {}, rests: 0, zenMin: 100, lateNights: 0 };
+}
+const ST = () => (S.stats || (S.stats = newStats()));
+const TECH = ['burner', 'charger', 'wifi'];
+const pluralN = (n, it) => `${n} ${nameOf(it, n)}`;
+function topConfiscated() {
+  const e = Object.entries(ST().conf).sort((a, b) => b[1] - a[1])[0];
+  return e ? { it: BYID[e[0]], q: e[1] } : null;
+}
+function rankIndex() {
+  if (S.reason === 'zen') return -1;
+  const md = MODES.find(m => m.id === S.mode) || MODES[2], n = netWorth();
+  let i = 0; md.ranks.forEach((min, k) => { if (n >= min) i = k + 1; });
+  return i;
+}
+function grades() {
+  const st = ST(), n = netWorth(), ri0 = rankIndex(), top = topConfiscated();
+  const G = (g, c) => ({ g, c });
+  const commerce = ri0 < 0 ? G('Inc', `Withdrew early holding ${fmt(n)}.`)
+    : [G('F', `Finished ${fmt(-n)} in the hole.`), G('D', 'Broke, but centered.'), G('C', `Cleared ${fmt(n)}. A side hustle.`),
+       G('B', `Cleared ${fmt(n)}. Bought a yurt.`), G('A', `Cleared ${fmt(n)}. Eyeing a second yurt.`), G('A+', `Cleared ${fmt(n)}. Should run this place.`)][ri0];
+  const cu = st.confUnits;
+  const nonattach = !cu ? G('F', 'Let go of nothing. Not one thing.')
+    : cu < 10 ? G('C', `Released ${pluralN(top.q, top.it)} to Guide Saffron.`)
+    : cu < 40 ? G('B', `Released ${pluralN(top.q, top.it)} to Guide Saffron. Growth.`)
+    : G('A+', `Released ${cu} items to Guide Saffron. Fully unattached.`);
+  const silence = !st.checkins ? G('A', 'Never once checked in. Suspicious.')
+    : st.escapes >= 3 ? G('F', `Ran from Guide Saffron ${st.escapes} times.`)
+    : st.escapes ? G('C', `Ran from Guide Saffron ${st.escapes === 1 ? 'once' : 'twice'}.`)
+    : G('B', `Checked in ${st.checkins === 1 ? 'once' : st.checkins === 2 ? 'twice' : `${st.checkins} times`}. Talked it out.`);
+  const z = st.zenMin;
+  const peace = S.reason === 'zen' ? G('F', 'Screamed during Noble Silence.')
+    : z >= 85 ? G('A', 'Barely rattled.') : z >= 65 ? G('B', `Zen dipped to ${z}. Breathed through it.`)
+    : z >= 45 ? G('C', `Zen dipped to ${z}.`) : z >= 25 ? G('D', `Zen bottomed out at ${z}.`) : G('F', `Zen hit ${z}. Held together with tape.`);
+  const money = S.debt > 0 && st.paidDay == null ? G('F', `Still owes Dale ${fmt(S.debt)}.`)
+    : st.paidDay === 1 ? G('A+', `Square with Dale on day one.${st.borrowed ? ' Then borrowed more.' : ''}`)
+    : st.paidDay === 2 ? G('A', `Square with Dale by day two.${st.borrowed ? ' Then borrowed more.' : ''}`)
+    : st.paidDay ? G('B', `Took until day ${st.paidDay} to pay Dale.`) : G('C', 'Square with Dale, somehow.');
+  const t = st.tech;
+  const detox = !t ? G('A+', "Didn't touch a single device. Respect.")
+    : t < 20 ? G('C', `Moved ${t === 1 ? 'one piece' : `${t} pieces`} of tech.`) : t < 100 ? G('D', `Moved ${t} phones, chargers and passwords.`)
+    : G('F', `Personally put ${t} devices back into circulation.`);
+  return [['Commerce', commerce], ['Nonattachment', nonattach], ['Noble Silence', silence], ['Inner Peace', peace], ['Financial Wellness', money], ['Digital Detox', detox]];
+}
+function superlative() {
+  const st = ST(), ri0 = rankIndex();
+  if (S.reason === 'zen') return 'Withdrew early to start a podcast';
+  if (ri0 === 5) return 'Should probably be running this place';
+  if (st.tech >= 150) return 'Least unplugged guest in retreat history';
+  if (st.confUnits >= 40) return "Guide Saffron's favorite donor";
+  if (st.escapes >= 3) return 'Fastest walking meditation on record';
+  if (netWorth() < 0) return "Dale's favorite liability";
+  if (st.lateNights >= 5) return 'Most likely to be in the parking lot at 9pm';
+  if (st.coke >= 50) return 'Kept the labyrinth hydrated';
+  if (st.donated >= 500) return 'Funded a scholarship that does not exist';
+  return 'Attended';
+}
+const shuffle = a => a.map(v => [Math.random(), v]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+/* Staff comments: the most specific lines about your run come first; generic ones only fill gaps. */
+function chooseLines(specific, generic) {
+  const out = specific.length ? [specific[0], ...shuffle(specific.slice(1, 4)).slice(0, 1)] : [];
+  const g = shuffle(generic);
+  while (out.length < 2 && g.length) out.push(g.shift());
+  return out;
+}
+function staffComments(who) {
+  const st = ST(), top = topConfiscated(), lot = st.visits[VAN_IX] || 0;
+  const keep = arr => arr.filter(Boolean);
+  if (who.kind === 'dale') {
+    return chooseLines(keep([
+      S.debt > 0 ? `Still owes me ${fmt(S.debt)}. I know which yurt.` : null,
+      st.borrowed ? `Borrowed another ${fmt(st.borrowed)} off me. Bold. I respect bold.` : null,
+      st.paidDay ? `Paid me back on day ${st.paidDay}. Didn't tip.` : null,
+      lot >= 5 ? `Came up to the van ${lot} times. I'm not a therapist.` : null,
+      st.tech >= 50 ? `Moved ${st.tech} phones and chargers. Didn't learn that from me.` : null,
+      hasSong('w2') ? 'Bought my CD. Finally, someone who gets it.' : null,
+    ]), ['Asked me for the wifi password. I live in a van.', hasSong('w2') ? 'Good taste in music. Bad taste in everything else.' : 'Never bought my CD. Their loss.'])
+      .map(l => `“${l}”`);
+  }
+  if (who.kind === 'saffron') {
+    return chooseLines(keep([
+      S.reason === 'zen' ? "Screamed during Noble Silence. I'm choosing to hear it as a breakthrough." : null,
+      st.donated ? `Gave ${fmt(st.donated)} to the scholarship fund. There is no scholarship fund.` : null,
+      top ? `I'm holding ${pluralN(top.q, top.it)} for them. Forever.` : null,
+      st.escapes ? `They ran from me ${st.escapes === 1 ? 'once' : `${st.escapes} times`}. Running is also a feeling.` : null,
+      !st.checkins ? 'I never once caught them. That worries me more.' : null,
+      st.decoyWins ? 'Their decoy had a breakthrough on my shift. It was beautiful. It was a setup.' : null,
+      st.zenMin < 40 && S.reason !== 'zen' ? `Their zen bottomed out at ${st.zenMin}. I offered a hug. They declined.` : null,
+      st.lateNights >= 3 ? 'Very present. Mostly in the parking lot. At night.' : null,
+    ]), ['Such a beautiful energy. Please never come back.', 'I see them. I see all of them.'])
+      .map(l => `“${l}”`);
+  }
+  const g = grades()[0][1].g;
+  return chooseLines(keep([
+    st.coke ? `[gestures at ${st.coke} empty Diet Kola cans]` : null,
+    st.escapes ? '[mimes running. sighs.]' : null,
+    st.decoyWins ? '[still emotionally recovering from your decoy]' : null,
+    lot >= 3 ? '[points at the parking lot, then at you, then at the parking lot]' : null,
+    st.tech >= 50 ? '[silently confiscates your phone, then remembers it is not yours]' : null,
+    S.reason === 'zen' ? '[covers ears, remembering the scream]' : null,
+  ]), ['[nods slowly]', '[holds eye contact for the entire report]', `[writes “${g}” on a leaf and walks away]`, '[hands you a pamphlet titled “Letting Go”]', '[bows. keeps bowing.]']);
+}
+let cardWho = null, cardCanvas = null;
+function pickWho(prev) {
+  const all = [{ kind: 'dale' }, { kind: 'saffron' }, ...['vol1', 'vol2', 'vol3', 'vol4'].map(v => ({ kind: 'vol', vol: v }))];
+  const pool = all.filter(w => !prev || w.kind !== prev.kind);
+  const weighted = pool.flatMap(w => (w.kind === 'vol' ? [w] : [w, w, w]));
+  return pick(weighted);
+}
+function whoInfo(who) {
+  const st = ST();
+  if (who.kind === 'dale') return { label: 'Dale, shuttle driver', face: S.debt === 0 ? IMG.daleCash : S.debt > 2 * START_DEBT ? IMG.daleMad : IMG.daleCalm };
+  if (who.kind === 'saffron') {
+    const f = S.reason === 'zen' ? 'saffronShock' : (st.donated || st.handed) ? 'saffronJoy' : st.escapes >= 2 ? 'saffronSide' : !st.checkins ? 'saffronPuzzled' : 'saffronCalm';
+    return { label: 'Guide Saffron', face: IMG[f] };
+  }
+  return { label: 'a silent volunteer', face: IMG[who.vol] };
+}
+const cardName = () => (S.signedName || ($('#signname')?.value || '').trim().slice(0, 14) || 'A guest');
+function cardSummary(lines) {
+  return `My unplugged report card: ${S.modeName}. ${rankFor(netWorth(), S.reason)}, ${fmt(netWorth())}. Voted “${superlative()}.” ${lines[0] || ''}`.trim();
+}
+async function drawCard(who) {
+  const W = 1080, H = 1350, HAND = '"Playpen Sans", "Chalkboard SE", "Comic Sans MS", sans-serif', BODY = 'Figtree, system-ui, -apple-system, sans-serif';
+  const INK = '#22382B', INK2 = '#56695B', PAPER = '#F6E9D2', CARD = '#FFF9EF', RUST = '#A3472A';
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d');
+  try { await Promise.all([`700 60px ${HAND}`, `600 30px ${HAND}`, `400 26px ${BODY}`, `600 26px ${BODY}`].map(f => document.fonts.load(f))); } catch (e) { /* fall back to system fonts */ }
+  const load = src => new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+  const info = whoInfo(who);
+  const [hdr, logo, face] = await Promise.all([load(IMG.header), load(IMG.logo), load(info.face)]);
+  const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
+  const wrap = (text, X, Y, maxW, lh, maxLines) => {
+    const words = text.split(' '); let line = '', lines = [];
+    for (const w of words) { const t = line ? `${line} ${w}` : w; if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) { lines = lines.slice(0, maxLines); lines[maxLines - 1] = lines[maxLines - 1].replace(/\s+\S*$/, '') + '…'; }
+    lines.forEach((l, i) => x.fillText(l, X, Y + i * lh));
+    return lines.length * lh;
+  };
+  x.fillStyle = PAPER; x.fillRect(0, 0, W, H);
+  // header art with the logo in forest green
+  const bandH = 250;
+  if (hdr) { const s = Math.max(W / hdr.width, bandH / hdr.height), dw = hdr.width * s, dh = hdr.height * s; x.save(); x.beginPath(); x.rect(0, 0, W, bandH); x.clip(); x.drawImage(hdr, (W - dw) / 2, (bandH - dh) * 0.6, dw, dh); x.restore(); }
+  if (logo) {
+    const lw = 330, lh = lw * logo.height / logo.width, o = document.createElement('canvas'); o.width = lw; o.height = lh;
+    const oc = o.getContext('2d'); oc.drawImage(logo, 0, 0, lw, lh); oc.globalCompositeOperation = 'source-in'; oc.fillStyle = INK; oc.fillRect(0, 0, lw, lh);
+    x.drawImage(o, 54, 34);
+  }
+  // rubber stamp
+  x.save(); x.translate(W - 200, 150); x.rotate(-0.2); x.globalAlpha = 0.9;
+  x.strokeStyle = RUST; x.lineWidth = 7; rr(-150, -58, 300, 116, 20); x.stroke();
+  x.fillStyle = RUST; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = `700 40px ${HAND}`; x.fillText(S.reason === 'zen' ? 'WITHDRAWN' : 'COMPLETED', 0, -12);
+  x.font = `600 22px ${HAND}`; x.fillText(S.modeName.toUpperCase().replace(/^THE |^A /, ''), 0, 30);
+  x.restore();
+  // title block
+  x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  let y = bandH + 74;
+  x.fillStyle = INK; x.font = `700 62px ${HAND}`; x.fillText('Report card', 54, y);
+  y += 46; x.font = `500 27px ${BODY}`; x.fillStyle = INK2;
+  x.fillText(`Guest: ${cardName()}`, 56, y);
+  x.textAlign = 'right'; x.fillText(`Program: ${S.modeName}`, W - 56, y); x.textAlign = 'left';
+  y += 50; x.fillStyle = '#B4602A'; x.font = `600 32px ${HAND}`;
+  wrap(`Voted: ${superlative()}`, 56, y, W - 112, 36, 1);
+  // grades
+  y += 26;
+  const rowH = 88;
+  const color = g => (g.startsWith('A') ? '#4F7A4B' : g === 'B' ? '#6E8B66' : g === 'C' ? '#D08A2E' : g === 'D' ? '#C0622E' : g === 'Inc' ? '#8A7E6E' : RUST);
+  for (const [subj, { g, c }] of grades()) {
+    x.strokeStyle = 'rgba(34,56,43,.18)'; x.lineWidth = 2; x.beginPath(); x.moveTo(56, y); x.lineTo(W - 56, y); x.stroke();
+    x.fillStyle = color(g); x.beginPath(); x.arc(56 + 36, y + rowH / 2, 34, 0, Math.PI * 2); x.fill();
+    x.fillStyle = CARD; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `700 ${g.length > 2 ? 24 : g.length > 1 ? 32 : 38}px ${HAND}`;
+    x.fillText(g, 56 + 36, y + rowH / 2 + 2);
+    x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+    x.fillStyle = INK; x.font = `600 31px ${HAND}`; x.fillText(subj, 150, y + 38);
+    x.fillStyle = INK2; x.font = `400 25px ${BODY}`; wrap(c, 150, y + 72, W - 150 - 56, 28, 1);
+    y += rowH;
+  }
+  // comments box with the staff member's portrait
+  y += 16;
+  const bx = 40, bw = W - 80, bh = H - y - 104;
+  x.fillStyle = CARD; rr(bx, y, bw, bh, 26); x.fill(); x.strokeStyle = INK; x.lineWidth = 5; x.stroke();
+  let fw = 0;
+  if (face) {
+    const fh = Math.min(bh - 16, 250); fw = face.width * fh / face.height;
+    x.save(); rr(bx, y, bw, bh, 26); x.clip(); x.drawImage(face, bx + 18, y + bh - fh - 4, fw, fh); x.restore();
+  }
+  const tx = bx + 18 + fw + 22, tw = bx + bw - 28 - tx;
+  x.fillStyle = INK; x.font = `600 29px ${HAND}`; let ty = y + 50; ty += wrap(`Comments from ${info.label}`, tx, ty, tw, 34, 1) + 8;
+  x.fillStyle = INK; x.font = `400 28px ${BODY}`;
+  for (const l of who.lines) ty += wrap(l, tx, ty, tw, 34, 3) + 12;
+  // footer
+  const n = netWorth();
+  x.fillStyle = INK; x.font = `700 36px ${HAND}`; x.fillText(`Takeaway: ${rankFor(n, S.reason)}`, 56, H - 46);
+  x.textAlign = 'right'; x.fillText(fmt(n), W - 56, H - 46); x.textAlign = 'left';
+  return cv;
+}
+async function reportSheet(reroll) {
+  if (!S) return;
+  if (!cardWho || reroll) { const w = pickWho(cardWho); w.lines = staffComments(w); cardWho = w; }
+  const share = !!(navigator.share || navigator.clipboard);
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">Your report card</h3>
+    <div class="cardwrap"><p class="muted">The staff are grading your retreat…</p></div>
+    <p class="muted" style="text-align:center;margin-top:6px">Long-press the card to save it.</p>
+    <div class="sheet-actions two">
+      <button type="button" class="btn soft" data-act="reroll">Ask someone else</button>
+      ${share ? '<button type="button" class="btn primary" data-act="sharecard">Share</button>' : ''}
+    </div>`, 'report');
+  const who = cardWho;
+  cardCanvas = await drawCard(who);
+  const wrap = $('#sheet .cardwrap');
+  if (!wrap || cardWho !== who) return;
+  const alt = `Report card. ${grades().map(([s, v]) => `${s}: ${v.g}, ${v.c}`).join(' ')} Comments from ${whoInfo(who).label}: ${who.lines.join(' ')}`;
+  wrap.innerHTML = `<img src="${cardCanvas.toDataURL('image/png')}" alt="${esc(alt)}">`;
+}
+async function shareCard() {
+  if (!cardCanvas || !cardWho) return;
+  const text = cardSummary(cardWho.lines);
+  try {
+    const blob = await new Promise(r => cardCanvas.toBlob(r, 'image/png'));
+    const file = blob && new File([blob], 'unplugged-report-card.png', { type: 'image/png' });
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+    if (navigator.share) { await navigator.share({ text }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); toast('Copied a summary. Long-press the card to save the picture.', 'good', 4500); }
+  catch (e) { toast('Long-press the card to save it, then share it anywhere.', '', 4500); }
+}
+
+/* ================= sheets & toasts ================= */
+function openSheet(html, kind, tone, dismissible = true) {
+  const scrim = $('#scrim'), sh = $('#sheet');
+  const fresh = scrim.hidden;
+  sh.className = tone || '';
+  scrim.className = tone || '';
+  sh.dataset.dismiss = dismissible ? '1' : '';
+  sh.innerHTML = (dismissible ? '<button type="button" class="xbtn" data-act="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + html;
+  sheetKind = kind;
+  scrim.hidden = false;
+  $('#toasts').classList.add('top');
+  if (fresh) { sh.style.animation = 'none'; void sh.offsetHeight; sh.style.animation = ''; }
+  const f = sh.querySelector('.btn.primary:not(:disabled)') || sh.querySelector('.btn:not(:disabled), .pick, .node:not(:disabled)') || sh.querySelector('button:not(:disabled)');
+  if (f) f.focus({ preventScroll: true });
+}
+function closeSheet(silent) {
+  const scrim = $('#scrim');
+  const was = !scrim.hidden;
+  if (sheetKind === 'van') daleCounting = false;
+  scrim.hidden = true; scrim.className = ''; $('#sheet').innerHTML = ''; sheetKind = null;
+  $('#toasts').classList.remove('top');
+  if (silent) return;
+  render();
+  if (was) runQueue();
+}
+function runQueue() {
+  if (!$('#scrim').hidden || !$('#dos').hidden) return;
+  const f = queue.shift();
+  if (f) f();
+}
+let heldToasts = [];
+function toast(text, tone = '', ms = 3500, face, icon) {
+  if (enc && sheetKind === 'enc') { heldToasts.push([text, tone, ms, face, icon]); return; }
+  const box = $('#toasts');
+  const el = document.createElement('button');
+  el.type = 'button'; el.className = `toast ${tone}`;
+  el.innerHTML = `${face ? `<img class="tface" src="${face}" alt="">` : icon ? `<img class="ticon" src="${icon}" alt="">` : '<i aria-hidden="true"></i>'}<span>${text}</span>`;
+  if (face || icon) el.classList.add('withface');
+  el.addEventListener('click', () => el.remove());
+  box.prepend(el);
+  while (box.children.length > 2) box.lastElementChild.remove();
+  setTimeout(() => el.remove(), ms);
+}
+function offerSheet(title, text, yes, onYes) {
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">${title}</h3><p>${text}</p>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="offeryes">${yes}</button>
+    <button type="button" class="btn quiet" data-act="close">Not now</button></div>`, 'offer');
+  offerYes = onYes;
+}
+let offerYes = null;
+
+function journeySheet() {
+  if (!S || S.over) return;
+  const trails = [[0, 1], [0, 3], [0, 4], [1, 3], [1, 4], [2, 3], [4, 5], [0, 2], [1, 5]];
+  const lines = trails.map(([a, b]) => `<line class="trail" x1="${PLACES[a].x}" y1="${PLACES[a].y}" x2="${PLACES[b].x}" y2="${PLACES[b].y}"/>`).join('');
+  const nodes = PLACES.map((p, i) => {
+    const here = i === S.loc, ok = canReach(i), h = HOURS[S.loc][i];
+    const eta = here ? 'You are here' : ok ? `${plural(h, 'hour', 'hours')}, ${clock(S.hour + h)}` : 'After quiet hours';
+    return `<button type="button" class="node ${here ? 'here' : ''} ${p.van ? 'van' : ''}" style="left:${p.x}%;top:${p.y}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
+      <span class="dot"></span><span class="lbl">${p.name}</span><span class="eta">${eta}</span></button>`;
+  }).join('');
+  openSheet(`<div class="grab"></div>
+    <h3 id="sheetTitle">Where to?</h3>
+    <p class="muted">It's ${clock(S.hour)}. Quiet hours start at ${clock(LIGHTS)}, and Dale's meter runs while you walk.</p>
+    <div class="map">
+      <svg viewBox="0 0 100 104" preserveAspectRatio="none" aria-hidden="true">
+        <path class="ocean" d="M100 22 C 86 44, 92 66, 74 84 S 60 104, 52 104 L 100 104 Z"/>
+        ${lines}
+      </svg>
+      ${nodes}
+    </div>
+    <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Stay here</button></div>`, 'journey');
+}
+function checkoutSheet() {
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">Check out?</h3>
+    <p class="muted">Your score is cash on you plus the glovebox, minus what you owe Dale. Anything still in your cushion gets confiscated at the gate.</p>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="checkoutgo">Check out</button>
+    <button type="button" class="btn quiet" data-act="close">Keep going</button></div>`, 'checkout');
+}
+function modeSheet() {
+  const last = store.get('unpw.mode', 'week');
+  const r = savedRun();
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">How long is your retreat?</h3>
+    <p class="muted">Dale charges less per hour on longer stays, so the squeeze feels the same.${r ? ' Starting a new one replaces your saved retreat.' : ''}</p>
+    <div class="picklist">${MODES.map((m, i) => `<button type="button" class="pick ${m.id === last ? 'last' : ''}" data-mode="${i}">
+      <span class="t">${m.name}</span><span class="d">${m.days} days. Dale charges ${pct(m.rate)} an hour.${m.extra}</span></button>`).join('')}</div>
+    <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Not yet</button></div>`, 'mode');
+  const el = $(`#sheet [data-mode="${Math.max(0, MODES.findIndex(m => m.id === last))}"]`); if (el) el.focus({ preventScroll: true });
+}
+function handbookSheet() {
+  const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}</summary><div class="hbb">${body}</div></details>`;
+  const goods = ITEMS.map(it => `<tr><td>${it.name}</td><td class="num">${fmt(it.min)} to ${fmt(it.max)}</td></tr>`).join('');
+  const lengths = MODES.map(m => `<tr><td>${m.name}</td><td class="num">${m.days}</td><td class="num">${pct(m.rate)}</td></tr>`).join('');
+  const kk = n => n >= 1e6 ? `$${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${+(n / 1e3).toFixed(0)}k` : `$${n}`;
+  const ranks = RANKS.map(([, name], i) => `<tr><td>${name}</td>${i === 0 ? `<td class="num" colspan="${MODES.length}">below $0 at any length</td>` : MODES.map(m => `<td class="num">${kk(m.ranks[i - 1])}</td>`).join('')}</tr>`).join('');
+  const body = [
+    sec('The goal', `
+      <p>You're a guest at a silent digital detox in Big Sur. The brochure bans phones, wifi, sugar and snacks. You sell them anyway.</p>
+      <p>You start at Yurt Village at 7am on day one with ${fmt(START_CASH)} on you, an empty meditation cushion that holds ${START_CAP} things, full zen, and a ${fmt(START_DEBT)} debt to Dale the shuttle driver.</p>
+      <p>When the retreat ends, your score is the cash on you plus whatever is in Dale's glovebox, minus what you still owe him. Anything still in your cushion at checkout gets confiscated, so let go of everything before you leave.</p>`, true),
+    sec('Reading the screen', `
+      <p>The sky shows the time of day. The sun crosses it between 7am and quiet hours. Under it are where you are, the day and hour, and a line about what's going on.</p>
+      <p>The ring is your zen. <b>On you</b> is the cash you're carrying, with your glovebox balance underneath once you have one. <b>Cushion</b> is how much you're holding out of how much you can hold, plus your decoys if you've hired any. <b>Owed to Dale</b> is your debt and how fast it grows.</p>
+      <p>The list shows what's for sale where you are. A price in an orange pill is in demand, above its usual range. A price in a green pill is abundant, below it. Goods you're holding that nobody here is trading show a dash instead of a price.</p>
+      <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened.</p>`),
+    sec('Time and walking', `
+      <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes and when you'd arrive. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
+      <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
+      <p>Tap <b>Rest</b> whenever you want to end the day. You sleep where you are and wake at 7am with up to 10 zen back, and the market where you slept sets new prices.</p>
+      <p>Dale's meter runs every hour, while you walk and while you sleep.</p>`),
+    sec('Buying and selling', `
+      <p>Tap any item to trade it. <b>Receive</b> buys and <b>Let go</b> sells. Drag the slider or tap One, Half or All, then confirm. The sheet shows what you paid on average and how much you'd gain or lose by selling.</p>
+      <p>Prices change every time you arrive somewhere and every morning. Most goods are on offer at any spot, but rarely all of them.</p>
+      <p>About a third of the time you arrive, gossip hits: one item spikes to two to three and a half times its price, or crashes to between a half and a quarter of it. The notification tells you which.</p>
+      <p>Every spot also runs steadily cheap or pricey on certain goods. The kitchen has the staff espresso machine. Tech comes in through Dale's van. The deeper into the retreat you go, the more tech is worth. Working out the rest is the game.</p>
+      <table class="hbt"><thead><tr><th>Goods, most to least valuable</th><th class="num">Usual price</th></tr></thead><tbody>${goods}</tbody></table>`),
+    sec("Dale and his van", `
+      <img class="hbimg" src="${IMG.daleCalm}" alt="Dale">
+      <p>You start out owing Dale ${fmt(START_DEBT)}. His meter compounds every hour, day and night, at a rate set by the length of your retreat.</p>
+      <p>His van is in the Parking Lot. Tap <b>Dale's van</b> there to:</p>
+      <ul>
+        <li><b>Pay Dale</b> as much as you have, up to what you owe.</li>
+        <li><b>Borrow</b> more, up to ${fmt(MAXDEBT)} owed in total.</li>
+        <li><b>Stash</b> cash in the glovebox, or <b>Take out</b> what's there.</li>
+      </ul>
+      <p>The glovebox doesn't earn anything, but cash in it can't go missing. Cash on you can.</p>
+      <p>Once you owe more than ${fmt(2 * START_DEBT)} and you're a fifth of the way through your retreat, Dale starts leaving notes on your yurt. Each one costs you zen.</p>`),
+    sec('Guide Saffron', `
+      <img class="hbimg" src="${IMG.saffronCalm}" alt="Guide Saffron">
+      <p>You'll know she's here. She has her own theme music.</p>
+      <p>She only comes for you when you're carrying something, and she can sense what it's worth. The more valuable your cushion, the fuller it is and the later in the retreat, the more likely she shows up after a walk. A cushion of burner phones draws her about twice as often as a cushion of espresso. Valuable cushions and late days also bring more silent volunteers, up to four.</p>
+      <p>Every round she's still with you, she confiscates 12 to 25 percent of your most valuable goods, plus 2 percent more for each volunteer. She costs you 1 to 3 zen herself, and each volunteer may cost you 3 to 8 more. The check-in screen shows exactly what each attempt cost you, a running total, and what every option will cost before you pick it. Your choices:</p>
+      <ul>
+        <li><b>Slip away.</b> A gamble, and the button shows your odds. They drop with every volunteer and with every bit of weight in your cushion, from about three in five at best to about one in seven at worst. If it fails, she takes her cut and you choose again.</li>
+        <li><b>Send in your decoys</b>, if you've hired any. Each one has an even chance of pulling one person off you. Clear them all and you find a dropped fanny pack worth $100 to $400 per person. If any are left, she takes her cut.</li>
+        <li><b>Hand over a third of your most valuable goods.</b> She leaves for sure, and honestly it feels kind of good: 4 zen back.</li>
+        <li><b>Donate 15 percent of your cash</b>, at least $50, to the scholarship fund. She leaves for sure.</li>
+      </ul>
+      <p>If your cushion ends up empty, she leaves on her own. Getting away by running or with decoys sometimes shakes something loose for your Dale-Fi.</p>`),
+    sec('Zen', `
+      <p>Zen is your sanity, and it starts at 100. Rest gives back up to 10 a night, or 15 on the 30-day intensive, and quiet moments on your walks give back 10 to 25. Guide Saffron, her volunteers and Dale's notes take it away. If you run from her every time, zen is what runs out.</p>
+      <p>At zero you snap, break Noble Silence, and leave to start a podcast. The retreat ends right there, and your net worth at that moment goes in the guestbook as Snapped.</p>`),
+    sec('Things that happen on your walks', `
+      <p>Besides gossip, a walk can bring:</p>
+      <ul>
+        <li>A room inspection, a forgotten robe or a bad decision that costs you 10 to 25 percent of the cash on you.</li>
+        <li>A find: a handful of free snacks or espresso in a hollow log or the lost and found.</li>
+        <li>A guest selling a bigger cushion: 40 more spaces, up to ${MAXCAP} in all. The first costs around $120, and each one after that costs about twice the last.</li>
+        <li>A guest from Marin offering to be your decoy. The first costs around $150 and each extra one about 80 percent more. You can keep up to ${MAXDECOY}, and they stay with you for the whole retreat.</li>
+        <li>A quiet moment that gives you zen back.</li>
+      </ul>
+      <p>Offers only show up when you can afford them. Say no if you'd rather keep the cash.</p>`),
+    sec('Retreat lengths and scoring', `
+      <p>Shorter retreats charge more per hour, so your debt grows by about the same amount whatever length you pick. The pace of trouble scales too.</p>
+      <table class="hbt"><thead><tr><th>Retreat</th><th class="num">Days</th><th class="num">Dale per hour</th></tr></thead><tbody>${lengths}</tbody></table>
+      <p>Your takeaway at checkout depends on your net worth and how long you stayed. You need at least this much:</p>
+      <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
+      <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
+    sec('The Dale-Fi', `
+      <p>The equalizer icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up.</p>
+      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
+    sec('Saving, controls and a secret', `
+      <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
+      <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, 1 to 6 pick a spot on the map, and Esc closes things.</p>
+      <p>There's also a secret, and it involves the wordmark. You'll know it when you find it.</p>`),
+    sec('Tips from past guests', `
+      <ul>
+        <li>Pay Dale down early. His meter is the most expensive thing at the retreat.</li>
+        <li>Start at the bottom of the ladder. Espresso and chocolate flip fine when you're broke.</li>
+        <li>An orange price is where you let go. A green one is where you receive.</li>
+        <li>A full cushion of burners late in a long retreat is exactly what Guide Saffron is looking for. Decide ahead of time what you'll hand over.</li>
+        <li>Stash cash in the glovebox before you wander far from the van.</li>
+        <li>A decoy or two usually pays for itself.</li>
+      </ul>`),
+  ].join('');
+  openSheet(`<div class="grab"></div>
+    <h3 id="sheetTitle">Retreat handbook</h3>
+    <p class="muted">Everything the front desk won't tell you.</p>
+    <div class="hbwrap">${body}</div>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'handbook');
+}
+function howSheet() {
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">How it works</h3>
+    <p>The retreat bans phones, wifi, sugar and snacks. You sell them anyway. Prices change by spot and by gossip, so receive where it's abundant and let go where it's in demand.</p>
+    <p>Walks take one to three hours. Quiet hours start at 10pm; rest to begin the next day with a little more zen.</p>
+    <p>You owe Dale the shuttle driver ${fmt(START_DEBT)}, and his meter runs every hour, overnight too. Pay him, borrow more, or stash cash in his glovebox up in the parking lot. Cash on you can go missing.</p>
+    <p>Carrying goods draws Guide Saffron. Slip away, send in a decoy, or donate your way out. Run out of zen and you snap.</p>
+    <p>On the last day, let go of everything and check out. Your score is cash plus glovebox minus what you owe. The game saves as you play.</p>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Got it</button>
+    <button type="button" class="btn quiet" data-act="handbook">Read the full handbook</button></div>`, 'how');
+}
+function scoresSheet() {
+  const all = store.get('unpw.scores', []);
+  const body = MODES.filter(m => all.some(e => e.m === m.id)).map(m => `<p><b>${m.name}</b></p>${boardHTML(m.id)}`).join('');
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">Guestbook</h3>
+    ${body || '<p class="muted">No one has signed yet. Finish a retreat to add your name.</p>'}
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'scores');
+}
+function journalSheet() {
+  const lines = S.log.slice(-20).reverse().map(t => `<p>${t}</p>`).join('');
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">Your journal</h3><div class="journal">${lines}</div>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'journal');
+}
+function menuSheet() {
+  openSheet(`<div class="grab"></div><h3 id="sheetTitle">${S.modeName}</h3>
+    <p class="muted">Day ${S.day} of ${S.days}.</p>
+    <div class="sheet-actions">
+      <button type="button" class="btn soft" data-act="journal">Your journal</button>
+      <button type="button" class="btn soft" data-act="handbook">Retreat handbook</button>
+      <button type="button" class="btn soft" data-act="scores">Guestbook</button>
+      <button type="button" class="btn soft" data-act="sound">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
+      <button type="button" class="btn quiet" data-act="welcome">Save and leave</button>
+      <button type="button" class="btn quiet" data-act="close">Close</button>
+    </div>`, 'menu');
+}
+
+/* ================= DOS easter egg ================= */
+let dosSnap = false;
+function showDos(isSnap) {
+  dosSnap = !!isSnap;
+  const v = S && screen === 'game' ? S : null;
+  const L = [];
+  L.push('10 REM *** UNPLUGGED ***');
+  L.push('20 REM A RETREAT IN BIG SUR, 1984');
+  if (v) {
+    L.push(`30 LET CASH = ${Math.round(v.cash)}`);
+    L.push(`40 LET DALE = ${Math.round(v.debt)} : REM ${pct(v.rate)} AN HOUR`);
+    L.push(`50 LET ZEN = ZEN - 1 : REM NOW ${v.zen}`);
+  } else {
+    L.push('30 LET CASH = 400');
+    L.push('40 LET DALE = 1100');
+    L.push('50 LET ZEN = ZEN - 1');
+  }
+  L.push('60 IF ZEN <= 0 THEN PRINT "YOU STARTED A PODCAST": END');
+  L.push('70 PRINT "BE THE PLUG"');
+  L.push('80 GOTO 50');
+  const body = dosSnap
+    ? `${L.join('\n')}\n\nRUN\n<span class="err">?ZEN UNDERFLOW ERROR IN 50</span>\nOk`
+    : `${L.join('\n')}\n\nOk`;
+  const d = $('#dos');
+  d.innerHTML = `<div class="mb">File  Edit  View  Search  Run  Debug  Options    Help</div>
+    <fieldset><legend>UNPLUGGD.BAS</legend><pre>${body}</pre></fieldset>
+    <div class="sl"><span>&lt;Tap anywhere to ${dosSnap ? 'accept your podcast' : 'return to mindfulness'}&gt;</span><span>00050:001</span></div>`;
+  d.hidden = false;
+  d.focus({ preventScroll: true });
+  if (dosSnap) chime([[330, 0], [262, .2], [196, .4]], .8, .05);
+}
+function hideDos() {
+  const d = $('#dos'); d.hidden = true;
+  if (dosSnap) { dosSnap = false; endGame('zen'); }
+  else runQueue();
+}
+let eggTaps = [];
+function egg() {
+  const now = Date.now();
+  eggTaps = eggTaps.filter(t => now - t < 700); eggTaps.push(now);
+  if (eggTaps.length >= 3) { eggTaps = []; showDos(false); }
+}
+
+/* ================= input ================= */
+function act(a, el) {
+  switch (a) {
+    case 'begin': return modeSheet();
+    case 'continue': return continueRun();
+    case 'how': return howSheet();
+    case 'report': cardWho = null; return reportSheet();
+    case 'reroll': return reportSheet(true);
+    case 'sharecard': return shareCard();
+    case 'options': return optionsSheet();
+    case 'soundopt': setSound(!soundOn); return optionsSheet();
+    case 'handbook': return handbookSheet();
+    case 'scores': return scoresSheet();
+    case 'journal': return journalSheet();
+    case 'menu': return menuSheet();
+    case 'journey': return journeySheet();
+    case 'rest': return restSheet();
+    case 'restgo': return rest();
+    case 'checkout': return checkoutSheet();
+    case 'checkoutgo': return endGame('time');
+    case 'van': daleCounting = false; return vanSheet();
+    case 'vango': return vanGo();
+    case 'trade': return doTrade();
+    case 'offeryes': { const f = offerYes; offerYes = null; if (f) f(); return closeSheet(); }
+    case 'encrun': return encRun();
+    case 'encdecoy': return encDecoy();
+    case 'encdonate': return encDonate();
+    case 'encdone': { enc = null; themeStop(); musicDuck(false); closeSheet(); const h = heldToasts; heldToasts = []; h.forEach((t, i) => setTimeout(() => toast(...t), 250 + i * 150)); return; }
+    case 'enchand': return encHand();
+    case 'music': return musicSheet();
+    case 'buycd': buyCD(); return sheetKind === 'van' ? vanSheet() : musicSheet();
+    case 'mplay': return musicToggle();
+    case 'mprev': return musicStep(-1);
+    case 'mnext': return musicStep(1);
+    case 'mvolup': return musicNudge(0.1);
+    case 'mvoldn': return musicNudge(-0.1);
+    case 'sign': return saveScore();
+    case 'sound': setSound(!soundOn); return menuSheet();
+    case 'welcome': closeSheet(true); queue = []; $('#toasts').innerHTML = ''; screen = 'welcome'; return render();
+    case 'close': return closeSheet();
+  }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('#dos')) return hideDos();
+  if (t.id === 'scrim' && $('#sheet').dataset.dismiss) return closeSheet();
+  const eg = t.closest('[data-egg]'); if (eg) return egg();
+  const md = t.closest('[data-mode]'); if (md) { closeSheet(true); return startGame(MODES[+md.dataset.mode]); }
+  const go = t.closest('[data-go]'); if (go && !go.disabled) return walk(+go.dataset.go);
+  const row = t.closest('[data-item]'); if (row) return openTrade(row.dataset.item);
+  const tr = t.closest('[data-track]'); if (tr) return musicPick(tr.dataset.track);
+  const pg = t.closest('#lcdProg');
+  if (pg && M.audio && isFinite(M.audio.duration)) { const r = pg.getBoundingClientRect(); M.audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * M.audio.duration; return; }
+  const tm = t.closest('[data-tmode]');
+  if (tm && !tm.disabled) { trade.mode = tm.dataset.tmode; trade.q = tradeMax(); SND.tap(); return tradeSheet(); }
+  const ts = t.closest('[data-tset]');
+  if (ts && !ts.disabled) { const m = tradeMax(); trade.q = ts.dataset.tset === 'max' ? m : ts.dataset.tset === 'half' ? Math.max(1, Math.floor(m / 2)) : 1; return updateTrade(); }
+  const vm = t.closest('[data-vmode]'); if (vm && !vm.disabled) { vanMode = vm.dataset.vmode; return vanSheet(); }
+  const vs = t.closest('[data-vset]');
+  if (vs && !vs.disabled) { const m = vanMax(vanMode); vanAmt = vs.dataset.vset === 'max' ? m : vs.dataset.vset === 'half' ? Math.floor(m / 2) : Math.floor(m / 4); return updateVan(); }
+  const a = t.closest('[data-act]'); if (a && !a.disabled) act(a.dataset.act, a);
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'tslider') { trade.q = +e.target.value; updateTrade(); }
+  if (e.target.id === 'vslider') { vanAmt = +e.target.value; updateVan(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (!$('#dos').hidden) { e.preventDefault(); return hideDos(); }
+  const open = !$('#scrim').hidden;
+  if (open) {
+    if (k === 'escape' && $('#sheet').dataset.dismiss) { e.preventDefault(); return closeSheet(); }
+    if (k === 'tab') {
+      const f = [...$('#sheet').querySelectorAll('button:not(:disabled), input:not(:disabled)')];
+      if (f.length) {
+        const i = f.indexOf(document.activeElement);
+        const n = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i === f.length - 1 ? 0 : i + 1);
+        e.preventDefault(); f[n].focus();
+      }
+      return;
+    }
+    if (sheetKind === 'journey' && /^[1-6]$/.test(k)) { const ix = +k - 1; if (canReach(ix)) { e.preventDefault(); walk(ix); } }
+    if (sheetKind === 'mode' && /^[1-4]$/.test(k)) { e.preventDefault(); closeSheet(true); startGame(MODES[+k - 1]); }
+    return;
+  }
+  if (e.target.tagName === 'INPUT') { if (k === 'enter' && e.target.id === 'signname') { e.preventDefault(); saveScore(); } return; }
+  if (screen === 'game' && S && !S.over) {
+    if (k === 'j' || k === 'w') { e.preventDefault(); journeySheet(); }
+    else if (k === 'r' || k === 'z') { e.preventDefault(); restSheet(); }
+    else if (k === 'v') { e.preventDefault(); vanSheet(); }
+    else if (k === 'm') { e.preventDefault(); musicSheet(); }
+  }
+});
+
+['logo', 'tagline', 'welcome', 'header'].forEach(k => document.documentElement.style.setProperty(`--img-${k}`, `url(${IMG[k]})`));
+window.addEventListener('offline', () => toast("Signal lost. You're fully unplugged now. The game keeps working.", 'good', 5000));
+render();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
