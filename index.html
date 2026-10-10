@@ -85,6 +85,15 @@ button:disabled { cursor: default; }
 .num { font-variant-numeric: tabular-nums; }
 
 #app { height: 100%; display: flex; flex-direction: column; max-width: 560px; margin: 0 auto; position: relative; }
+/* Wide screens: the game sits in a column over a soft-focus copy of the scene, tinted to the time of day. */
+#backdrop { display: none; position: fixed; inset: 0; z-index: -1; overflow: hidden; background: #22382B; pointer-events: none; }
+#backdrop::before { content: ""; position: absolute; inset: -60px; background: var(--img-backdrop, var(--img-header)) center 55% / cover no-repeat; filter: blur(16px) saturate(1.08); }
+#backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(18, 28, 22, .35), rgba(18, 28, 22, .05) 30%, rgba(18, 28, 22, .05) 70%, rgba(18, 28, 22, .35)), var(--bd-tint, transparent); transition: background .6s ease; }
+@media (min-width: 600px) {
+  #backdrop { display: block; }
+  body { background: transparent; }
+  #app { background: var(--fog); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12), 0 24px 70px rgba(0, 0, 0, .45); }
+}
 
 /* ---------- welcome ---------- */
 .welcome {
@@ -506,6 +515,7 @@ input[type=range]:disabled { opacity: .35; }
 </head>
 <body>
 <div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
+<div id="backdrop" aria-hidden="true"></div>
 <script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp"};</script>
 <div id="app"></div>
 <div id="toasts" aria-live="polite"></div>
@@ -1509,12 +1519,15 @@ function render() {
   const app = $('#app');
   const listTop = $('.list')?.scrollTop || 0;
   document.getElementById('loader')?.remove();
+  document.documentElement.style.setProperty('--img-backdrop', screen === 'welcome' ? 'var(--img-welcome)' : 'var(--img-header)');
+  if (screen !== 'game') document.documentElement.style.setProperty('--bd-tint', 'transparent');
   document.documentElement.style.setProperty('--sky-bottom', screen === 'welcome' ? '#DC9D55' : 'var(--mist)');
   if (screen === 'welcome') { app.innerHTML = welcomeHTML(); document.documentElement.style.setProperty('--sky-top', '#C9CEDA'); }
   else if (screen === 'game') {
     if (S.stats) S.stats.zenMin = Math.min(S.stats.zenMin, S.zen);
     app.innerHTML = gameHTML();
     document.documentElement.style.setProperty('--sky-top', skyFor(S.hour)[1]);
+    document.documentElement.style.setProperty('--bd-tint', skyFor(S.hour)[2]);
     const l = $('.list'); if (l) l.scrollTop = listTop;
   } else { app.innerHTML = overHTML(); document.documentElement.style.setProperty('--sky-top', 'var(--fog)'); }
   saveRun();
