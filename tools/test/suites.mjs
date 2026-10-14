@@ -15,7 +15,6 @@ const tst = (name, opts, body, extra = {}) => ({ name, run: play(opts, body), ..
 /* Audible = playing and routed at a gain above silence. Covers the Dale-Fi, Saffron's theme and any event-song player. */
 const AUDIBLE = `[[M.audio, M.gain], [T.el, T.gain], typeof E !== 'undefined' ? [E.el, E.gain] : [null, null]]
   .filter(([el, g]) => el && !el.paused && (!g || g.gain.value > 0.02)).length`;
-const IOS_BUG = "Dale-Fi doesn't come back after Saffron on iPhone; fixed on branch unplugged-handoff-1";
 
 /* ======================= static: no browser ======================= */
 const staticSuite = {
@@ -178,6 +177,7 @@ const trading = {
       const price = +(await g.page.textContent('[data-act="offeryes"]')).replace(/\D/g, '');
       await g.tap('[data-act="offeryes"]');
       eq(await g.run('[S.cap, S.cash]'), [140, 5000 - price], 'cushion bought');
+      ok((await g.run('S.log.at(-1)')).includes(`$${price.toLocaleString('en-US')}`), 'journal records the price paid', await g.run('S.log.at(-1)'));
     }),
   ],
 };
@@ -371,21 +371,39 @@ const audio = {
       await g.hidden(false); await g.wait(600);
       eq(await g.run('musicPlaying()'), true, 'back on return');
     }),
-    { ...tst('iOS one-player rule: Dale-Fi comes back after Saffron', {}, async g => {
+    tst('paying Dale off plays "you\'re square" alone, then the Dale-Fi picks up where it was', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.run('M.audio.currentTime = 20'); await g.wait(200);
+      await g.run("S.loc = VAN_IX; S.cash = 5000; render(); vanMode = 'pay'; vanSheet(); vanAmt = S.debt; vanGo(); closeSheet(true)"); await g.wait(900);
+      eq(await g.run(`[E.id, !E.el.paused, musicPlaying(), screen, ${AUDIBLE}]`), ['square', true, false, 'game', 1], 'payoff song alone, game continues');
+      await g.run('E.el.currentTime = E.el.duration - 0.3'); await g.wait(1500);
+      const s = await g.run(`({ on: E.on, playing: musicPlaying(), t: M.audio.currentTime, audible: ${AUDIBLE} })`);
+      ok(!s.on && s.playing && s.t >= 20 && s.t < 26 && s.audible === 1, 'Dale-Fi resumed at its position', s);
+    }),
+    tst('checkout plays the ending song for the takeaway, alone; leaving results brings back the Dale-Fi', {}, async g => {
+      await g.start(2); await startMusic(g);
+      for (const [net, want] of [[3e6, 'win-moment'], [1e5, 'win-thats'], [-500, 'checkout']]) {
+        await g.run(`if (S.over) { closeSheet(true); startGame(MODES[2]); } S.cash = ${Math.max(0, net)}; S.debt = ${Math.max(0, -net)}; endGame('time')`); await g.wait(900);
+        eq(await g.run(`[E.id, !E.el.paused, ${AUDIBLE}]`), [want, true, 1], `ending song for net worth ${net}`);
+      }
+      await g.tap('[data-act="welcome"]'); await g.wait(1200);
+      eq(await g.run(`[E.on, musicPlaying(), ${AUDIBLE}]`), [false, true, 1], 'ending stopped, Dale-Fi back');
+    }),
+    tst('iOS one-player rule: Dale-Fi comes back after Saffron', {}, async g => {
       await g.page.evaluate(() => { window.__ios = { onePlayer: true }; });
       await g.start(2); await startMusic(g);
       await g.run(ENC); await g.wait(600); await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]');
       await g.page.click('.stats'); await g.wait(800);
       eq(await g.run('musicPlaying()'), true, 'Dale-Fi playing again');
-    }), expectFail: IOS_BUG },
-    { ...tst('iOS refused play() on return mid check-in: recovers on the next tap', {}, async g => {
+    }),
+    tst('iOS refused play() on return mid check-in: recovers on the next tap', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.run(ENC); await g.wait(400);
       await g.hidden(true); await g.page.evaluate(() => { window.__ios = { denyPlay: true }; }); await g.hidden(false); await g.wait(300);
       await g.page.evaluate(() => { window.__ios = {}; });
       await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]'); await g.page.click('.stats'); await g.wait(800);
       eq(await g.run('musicPlaying()'), true, 'Dale-Fi playing again');
-    }), expectFail: IOS_BUG },
+    }),
   ],
 };
 
