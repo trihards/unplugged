@@ -7,14 +7,14 @@ A small harness that loads the real game in headless Chromium and checks the beh
 From the repo root:
 
 ```
-node tools/test/run.mjs                      # everything, about 2 minutes
+node tools/test/run.mjs                      # everything, about 80 seconds
 node tools/test/run.mjs trading encounters   # just those suites
 node tools/test/run.mjs static               # no browser, under a second
 node tools/test/run.mjs --list               # every suite and test
 node tools/test/run.mjs --root ../other-copy # test another checkout
 ```
 
-The exit code is 0 when nothing failed. Each line reads `pass`, `FAIL`, `xfail` (a known issue, expected to fail) or `XPASS` (a known issue that now passes: remove its `expectFail` in `suites.mjs` so the test guards the fix).
+The exit code is 0 when nothing failed. Each line reads `pass`, `FAIL`, `skip` (the check can't run here, for example no git history to compare against), `xfail` (a known issue, expected to fail) or `XPASS` (a known issue that now passes: remove its `expectFail` in `suites.mjs` so the test guards the fix).
 
 Optional environment variables: `TEST_BASE` (branch the cache-version check compares against, default `origin/main`), `TEST_TIMEOUT` (seconds per test, default 60), `PLAYWRIGHT_MODULE` (path to a Playwright install).
 
@@ -26,12 +26,12 @@ Node 18 or later, plus Playwright with Chromium. Cloud sessions already have bot
 
 | Suite | Runs in | Covers |
 | --- | --- | --- |
-| `static` | no browser | scripts parse; every image and song exists; `sw.js` lists every asset and only real files; cache `VERSION` changed if cached files changed |
+| `static` | no browser | scripts parse; every image and song exists; `sw.js` lists every asset and only real files; cache `VERSION` changed if cached files changed (skipped when the base branch isn't available) |
 | `smoke` | desktop Chromium | boot; every retreat length starts correctly; walking spends hours and compounds Dale's debt; quiet hours and resting; checkout scoring |
 | `trading` | desktop Chromium | buy limits (cash and space), selling and cost basis, goods not traded here, price ranges, Dale's van (pay, borrow cap, stash), cushion upgrade |
 | `encounters` | desktop Chromium | Saffron can't be dismissed; failed and successful escapes; hand over; donate; empty cushion; snapping at zero zen; decoys (pulled people stay gone, fanny pack, endurance if present); decoy offer prices and cap |
 | `saves` | desktop Chromium | reload and continue; Save and leave; older saves missing fields; corrupt save; new run replaces save; guestbook top ten; sound and volume settings |
-| `audio` | desktop Chromium, songs stubbed | Dale-Fi play and track memory; mute and unmute; muted Saffron; her theme replaces the Dale-Fi and it returns at full volume; deliberate pause survives; leaving the app; two iOS-rule emulations |
+| `audio` | desktop Chromium, songs stubbed | Dale-Fi play and track memory; mute and unmute; muted Saffron; muting mid-theme; her theme replaces the Dale-Fi and it returns at full volume; deliberate pause survives; leaving the app; two iOS-rule emulations |
 | `layout` | Chromium mobile emulation at 320×568, 375×667, 390×844 with touch; plus desktop | no sideways scrolling on every main screen; bottom buttons on screen and at least 40px; check-in buttons reachable and tappable |
 | `offline` | desktop Chromium, service worker on | installs, caches every listed file, reloads with no network |
 

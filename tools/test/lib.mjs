@@ -109,8 +109,8 @@ export async function openGame(env, opts = {}) {
     const res = await route.fetch();
     route.fulfill({ response: res, body: injectHook(await res.text()), headers: { ...res.headers(), 'content-type': 'text/html' } });
   });
-  await page.goto(env.url);
-  await page.waitForFunction(() => window.__U);
+  try { await page.goto(env.url); await page.waitForFunction(() => window.__U); }
+  catch (e) { await ctx.close(); throw e; }
   return new Game(page, ctx, label, !!vp.hasTouch);
 }
 
@@ -130,5 +130,8 @@ export class Game {
 
 /* ---------- Assertions ---------- */
 export class Fail extends Error {}
+/* A check that can't run here (missing git history, for example). Reported as a skip, never as a pass. */
+export class Skip extends Error {}
+export function skip(why) { throw new Skip(why); }
 export function ok(cond, msg, detail) { if (!cond) throw new Fail(detail === undefined ? msg : `${msg} (${typeof detail === 'string' ? detail : JSON.stringify(detail)})`); }
 export function eq(actual, expected, msg) { ok(Object.is(actual, expected) || JSON.stringify(actual) === JSON.stringify(expected), `${msg}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`); }

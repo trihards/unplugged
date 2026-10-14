@@ -6,7 +6,7 @@
 //   node tools/test/run.mjs --root ../other-checkout   test another copy of the game
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadPlaywright, serve, Fail } from './lib.mjs';
+import { loadPlaywright, serve, Fail, Skip } from './lib.mjs';
 import suites from './suites.mjs';
 
 const args = process.argv.slice(2);
@@ -36,7 +36,7 @@ if (needsBrowser) {
   Object.assign(env, { url: srv.url, closeServer: srv.close });
 }
 
-const counts = { pass: 0, fail: 0, xfail: 0, xpass: 0 };
+const counts = { pass: 0, fail: 0, xfail: 0, xpass: 0, skip: 0 };
 const failures = [];
 const t0 = Date.now();
 console.log(`unplugged regression tests: ${root}`);
@@ -53,6 +53,7 @@ for (const s of chosen) {
     if (err && /timed out|has been closed/.test(err.message) && env.browser) { await env.browser.close().catch(() => {}); await launch(); }
     const ms = `${((Date.now() - started) / 1000).toFixed(1)}s`;
     const msg = err ? (err instanceof Fail ? err.message : `${err.name}: ${err.message.split('\n')[0]}`) : '';
+    if (err instanceof Skip) { counts.skip++; console.log(`  skip  ${t.name}  (${err.message})`); continue; }
     if (t.expectFail) {
       if (err) { counts.xfail++; console.log(`  xfail ${t.name} (${ms})  known issue: ${t.expectFail}\n        (${msg})`); }
       else { counts.xpass++; console.log(`  XPASS ${t.name} (${ms})  now passes: remove its expectFail so it guards the fix`); }
@@ -62,7 +63,7 @@ for (const s of chosen) {
 }
 if (env.browser) { await env.browser.close(); env.closeServer(); }
 
-console.log(`\n${counts.pass} passed, ${counts.fail} failed, ${counts.xfail} known issues, ${counts.xpass} unexpectedly passing  (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
+console.log(`\n${counts.pass} passed, ${counts.fail} failed, ${counts.skip} skipped, ${counts.xfail} known issues, ${counts.xpass} unexpectedly passing  (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
 if (failures.length) console.log(`\nFailures:\n${failures.map(f => `  - ${f}`).join('\n')}`);
 console.log('\nAutomated runs use Chromium (desktop and mobile emulation). They do not verify iPhone Safari; see tools/test/README.md.');
 process.exit(counts.fail ? 1 : 0);

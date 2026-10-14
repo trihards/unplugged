@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
-import { openGame, ok, eq } from './lib.mjs';
+import { openGame, ok, eq, skip } from './lib.mjs';
 
 /* Open a game, run the body, always close it, and fail on any script error the page logged. */
 const play = (opts, body) => async env => {
@@ -48,13 +48,14 @@ const staticSuite = {
     } },
     { name: 'cache version changes when cached files change (vs. the base branch)', run: async ({ root }) => {
       const base = process.env.TEST_BASE || 'origin/main';
-      let changed;
-      try { changed = execSync(`git -C "${root}" diff --name-only ${base} -- index.html manifest.webmanifest favicon.svg '*.png' assets`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); }
-      catch (e) { return; } // not a git checkout, or no base branch: nothing to compare
+      const git = cmd => execSync(`git -C "${root}" ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+      try { git(`rev-parse --verify ${base}`); } catch (e) { skip(`base ref "${base}" not found (shallow clone, no remote, or a typo in TEST_BASE)`); }
+      const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+      const cached = ['CORE', 'AUDIO'].flatMap(k => JSON.parse(new RegExp(`const ${k} = (\\[[^\\]]*\\]);`).exec(sw)[1])).filter(p => p !== './');
+      const changed = git(`diff --name-only ${base} -- ${cached.map(p => `"${p}"`).join(' ')}`).trim();
       if (!changed) return;
       const v = s => /const VERSION = '([^']+)'/.exec(s)?.[1];
-      let before = null; try { before = v(execSync(`git -C "${root}" show ${base}:sw.js`).toString()); } catch (e) { return; }
-      ok(v(fs.readFileSync(path.join(root, 'sw.js'), 'utf8')) !== before, `cached files changed (${changed.split('\n').length}) but VERSION in sw.js still matches ${base}; returning players would keep the old copy`);
+      ok(v(sw) !== v(git(`show ${base}:sw.js`)), `cached files changed (${changed.split('\n').join(', ')}) but VERSION in sw.js still matches ${base}; returning players would keep the old copy`);
     } },
   ],
 };
@@ -343,6 +344,12 @@ const audio = {
       await g.start(2); await g.run('setSound(false); ' + ENC); await g.wait(500);
       eq(await g.run(AUDIBLE), 0, 'silent check-in');
     }),
+    tst('muting during Saffron\'s theme silences it too', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.run(ENC); await g.wait(600);
+      await g.run('setSound(false)'); await g.wait(300);
+      eq(await g.run(AUDIBLE), 0, 'nothing audible after muting mid-theme');
+    }),
     tst('Saffron: her theme replaces the Dale-Fi, which returns at full volume after', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.run(ENC); await g.wait(900);
@@ -383,7 +390,9 @@ const audio = {
 };
 
 /* ======================= layout: mobile emulation ======================= */
-const OVERFLOW = 'document.documentElement.scrollWidth - innerWidth';
+/* Compare content width with the visible width. In mobile emulation innerWidth grows to fit wide content,
+   so it can't reveal overflow; clientWidth and the visual viewport stay at the device width. */
+const OVERFLOW = 'document.documentElement.scrollWidth - Math.min(document.documentElement.clientWidth, visualViewport ? Math.round(visualViewport.width) : innerWidth)';
 const layoutTest = device => tst(`screens fit without sideways scrolling, buttons reachable (${device})`, { device }, async g => {
   const check = async what => eq(await g.page.evaluate(OVERFLOW), 0, `horizontal overflow on ${what}`);
   await check('welcome');
