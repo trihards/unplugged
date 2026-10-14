@@ -530,6 +530,10 @@ input[type=range]:disabled { opacity: .35; }
 /* ================= data ================= */
 const WAKE = 7, LIGHTS = 22;
 const START_CASH = 400, START_DEBT = 1100, MAXDEBT = 5000, START_CAP = 100, MAXCAP = 420, MAXDECOY = 4;
+/* Decoy endurance (proposed, pending approval): each decoy has this many staged breakthroughs in her.
+   Every attempt to pull someone off you costs one, whether it works or not. Your decoys share one pool,
+   so a decoy goes home each time the pool drops past a multiple of this. */
+const DECOY_SHARES = 3;
 
 /* Retreat lengths. Dale's hourly rate makes debt grow about 16x over any length.
    k scales per-walk event odds. Rank thresholds were calibrated per length by simulating
@@ -686,7 +690,7 @@ function startGame(m) {
   store.set('unpw.mode', m.id);
   S = {
     mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
-    day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, zen: 100,
+    day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, decoyShares: 0, zen: 100,
     loc: 0, prices: {}, inv: {}, paid: {}, log: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
@@ -819,9 +823,10 @@ function rollEvents() {
       const price = Math.round(150 * Math.pow(1.8, S.decoys) * rf(0.85, 1.15));
       queue.push(() => {
         if (S.cash < price) return runQueue();
-        offerSheet('A decoy for hire', `A guest from Marin offers to be your decoy if Guide Saffron comes around. She cries on cue.`, `Hire her for ${fmt(price)}`, () => {
-          S.cash -= price; S.decoys += 1; SND.receive();
-          log(`Hired a decoy for ${fmt(price)}. You have ${S.decoys}.`); toast(`Decoy hired. You have ${plural(S.decoys, 'decoy', 'decoys')}.`, 'good');
+        offerSheet('A decoy for hire', `A guest from Marin offers to be your decoy if Guide Saffron comes around. She cries on cue, about ${DECOY_SHARES} times before she's all cried out.`, `Hire her for ${fmt(price)}`, () => {
+          S.cash -= price; S.decoyShares += DECOY_SHARES; syncDecoys(); SND.receive();
+          log(`Hired a decoy for ${fmt(price)}. You have ${S.decoys}, with ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left in them.`);
+          toast(`Decoy hired. You have ${plural(S.decoys, 'decoy', 'decoys')}.`, 'good');
         });
       });
     } else if (r < 0.26 * k && S.zen < 100) {
@@ -1033,24 +1038,40 @@ function encRun() {
   }
   encSheet();
 }
+const DECOY_SPENT = [
+  "One decoy has shared her why one too many times. She's going to sit with that.",
+  'One decoy is out of breathwork. She is lying face down in the labyrinth.',
+  'One decoy ran out of vulnerability mid-sentence and went home.',
+];
+const syncDecoys = () => { S.decoys = Math.ceil(S.decoyShares / DECOY_SHARES); };
+/* Each decoy you send stages one breakthrough to pull someone off you: volunteers first, Guide Saffron last.
+   Every attempt costs a breakthrough, win or lose; decoys stop once nobody is left to pull. */
 function encDecoy() {
   enc.round = []; enc.tries++;
-  let pulled = 0;
-  for (let i = 0; i < S.decoys && enc.left > 0; i++) {
+  let pulled = 0, spent = 0;
+  const sent = S.decoys;
+  for (let i = 0; i < sent && enc.left > 0 && S.decoyShares > 0; i++) {
+    S.decoyShares -= 1; spent++;
     if (Math.random() < 0.5) {
       enc.left -= 1; pulled++;
       const v = enc.vols.find(x => !enc.gone.includes(x)); if (v) enc.gone.push(v);
     }
   }
+  syncDecoys();
+  const out = sent - S.decoys;
+  const left = S.decoys ? `${plural(S.decoys, 'decoy', 'decoys')} and ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left` : 'no decoys left';
+  const used = ` ${plural(spent, 'breakthrough', 'breakthroughs')} used, ${S.decoyShares} left.`;
+  const tired = out ? [{ t: out === 1 ? pick(DECOY_SPENT) : `${out} decoys are all cried out and went home.`, c: '' }] : [];
+  log(`Sent ${plural(spent, 'decoy', 'decoys')} at Guide Saffron. ${pulled ? `Pulled ${plural(pulled, 'person', 'people')} away` : 'Nobody bit'}${out ? `, and ${out === 1 ? 'one decoy' : `${out} decoys`} went home exhausted` : ''}. You have ${left}.`);
   if (enc.left === 0) {
     const found = ri(100, 400) * enc.n; ST().decoyWins++;
     S.cash += found;
-    enc.round.push({ t: `Your decoys pulled everyone away, Guide Saffron included. Someone dropped a fanny pack with ${fmt(found)} in it.`, c: 'good' });
+    enc.round.push({ t: `Your decoys pulled everyone away, Guide Saffron included. Someone dropped a fanny pack with ${fmt(found)} in it.${used}`, c: 'good' }, ...tired);
     log(`Found ${fmt(found)} in a fanny pack.`);
     staffUSB();
     enc.done = true; enc.face = 'shock'; enc.say = pick(SAY_DECOYED); SND.good();
   } else {
-    enc.round.push({ t: pulled ? `Your decoys pulled ${plural(pulled, 'person', 'people')} away. ${enc.left === 1 ? 'Guide Saffron is still with you.' : `${enc.left} are still with you.`}` : 'Your decoys just stood there, awkwardly.', c: pulled ? 'good' : '' });
+    enc.round.push({ t: pulled ? `Your decoys pulled ${plural(pulled, 'person', 'people')} away. ${enc.left === 1 ? 'Guide Saffron is still with you.' : `${enc.left} are still with you.`}${used}` : `Your decoys just stood there, awkwardly.${used}`, c: pulled ? 'good' : '' }, ...tired);
     if (!saffronTurn()) return;
   }
   encSheet();
@@ -1099,7 +1120,7 @@ function encSheet() {
     ? `<button type="button" class="btn primary carry" data-act="encdone">Carry on</button>`
     : `<div class="choices">
         <button type="button" class="choice primary" data-act="encrun"><b>Slip away</b><span>About a ${roundPct(odds)} chance. If it fails, she takes more.</span></button>
-        <button type="button" class="choice" data-act="encdecoy" ${S.decoys ? '' : 'disabled'}><b>${S.decoys ? `Send ${plural(S.decoys, 'decoy', 'decoys')}` : 'No decoys'}</b><span>${S.decoys ? 'Each has an even chance to pull someone away.' : 'Hire one when a guest offers.'}</span></button>
+        <button type="button" class="choice" data-act="encdecoy" ${S.decoys ? '' : 'disabled'}><b>${S.decoys ? `Send ${plural(S.decoys, 'decoy', 'decoys')}` : 'No decoys'}</b><span>${S.decoys ? `Even odds each to pull someone away. ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left.` : 'Hire one when a guest offers.'}</span></button>
         <button type="button" class="choice" data-act="enchand" ${top ? '' : 'disabled'}><b>Hand over ${handQ} ${top ? nameOf(top, handQ) : ''}</b><span>About ${fmt(handV)}. She leaves for sure.</span></button>
         <button type="button" class="choice" data-act="encdonate" ${S.cash >= don ? '' : 'disabled'}><b>Donate ${fmt(don)}</b><span>${S.cash >= don ? 'To the scholarship fund. She leaves for sure.' : 'You don\'t have enough cash on you.'}</span></button>
       </div>`;
@@ -1250,6 +1271,7 @@ function continueRun() {
   const r = savedRun(); if (!r) return;
   S = r; if (!Array.isArray(S.songs)) S.songs = ['s0'];
   ITEMS.forEach(i => { if (!(S.inv[i.id] >= 0)) S.inv[i.id] = 0; if (!(S.paid[i.id] >= 0)) S.paid[i.id] = 0; });
+  if (!(S.decoyShares >= 0)) S.decoyShares = (S.decoys || 0) * DECOY_SHARES;
   if (!S.stats) S.stats = newStats();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
   queue = []; enc = null; lastSaved = null; trade = null;
@@ -2164,7 +2186,7 @@ function handbookSheet() {
       <p>Every round she's still with you, she confiscates 12 to 25 percent of your most valuable goods, plus 2 percent more for each volunteer. She costs you 1 to 3 zen herself, and each volunteer may cost you 3 to 8 more. The check-in screen shows exactly what each attempt cost you, a running total, and what every option will cost before you pick it. Your choices:</p>
       <ul>
         <li><b>Slip away.</b> A gamble, and the button shows your odds. They drop with every volunteer and with every bit of weight in your cushion, from about three in five at best to about one in seven at worst. If it fails, she takes her cut and you choose again.</li>
-        <li><b>Send in your decoys</b>, if you've hired any. Each one has an even chance of pulling one person off you. Clear them all and you find a dropped fanny pack worth $100 to $400 per person. If any are left, she takes her cut.</li>
+        <li><b>Send in your decoys</b>, if you've hired any. Each one stages a breakthrough with an even chance of pulling one person off you, volunteers first and Guide Saffron last. Anyone they pull away stays gone for the rest of the check-in, so you can send them again next round. Clear everyone and you find a dropped fanny pack worth $100 to $400 per person. If anyone is left, she takes her cut. Every decoy you send uses up one breakthrough, whether it works or not, and the button shows how many you have left.</li>
         <li><b>Hand over a third of your most valuable goods.</b> She leaves for sure, and honestly it feels kind of good: 4 zen back.</li>
         <li><b>Donate 15 percent of your cash</b>, at least $50, to the scholarship fund. She leaves for sure.</li>
       </ul>
@@ -2178,7 +2200,7 @@ function handbookSheet() {
         <li>A room inspection, a forgotten robe or a bad decision that costs you 10 to 25 percent of the cash on you.</li>
         <li>A find: a handful of free snacks or espresso in a hollow log or the lost and found.</li>
         <li>A guest selling a bigger cushion: 40 more spaces, up to ${MAXCAP} in all. The first costs around $120, and each one after that costs about twice the last.</li>
-        <li>A guest from Marin offering to be your decoy. The first costs around $150 and each extra one about 80 percent more. You can keep up to ${MAXDECOY}, and they stay with you for the whole retreat.</li>
+        <li>A guest from Marin offering to be your decoy. The first costs around $150 and each extra one about 80 percent more. You can keep up to ${MAXDECOY}. Each has ${DECOY_SHARES} breakthroughs in her; once she's used them up she goes home, and the next offer is priced for the decoys you have left.</li>
         <li>A quiet moment that gives you zen back.</li>
       </ul>
       <p>Offers only show up when you can afford them. Say no if you'd rather keep the cash.</p>`),
@@ -2202,7 +2224,7 @@ function handbookSheet() {
         <li>An orange price is where you let go. A green one is where you receive.</li>
         <li>A full cushion of burners late in a long retreat is exactly what Guide Saffron is looking for. Decide ahead of time what you'll hand over.</li>
         <li>Stash cash in the glovebox before you wander far from the van.</li>
-        <li>A decoy or two usually pays for itself.</li>
+        <li>A decoy or two usually pays for itself. Save their breakthroughs for a cushion worth protecting.</li>
       </ul>`),
   ].join('');
   openSheet(`<div class="grab"></div>

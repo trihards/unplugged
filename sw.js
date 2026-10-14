@@ -1,6 +1,6 @@
 // unplugged service worker: caches the whole retreat so it plays with no signal.
 // The version is generated from the files' contents; rebuilding with any change makes a new one.
-const VERSION = 'unplugged-aeeadca131';
+const VERSION = 'unplugged-ec1d66481d';
 const FONTS = 'unplugged-fonts';
 const CORE = ["./", "index.html", "manifest.webmanifest", "favicon.svg", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "assets/img/logo.webp", "assets/img/tagline.webp", "assets/img/bg-welcome.webp", "assets/img/bg-header.webp", "assets/img/lineup.webp", "assets/img/saffron-calm.webp", "assets/img/saffron-side.webp", "assets/img/dale-calm.webp", "assets/img/dale-mad.webp", "assets/img/dale-crossword.webp", "assets/img/vol1.webp", "assets/img/vol2.webp", "assets/img/vol3.webp", "assets/img/vol4.webp", "assets/img/saffron-shock.webp", "assets/img/saffron-puzzled.webp", "assets/img/saffron-joy.webp", "assets/img/dale-cash.webp", "assets/img/it-burner.webp", "assets/img/it-charger.webp", "assets/img/it-wifi.webp", "assets/img/it-wine.webp", "assets/img/it-doritos.webp", "assets/img/it-coke.webp", "assets/img/it-choc.webp", "assets/img/it-espresso.webp"];
 const AUDIO = ["assets/audio/s0.m4a", "assets/audio/w0.m4a", "assets/audio/w1.m4a", "assets/audio/w2.m4a", "assets/audio/saffron.m4a", "assets/audio/square.m4a", "assets/audio/win-moment.m4a", "assets/audio/win-thats.m4a", "assets/audio/checkout.m4a"];
