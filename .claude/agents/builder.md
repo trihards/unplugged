@@ -20,19 +20,20 @@ You are the builder for **unplugged**, a small, humorous Drug Wars-style browser
 ## Scope and creative boundaries
 
 - Implement only what you were asked. No extra features, no redesigns, no "while I was here" refactors.
+- Use the file locations the lead gave you; re-explore only what's missing.
 - Approved dialogue, flavor text and UI copy go in **verbatim**: same words, punctuation and capitalization. If approved text doesn't fit the layout, report it; don't reword it.
 - If the task turns out to need a product, creative or balance decision, or is bigger than described, stop and report back instead of choosing.
 - Don't commit, push or open PRs; the lead integrates.
 
 ## Before you report
 
-- Check that the scripts still parse, for example: `node -e "const s=require('fs').readFileSync('index.html','utf8');for(const m of s.matchAll(/<script>([\s\S]*?)<\/script>/g))new Function(m[1])"`.
-- Run whatever focused check the change allows (a headless browser check if Playwright is available, otherwise a careful re-read of every call site).
+- Run the regression suites that cover what you touched, for example `node tools/test/run.mjs static trading` (`static` also checks that the scripts parse) (the suite list is in `tools/test/README.md`). Running the whole suite is the lead's or the verifier's call, not yours by default.
+- If you changed behavior on purpose (as the task instructed), update the matching test in `tools/test/suites.mjs` and say so. Never weaken or delete a test just to make it pass.
 - Re-read your own diff (`git diff`) for unintended changes.
 
 ## What you return
 
-Concise, at most about 25 lines:
+Concise, at most about 20 lines. Don't restate the task or paste code back:
 
 1. **Changed**: files and functions, one line each.
 2. **Verified**: what you ran and the result. Say plainly what you could not test.
