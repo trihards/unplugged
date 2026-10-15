@@ -1389,7 +1389,7 @@ function musicAway() {
 function musicBack() {
   if (!soundOn) return;
   acWake();
-  if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(); }
+  if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(true); }
   if (E.on && E.el.paused) eventPlay();
   else musicResume();
 }
@@ -1444,7 +1444,7 @@ function musicResume() {
 /* Guide Saffron's theme: plays once as she shows up. The Dale-Fi steps aside for it, then comes back quietly until she leaves. */
 const T = { el: null, gain: null, stopTimer: null, on: false };
 const themeReady = () => soundOn && canPlayAAC();
-function themeStart() {
+function themeStart(resume) {
   if (!themeReady()) return;
   ensureAudio();
   if (E.on) eventStop();
@@ -1458,7 +1458,7 @@ function themeStart() {
   clearTimeout(T.stopTimer);
   T.on = true;
   musicHold();
-  try { T.el.currentTime = 0; } catch (e) { /* not loaded yet */ }
+  if (!resume) { try { T.el.currentTime = 0; } catch (e) { /* not loaded yet */ } }
   if (T.gain) { T.gain.gain.cancelScheduledValues(ac.currentTime); T.gain.gain.setValueAtTime(0, ac.currentTime); T.gain.gain.linearRampToValueAtTime(0.9 * M.vol, ac.currentTime + 0.5); }
   tryPlay(T.el).then(err => { if (err && err !== 'AbortError') themeEnded(); });
   clearMediaSession();

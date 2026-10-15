@@ -389,6 +389,16 @@ const audio = {
       await g.tap('[data-act="welcome"]'); await g.wait(1200);
       eq(await g.run(`[E.on, musicPlaying(), ${AUDIBLE}]`), [false, true, 1], 'ending stopped, Dale-Fi back');
     }),
+    tst('leaving the app mid check-in: her theme picks up where it was, not from the start', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.run(ENC); await g.wait(700);
+      await g.run('T.el.currentTime = 6'); await g.wait(200);
+      await g.hidden(true); await g.wait(200);
+      eq(await g.run(AUDIBLE), 0, 'silent while away');
+      await g.hidden(false); await g.wait(600);
+      const s = await g.run(`({ t: T.el.currentTime, audible: ${AUDIBLE}, th: !T.el.paused })`);
+      ok(s.th && s.audible === 1 && s.t >= 6, 'theme playing again from about where it was', s);
+    }),
     tst('iOS one-player rule: Dale-Fi comes back after Saffron', {}, async g => {
       await g.page.evaluate(() => { window.__ios = { onePlayer: true }; });
       await g.start(2); await startMusic(g);
