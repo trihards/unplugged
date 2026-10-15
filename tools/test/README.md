@@ -31,7 +31,7 @@ Node 18 or later, plus Playwright with Chromium. Cloud sessions already have bot
 | `trading` | desktop Chromium | buy limits (cash and space), selling and cost basis, goods not traded here, price ranges, Dale's van (pay, borrow cap, stash), cushion upgrade |
 | `encounters` | desktop Chromium | Saffron can't be dismissed; failed and successful escapes; hand over; donate; empty cushion; snapping at zero zen; decoys (pulled people stay gone, fanny pack, endurance if present); decoy offer prices and cap |
 | `saves` | desktop Chromium | reload and continue; Save and leave; older saves missing fields; corrupt save; new run replaces save; guestbook top ten; sound and volume settings |
-| `audio` | desktop Chromium, songs stubbed | Dale-Fi play and track memory; mute and unmute; muted Saffron; muting mid-theme; her theme replaces the Dale-Fi and it returns at full volume; deliberate pause survives; leaving the app; two iOS-rule emulations |
+| `audio` | desktop Chromium, songs stubbed | Dale-Fi play and track memory; mute and unmute; muted Saffron; muting mid-theme; event songs (Dale payoff, endings) never overlap the Dale-Fi; her theme replaces the Dale-Fi and it returns at full volume; deliberate pause survives; leaving the app; two iOS-rule emulations |
 | `layout` | Chromium mobile emulation at 320×568, 375×667, 390×844 with touch; plus desktop | no sideways scrolling on every main screen; bottom buttons on screen and at least 40px; check-in buttons reachable and tappable |
 | `offline` | desktop Chromium, service worker on | installs, caches every listed file, reloads with no network |
 
@@ -51,7 +51,7 @@ Use this when a change touches audio, the service worker or home-screen install,
 
 1. **First sound.** Fresh load, tap Begin, open the Dale-Fi, press play. Music starts on the first press, with the ringer switch both on and off.
 2. **Saffron.** Carry goods until she appears. Her theme plays, the Dale-Fi drops out, then comes back quietly after the theme and at full volume when you carry on.
-3. **Leaving mid check-in.** While her theme plays, switch to another app for 10 seconds, come back, finish the check-in. Music returns, at the latest after one more tap. (On main this, and step 2's return, can fail: it's the known bug fixed on `unplugged-handoff-1`.)
+3. **Leaving mid check-in.** While her theme plays, switch to another app for 10 seconds, come back, finish the check-in. Music returns, at the latest after one more tap.
 4. **Interruptions.** With music playing: lock the phone and unlock; pull down Control Center; trigger Siri or receive a call or alarm. After each, music resumes or resumes on the next tap. Nothing shows up on the lock screen.
 5. **Pause and mute.** Pause the Dale-Fi, meet Saffron, carry on: it stays paused. Mute all sound from the menu, close and reopen the app: still muted.
 6. **Volume.** The Dale-Fi + and − buttons change the volume (element volume is read-only on iOS, so this exercises the game's own gain).

@@ -468,7 +468,7 @@ input[type=range]:disabled { opacity: .35; }
 .row .nm { display: flex; align-items: center; gap: 10px; }
 .row .ico { width: 30px; height: 30px; flex: 0 0 auto; object-fit: contain; }
 .item-head { display: flex; align-items: center; gap: 12px; margin-right: 44px; }
-.item-head img { width: 54px; height: 54px; object-fit: contain; flex: 0 0 auto; }
+.item-head img, .item-head .noart { width: 54px; height: 54px; object-fit: contain; flex: 0 0 auto; }
 .item-head h3 { margin: 0; }
 .toast .ticon { width: 34px; height: 34px; object-fit: contain; }
 
@@ -516,7 +516,7 @@ input[type=range]:disabled { opacity: .35; }
 <body>
 <div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
 <div id="backdrop" aria-hidden="true"></div>
-<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp"};</script>
+<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp"};</script>
 <div id="app"></div>
 <div id="toasts" aria-live="polite"></div>
 <div id="veil" aria-hidden="true"></div>
@@ -530,6 +530,10 @@ input[type=range]:disabled { opacity: .35; }
 /* ================= data ================= */
 const WAKE = 7, LIGHTS = 22;
 const START_CASH = 400, START_DEBT = 1100, MAXDEBT = 5000, START_CAP = 100, MAXCAP = 420, MAXDECOY = 4;
+/* Decoy endurance (proposed, pending approval): each decoy has this many staged breakthroughs in her.
+   Every attempt to pull someone off you costs one, whether it works or not. Your decoys share one pool,
+   so a decoy goes home each time the pool drops past a multiple of this. */
+const DECOY_SHARES = 3;
 
 /* Retreat lengths. Dale's hourly rate makes debt grow about 16x over any length.
    k scales per-walk event odds. Rank thresholds were calibrated per length by simulating
@@ -552,6 +556,9 @@ const ITEMS = [
   { id: 'wifi', name: 'Wifi passwords', plural: 'wifi password slips', min: 120, max: 400,
     up: 'Staff changed the wifi password. Whoever has the new one names their price.',
     down: 'Someone raked the wifi password into the zen garden. Everyone has it.' },
+  { id: 'petagotchi', name: 'Pocket Petagotchis', plural: 'Pocket Petagotchis', min: 60, max: 200,
+    up: 'A Petagotchi died during Noble Silence and the grief circle ran long. Everyone wants one to care for.',
+    down: 'Half the yurts set their Petagotchis free in the redwoods at once. The forest is beeping.' },
   { id: 'wine', name: 'Natural wine', plural: 'bottles of natural wine', min: 35, max: 110,
     up: 'Full moon sound bath tonight. Everyone wants a bottle.',
     down: 'A sommelier on week three is quietly unloading her stash.' },
@@ -570,10 +577,11 @@ const ITEMS = [
 ];
 const BYID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const itemIcon = id => IMG[`it_${id}`];
+const iconHTML = (id, cls = '') => (itemIcon(id) ? `<img${cls ? ` class="${cls}"` : ''} src="${itemIcon(id)}" alt="">` : `<span class="noart ${cls}" aria-hidden="true"></span>`);
 
 /* x/y place each spot on the journey map (percent of the map) */
 const PLACES = [
-  { name: 'Yurt Village', via: 'You shuffle back to the yurts. Someone is playing a singing bowl.', bias: { wine: .85, doritos: 1.15 }, x: 26, y: 55 },
+  { name: 'Yurt Village', via: 'You shuffle back to the yurts. Someone is playing a singing bowl.', bias: { wine: .85, doritos: 1.15, petagotchi: 1.2 }, x: 26, y: 55 },
   { name: 'Meditation Hall', via: 'You slip into the meditation hall mid-sit.', bias: { espresso: 1.35, burner: 1.2, charger: 1.15 }, x: 56, y: 36 },
   { name: 'Hot Springs', via: 'A man named River explains breathwork to you, unprompted.', bias: { wine: 1.3, doritos: 1.2, wifi: 1.2 }, x: 56, y: 86 },
   { name: 'The Labyrinth', via: 'You walk the labyrinth. It takes forty minutes to go nowhere.', bias: { coke: 1.2, choc: 1.15 }, x: 80, y: 58 },
@@ -682,7 +690,7 @@ function startGame(m) {
   store.set('unpw.mode', m.id);
   S = {
     mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
-    day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, zen: 100,
+    day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, decoyShares: 0, zen: 100,
     loc: 0, prices: {}, inv: {}, paid: {}, log: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
@@ -690,7 +698,9 @@ function startGame(m) {
   queue = []; enc = null; lastSaved = null; trade = null;
   closeSheet(true);
   screen = 'game';
-  if (M.cur !== 's0') { const was = musicPlaying(); musicLoad('s0'); if (was) M.audio.play().catch(() => {}); }
+  if (E.on) eventStop();
+  if (M.cur !== 's0' && M.audio) { const was = musicPlaying(); musicLoad('s0'); if (was) tryPlay(M.audio); }
+  musicResume();
   log(`Day 1, ${clock(WAKE)}. ${m.name}. You owe Dale the shuttle driver ${fmt(START_DEBT)} and his meter runs ${pct(m.rate)} an hour.`);
   const news = genPrices();
   render();
@@ -806,16 +816,17 @@ function rollEvents() {
         if (S.cash < price) return runQueue();
         offerSheet('A bigger cushion', `A guest is selling a bigger meditation cushion with a hidden zipper. It holds 40 more.`, `Buy it for ${fmt(price)}`, () => {
           S.cash -= price; S.cap += 40; SND.receive();
-          log(`Bought a bigger cushion. Room for ${S.cap}.`); toast(`New cushion. Room for ${S.cap}.`, 'good');
+          log(`Bought a bigger cushion for ${fmt(price)}. Room for ${S.cap}.`); toast(`New cushion. Room for ${S.cap}.`, 'good');
         });
       });
     } else if (r < 0.22 * k && S.decoys < MAXDECOY) {
       const price = Math.round(150 * Math.pow(1.8, S.decoys) * rf(0.85, 1.15));
       queue.push(() => {
         if (S.cash < price) return runQueue();
-        offerSheet('A decoy for hire', `A guest from Marin offers to be your decoy if Guide Saffron comes around. She cries on cue.`, `Hire her for ${fmt(price)}`, () => {
-          S.cash -= price; S.decoys += 1; SND.receive();
-          log(`Hired a decoy. You have ${S.decoys}.`); toast(`Decoy hired. You have ${plural(S.decoys, 'decoy', 'decoys')}.`, 'good');
+        offerSheet('A decoy for hire', `A guest from Marin offers to be your decoy if Guide Saffron comes around. She cries on cue, about ${DECOY_SHARES} times before she's all cried out.`, `Hire her for ${fmt(price)}`, () => {
+          S.cash -= price; S.decoyShares += DECOY_SHARES; syncDecoys(); SND.receive();
+          log(`Hired a decoy for ${fmt(price)}. You have ${S.decoys}, with ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left in them.`);
+          toast(`Decoy hired. You have ${plural(S.decoys, 'decoy', 'decoys')}.`, 'good');
         });
       });
     } else if (r < 0.26 * k && S.zen < 100) {
@@ -853,7 +864,7 @@ function tradeSheet() {
   const avg = have ? Math.round(S.paid[trade.id] / have) : 0;
   const held = have ? `You have ${have}${avg ? `, ${fmt(avg)} each on average` : ', all found for free'}.` : 'You have none.';
   if (!p) {
-    openSheet(`<div class="grab"></div><div class="item-head"><img src="${itemIcon(it.id)}" alt=""><h3 id="sheetTitle">${it.name}</h3></div>
+    openSheet(`<div class="grab"></div><div class="item-head">${iconHTML(it.id)}<h3 id="sheetTitle">${it.name}</h3></div>
       <p class="muted">No one at ${PLACES[S.loc].name} is trading ${it.plural} right now. ${held}</p>
       <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Close</button></div>`, 'trade');
     return;
@@ -861,7 +872,7 @@ function tradeSheet() {
   const max = tradeMax();
   trade.q = Math.min(Math.max(trade.q, max ? 1 : 0), max);
   openSheet(`<div class="grab"></div>
-    <div class="item-head"><img src="${itemIcon(it.id)}" alt=""><h3 id="sheetTitle">${it.name}</h3></div>
+    <div class="item-head">${iconHTML(it.id)}<h3 id="sheetTitle">${it.name}</h3></div>
     <p class="muted"><span class="num">${fmt(p)}</span> each here. ${held} Room for ${free()} more in your cushion.</p>
     <div class="seg" role="group" aria-label="Trade">
       <button type="button" data-tmode="buy" aria-pressed="${trade.mode === 'buy'}" ${canBuy(trade.id) ? '' : 'disabled'}>Receive</button>
@@ -993,7 +1004,7 @@ function saffronTurn() {
   const c = confiscate(rf(TAKE_LO, TAKE_HI) + TAKE_PER_VOL * (enc.left - 1));
   if (c) {
     enc.round.push({ t: `She took ${c.q} ${nameOf(c.it, c.q)}, about ${fmt(c.value)}.`, c: 'bad' });
-    log(`Guide Saffron confiscated ${c.q} ${c.it.plural}.`);
+    log(`Guide Saffron confiscated ${c.q} ${c.it.plural}, about ${fmt(c.value)}.`);
   }
   const own = ri(1, 3); let total = own;
   const parts = [`${pick(HER_ZEN)} (-${own})`];
@@ -1027,24 +1038,40 @@ function encRun() {
   }
   encSheet();
 }
+const DECOY_SPENT = [
+  "One decoy has shared her why one too many times. She's going to sit with that.",
+  'One decoy is out of breathwork. She is lying face down in the labyrinth.',
+  'One decoy ran out of vulnerability mid-sentence and went home.',
+];
+const syncDecoys = () => { S.decoys = Math.ceil(S.decoyShares / DECOY_SHARES); };
+/* Each decoy you send stages one breakthrough to pull someone off you: volunteers first, Guide Saffron last.
+   Every attempt costs a breakthrough, win or lose; decoys stop once nobody is left to pull. */
 function encDecoy() {
   enc.round = []; enc.tries++;
-  let pulled = 0;
-  for (let i = 0; i < S.decoys && enc.left > 0; i++) {
+  let pulled = 0, spent = 0;
+  const sent = S.decoys;
+  for (let i = 0; i < sent && enc.left > 0 && S.decoyShares > 0; i++) {
+    S.decoyShares -= 1; spent++;
     if (Math.random() < 0.5) {
       enc.left -= 1; pulled++;
       const v = enc.vols.find(x => !enc.gone.includes(x)); if (v) enc.gone.push(v);
     }
   }
+  syncDecoys();
+  const out = sent - S.decoys;
+  const left = S.decoys ? `${plural(S.decoys, 'decoy', 'decoys')} and ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left` : 'no decoys left';
+  const used = ` ${plural(spent, 'breakthrough', 'breakthroughs')} used, ${S.decoyShares} left.`;
+  const tired = out ? [{ t: out === 1 ? pick(DECOY_SPENT) : `${out} decoys are all cried out and went home.`, c: '' }] : [];
+  log(`Sent ${plural(spent, 'decoy', 'decoys')} at Guide Saffron. ${pulled ? `Pulled ${plural(pulled, 'person', 'people')} away` : 'Nobody bit'}${out ? `, and ${out === 1 ? 'one decoy' : `${out} decoys`} went home exhausted` : ''}. You have ${left}.`);
   if (enc.left === 0) {
     const found = ri(100, 400) * enc.n; ST().decoyWins++;
     S.cash += found;
-    enc.round.push({ t: `Your decoys pulled everyone away, Guide Saffron included. Someone dropped a fanny pack with ${fmt(found)} in it.`, c: 'good' });
+    enc.round.push({ t: `Your decoys pulled everyone away, Guide Saffron included. Someone dropped a fanny pack with ${fmt(found)} in it.${used}`, c: 'good' }, ...tired);
     log(`Found ${fmt(found)} in a fanny pack.`);
     staffUSB();
     enc.done = true; enc.face = 'shock'; enc.say = pick(SAY_DECOYED); SND.good();
   } else {
-    enc.round.push({ t: pulled ? `Your decoys pulled ${plural(pulled, 'person', 'people')} away. ${enc.left === 1 ? 'Guide Saffron is still with you.' : `${enc.left} are still with you.`}` : 'Your decoys just stood there, awkwardly.', c: pulled ? 'good' : '' });
+    enc.round.push({ t: pulled ? `Your decoys pulled ${plural(pulled, 'person', 'people')} away. ${enc.left === 1 ? 'Guide Saffron is still with you.' : `${enc.left} are still with you.`}${used}` : `Your decoys just stood there, awkwardly.${used}`, c: pulled ? 'good' : '' }, ...tired);
     if (!saffronTurn()) return;
   }
   encSheet();
@@ -1056,7 +1083,7 @@ function encHand() {
   const g = Math.min(4, 100 - S.zen); S.zen += g;
   ST().handed += c.q; ST().handedValue += c.value;
   enc.round.push({ t: `You handed over ${c.q} ${nameOf(c.it, c.q)}, about ${fmt(c.value)}. Honestly, it felt kind of good.${g ? ` Zen +${g}.` : ''}`, c: '' });
-  log(`Handed Guide Saffron ${c.q} ${c.it.plural}.`);
+  log(`Handed Guide Saffron ${c.q} ${c.it.plural}, about ${fmt(c.value)}.`);
   enc.done = true; enc.face = 'joy'; enc.say = pick(SAY_PAID); SND.bowl();
   encSheet();
 }
@@ -1093,7 +1120,7 @@ function encSheet() {
     ? `<button type="button" class="btn primary carry" data-act="encdone">Carry on</button>`
     : `<div class="choices">
         <button type="button" class="choice primary" data-act="encrun"><b>Slip away</b><span>About a ${roundPct(odds)} chance. If it fails, she takes more.</span></button>
-        <button type="button" class="choice" data-act="encdecoy" ${S.decoys ? '' : 'disabled'}><b>${S.decoys ? `Send ${plural(S.decoys, 'decoy', 'decoys')}` : 'No decoys'}</b><span>${S.decoys ? 'Each has an even chance to pull someone away.' : 'Hire one when a guest offers.'}</span></button>
+        <button type="button" class="choice" data-act="encdecoy" ${S.decoys ? '' : 'disabled'}><b>${S.decoys ? `Send ${plural(S.decoys, 'decoy', 'decoys')}` : 'No decoys'}</b><span>${S.decoys ? `Even odds each to pull someone away. ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left.` : 'Hire one when a guest offers.'}</span></button>
         <button type="button" class="choice" data-act="enchand" ${top ? '' : 'disabled'}><b>Hand over ${handQ} ${top ? nameOf(top, handQ) : ''}</b><span>About ${fmt(handV)}. She leaves for sure.</span></button>
         <button type="button" class="choice" data-act="encdonate" ${S.cash >= don ? '' : 'disabled'}><b>Donate ${fmt(don)}</b><span>${S.cash >= don ? 'To the scholarship fund. She leaves for sure.' : 'You don\'t have enough cash on you.'}</span></button>
       </div>`;
@@ -1176,7 +1203,7 @@ function updateVan() {
 function vanGo() {
   const a = vanAmt; if (!(a > 0) || a > vanMax(vanMode)) return;
   let msg = '';
-  if (vanMode === 'pay') { daleCounting = true; S.cash -= a; S.debt -= a; if (!S.debt && ST().paidDay == null) ST().paidDay = S.day; msg = S.debt ? `Paid Dale ${fmt(a)}. You still owe ${fmt(S.debt)}.` : `Paid Dale ${fmt(a)}. You're square.`; }
+  if (vanMode === 'pay') { daleCounting = true; S.cash -= a; S.debt -= a; if (!S.debt && ST().paidDay == null) { ST().paidDay = S.day; eventSong('square'); } msg = S.debt ? `Paid Dale ${fmt(a)}. You still owe ${fmt(S.debt)}.` : `Paid Dale ${fmt(a)}. You're square.`; }
   else if (vanMode === 'borrow') { S.cash += a; S.debt += a; ST().borrowed += a; msg = `Borrowed ${fmt(a)} at ${pct(S.rate)} an hour.`; }
   else if (vanMode === 'stash') { S.cash -= a; S.van += a; msg = `Stashed ${fmt(a)} in the glovebox.`; }
   else { S.van -= a; S.cash += a; msg = `Took ${fmt(a)} out of the glovebox.`; }
@@ -1203,10 +1230,12 @@ function endGame(reason) {
   screen = 'over';
   if (reason !== 'zen') SND.rest();
   render();
+  eventSong(endingSong());
 }
 function snap() {
   themeStop();
   musicDuck(false);
+  musicResume();
   if (S && S.stats) S.stats.zenMin = 0;
   closeSheet(true);
   queue = [];
@@ -1241,6 +1270,8 @@ function saveRun() { if (S && !S.over && screen === 'game') store.set('unpw.save
 function continueRun() {
   const r = savedRun(); if (!r) return;
   S = r; if (!Array.isArray(S.songs)) S.songs = ['s0'];
+  ITEMS.forEach(i => { if (!(S.inv[i.id] >= 0)) S.inv[i.id] = 0; if (!(S.paid[i.id] >= 0)) S.paid[i.id] = 0; });
+  if (!(S.decoyShares >= 0)) S.decoyShares = (S.decoys || 0) * DECOY_SHARES;
   if (!S.stats) S.stats = newStats();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
   queue = []; enc = null; lastSaved = null; trade = null;
@@ -1260,7 +1291,8 @@ const TRACKS = [
 ];
 const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
 const CD_PRICE = 150;
-const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null };
+const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
+  want: false, held: false, at: null, fadeTimer: null };
 const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
 const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
 const inRun = () => screen === 'game' && S && !S.over;
@@ -1295,6 +1327,16 @@ function buyCD() {
 
 function trackURL(id) { return `assets/audio/${id}.m4a`; }
 const canPlayAAC = () => { try { return !!new Audio().canPlayType('audio/mp4; codecs="mp4a.40.2"'); } catch (e) { return false; } };
+/* Every song runs through the same AudioContext so volume works on iOS, where element volume is read-only. */
+function routed(el, an) {
+  if (!ac) return {};
+  try {
+    const src = ac.createMediaElementSource(el), gain = ac.createGain();
+    if (an) { src.connect(an); an.connect(gain); } else src.connect(gain);
+    gain.connect(ac.destination);
+    return { gain };
+  } catch (e) { return {}; }
+}
 function ensureAudio() {
   if (M.audio) return;
   try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
@@ -1305,16 +1347,24 @@ function ensureAudio() {
   M.audio.addEventListener('pause', musicUI);
   M.audio.addEventListener('loadedmetadata', musicUI);
   if (ac) {
-    try {
-      const src = ac.createMediaElementSource(M.audio);
-      M.an = ac.createAnalyser(); M.an.fftSize = 64; M.an.smoothingTimeConstant = 0.75;
-      M.bins = new Uint8Array(M.an.frequencyBinCount);
-      M.gain = ac.createGain();
-      src.connect(M.an); M.an.connect(M.gain); M.gain.connect(ac.destination);
-    } catch (e) { M.an = null; M.gain = null; }
+    try { M.an = ac.createAnalyser(); M.an.fftSize = 64; M.an.smoothingTimeConstant = 0.75; M.bins = new Uint8Array(M.an.frequencyBinCount); } catch (e) { M.an = null; }
+    M.gain = routed(M.audio, M.an).gain || null;
+    ac.addEventListener('statechange', () => { if (ac.state !== 'running' && !document.hidden && soundOn) acWake(); });
   }
   musicVol();
   clearMediaSession();
+}
+/* iOS can leave the AudioContext suspended or "interrupted" (calls, Siri, other apps, coming back to the tab).
+   While it is, every song is silent even though it's technically playing. Waking it needs a tap, so
+   this runs on every tap; it's a no-op when the context is fine. Never wait on its promise: iOS can leave it hanging. */
+function acWake() {
+  if (ac && soundOn && ac.state !== 'running' && ac.state !== 'closed') { try { ac.resume().catch(() => {}); } catch (e) { /* ignore */ } }
+}
+/* play() that never throws: resolves to '' when the song starts, or the error's name when it doesn't. */
+function tryPlay(el) {
+  acWake();
+  try { return Promise.resolve(el.play()).then(() => '', e => (e && e.name) || 'Error'); }
+  catch (e) { return Promise.resolve((e && e.name) || 'Error'); }
 }
 /* Keep the game's music off the lock screen and out of system media controls. */
 function clearMediaSession() {
@@ -1328,61 +1378,170 @@ function clearMediaSession() {
    so nothing keeps playing or shows up in system controls. Coming back picks up where it left off. */
 function musicAway() {
   if (T.el && !T.el.paused) { clearTimeout(T.stopTimer); T.el.pause(); T.away = true; }
+  if (E.el && !E.el.paused) E.el.pause();
   if (!M.audio || !musicPlaying()) return;
-  M.away = { id: M.cur, t: M.audio.currentTime };
+  M.at = { id: M.cur, t: M.audio.currentTime };
   M.audio.pause();
   M.audio.removeAttribute('src'); M.audio.load(); M.loaded = null;
   clearMediaSession();
   musicUI();
 }
 function musicBack() {
+  if (!soundOn) return;
+  acWake();
   if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(); }
-  const a = M.away; M.away = null;
-  if (!a || !soundOn) return;
-  if (!musicLoad(a.id)) return;
-  M.audio.addEventListener('loadedmetadata', () => { try { M.audio.currentTime = a.t; } catch (e) { /* ignore */ } }, { once: true });
-  const go = () => M.audio.play().then(musicUI).catch(musicUI);
-  if (ac && ac.state === 'suspended') ac.resume().then(go).catch(musicUI); else go();
+  if (E.on && E.el.paused) eventPlay();
+  else musicResume();
 }
 document.addEventListener('visibilitychange', () => (document.hidden ? musicAway() : musicBack()));
 window.addEventListener('pagehide', musicAway);
-function musicVol() {
-  const v = M.vol * M.duck;
-  if (M.gain && ac) M.gain.gain.setTargetAtTime(v, ac.currentTime, 0.12);
-  else if (M.audio) M.audio.volume = v;
+/* Any tap is a chance to fix audio iOS stopped behind our back: wake the AudioContext, retry an event song
+   that wasn't allowed to start, and bring back a Dale-Fi song that should be playing but isn't. */
+function audioTap() {
+  if (!soundOn || !M.audio) return;
+  acWake();
+  if (E.on) { if (E.retry && E.el.paused) eventPlay(); return; }
+  if (!T.on && M.want && !musicPlaying()) musicResume();
 }
-function musicDuck(on) { M.duck = on ? (themeReady() ? 0 : 0.3) : 1; if (M.audio) musicVol(); }
-/* Guide Saffron's theme: plays once as she shows up. The Dale-Fi drops out for it, then comes back quietly until she leaves. */
-const T = { el: null, gain: null, stopTimer: null };
+['touchend', 'click', 'keydown'].forEach(t => document.addEventListener(t, audioTap, true));
+
+/* The Dale-Fi's volume: your setting, lowered while Guide Saffron is around, and silent while it's held
+   for her theme or an event song. */
+function musicVol(tc = 0.12) {
+  const v = M.held ? 0 : M.vol * M.duck;
+  if (M.gain && ac) M.gain.gain.setTargetAtTime(v, ac.currentTime, tc);
+  else if (M.audio) M.audio.volume = v;
+  if (E.on) { if (E.gain && ac) E.gain.gain.setTargetAtTime(M.vol, ac.currentTime, 0.12); else if (E.el) E.el.volume = M.vol; }
+}
+function musicDuck(on) { M.duck = on ? 0.3 : 1; if (M.audio) musicVol(); }
+/* Step the Dale-Fi aside for another song: fade it out, then pause it so two songs never play at once.
+   Whether you wanted it playing (M.want) doesn't change, so musicResume can bring it back. */
+function musicHold() {
+  M.held = true;
+  clearTimeout(M.fadeTimer);
+  if (!musicPlaying()) return;
+  musicVol(0.1);
+  M.fadeTimer = setTimeout(() => { if (M.held && M.audio) M.audio.pause(); }, 450);
+}
+/* Bring the Dale-Fi back after Guide Saffron's theme, an event song, an iOS interruption or a trip away
+   from the app, but only if you had it playing. A deliberate pause or mute stays that way. */
+function musicResume() {
+  if (T.on || E.on || !M.audio) return;
+  M.held = false;
+  clearTimeout(M.fadeTimer);
+  if (!M.want || !soundOn || document.hidden) { musicVol(); return musicUI(); }
+  const at = M.at;
+  if (M.loaded !== M.cur || !avail().includes(M.cur)) {
+    if (!musicLoad(M.cur)) return;
+    if (at && at.id === M.cur) M.audio.addEventListener('loadedmetadata', () => { try { M.audio.currentTime = at.t; } catch (e) { /* ignore */ } }, { once: true });
+  }
+  if (!musicPlaying() && M.gain && ac) { M.gain.gain.cancelScheduledValues(ac.currentTime); M.gain.gain.setValueAtTime(0, ac.currentTime); }
+  musicVol(0.25);
+  if (!musicPlaying()) tryPlay(M.audio).then(musicUI);
+  musicUI();
+}
+
+/* Guide Saffron's theme: plays once as she shows up. The Dale-Fi steps aside for it, then comes back quietly until she leaves. */
+const T = { el: null, gain: null, stopTimer: null, on: false };
 const themeReady = () => soundOn && canPlayAAC();
 function themeStart() {
   if (!themeReady()) return;
   ensureAudio();
+  if (E.on) eventStop();
   if (!T.el) {
-    const url = trackURL('saffron'); if (!url) return;
-    T.el = new Audio(); T.el.loop = false; T.el.src = url;
-    T.el.addEventListener('ended', () => { if (enc && M.duck === 0) { M.duck = 0.3; if (M.audio) musicVol(); } });
-    if (ac) { try { const src = ac.createMediaElementSource(T.el); T.gain = ac.createGain(); T.gain.gain.value = 0; src.connect(T.gain); T.gain.connect(ac.destination); } catch (e) { T.gain = null; } }
+    T.el = new Audio(); T.el.loop = false; T.el.src = trackURL('saffron');
+    T.el.addEventListener('ended', themeEnded);
+    T.el.addEventListener('error', themeEnded);
+    T.gain = routed(T.el).gain || null;
+    if (T.gain) T.gain.gain.value = 0;
   }
   clearTimeout(T.stopTimer);
-  if (ac && ac.state === 'suspended') ac.resume();
-  T.el.currentTime = 0;
+  T.on = true;
+  musicHold();
+  try { T.el.currentTime = 0; } catch (e) { /* not loaded yet */ }
   if (T.gain) { T.gain.gain.cancelScheduledValues(ac.currentTime); T.gain.gain.setValueAtTime(0, ac.currentTime); T.gain.gain.linearRampToValueAtTime(0.9 * M.vol, ac.currentTime + 0.5); }
-  T.el.play().catch(() => {});
+  tryPlay(T.el).then(err => { if (err && err !== 'AbortError') themeEnded(); });
   clearMediaSession();
 }
+/* Her theme finished, failed to start or couldn't load: the Dale-Fi comes back, quietly while she's still here. */
+function themeEnded() { if (!T.on) return; T.on = false; musicResume(); }
 function themeStop() {
+  T.on = false;
   if (!T.el || T.el.paused) return;
   if (T.gain && ac) { T.gain.gain.cancelScheduledValues(ac.currentTime); T.gain.gain.setValueAtTime(T.gain.gain.value, ac.currentTime); T.gain.gain.linearRampToValueAtTime(0, ac.currentTime + 0.6); }
   clearTimeout(T.stopTimer);
   T.stopTimer = setTimeout(() => { T.el.pause(); }, 650);
 }
+
+/* Event songs: full-length tracks that belong to a moment (squaring up with Dale, checking out).
+   They play once, in place of the Dale-Fi, which picks up where it left off when they end.
+   Guide Saffron showing up, any Dale-Fi button, muting or leaving the results screen ends one early. */
+const EVENT_SONGS = {
+  square: { title: "you're square", artist: 'TORiTiA' },
+  'win-moment': { title: 'The Winning Moment', artist: 'TORiTiA' },
+  'win-thats': { title: "That's Winning", artist: 'TORiTiA' },
+  checkout: { title: 'the checkout (sadder)', artist: 'TORiTiA' },
+};
+const E = { el: null, gain: null, an: null, id: null, on: false, retry: false, stopTimer: null };
+function eventSong(id) {
+  if (!themeReady() || !EVENT_SONGS[id]) return;
+  ensureAudio();
+  themeStop();
+  musicHold();
+  if (!E.el) {
+    E.el = new Audio(); E.el.preload = 'auto';
+    E.el.addEventListener('ended', eventDone);
+    E.el.addEventListener('error', () => { if (E.el.getAttribute('src')) eventDone(); });
+    E.el.addEventListener('play', musicUI);
+    E.el.addEventListener('pause', musicUI);
+    if (ac) { try { E.an = ac.createAnalyser(); E.an.fftSize = 64; E.an.smoothingTimeConstant = 0.75; } catch (e) { E.an = null; } }
+    E.gain = routed(E.el, E.an).gain || null;
+  }
+  clearTimeout(E.stopTimer);
+  E.on = true; E.id = id; E.retry = false;
+  E.el.src = trackURL(id);
+  if (E.gain) { E.gain.gain.cancelScheduledValues(ac.currentTime); E.gain.gain.setValueAtTime(0, ac.currentTime); E.gain.gain.linearRampToValueAtTime(M.vol, ac.currentTime + 0.6); }
+  else E.el.volume = M.vol;
+  eventPlay();
+  clearMediaSession();
+  musicUI();
+}
+function eventPlay() {
+  E.retry = false;
+  tryPlay(E.el).then(err => {
+    if (!err || err === 'AbortError' || !E.on) return musicUI();
+    if (err === 'NotAllowedError') { E.retry = true; return musicUI(); }
+    eventDone();
+  });
+}
+/* The event song ended on its own (or can't play at all): hand back to the Dale-Fi. */
+function eventDone() { if (!E.on) return; E.on = false; E.retry = false; musicResume(); musicUI(); }
+/* End an event song early with a short fade. The caller decides what plays next. */
+function eventStop() {
+  if (!E.on) return;
+  E.on = false; E.retry = false;
+  if (E.gain && ac) { E.gain.gain.cancelScheduledValues(ac.currentTime); E.gain.gain.setValueAtTime(E.gain.gain.value, ac.currentTime); E.gain.gain.linearRampToValueAtTime(0, ac.currentTime + 0.6); }
+  clearTimeout(E.stopTimer);
+  E.stopTimer = setTimeout(() => { if (!E.on) E.el.pause(); }, 650);
+  musicUI();
+}
+/* Checkout and results music. PROVISIONAL mapping, pending approval: the top two takeaways get
+   The Winning Moment, the middle two That's Winning, and snapping, debt or going broke get the sad checkout. */
+function endingSong() {
+  const i = rankIndex();
+  return i >= 4 ? 'win-moment' : i >= 2 ? 'win-thats' : 'checkout';
+}
+
 const musicPlaying = () => !!(M.audio && !M.audio.paused);
+/* What the Dale-Fi screen shows: an event song while one is on, otherwise your own song. */
+const eventPlaying = () => !!(E.on && E.el && !E.el.paused);
+const anyPlaying = () => musicPlaying() || eventPlaying();
 function musicLoad(id) {
   ensureAudio();
   const list = avail();
   if (!list.includes(id)) id = list[0];
   M.cur = id; store.set('unpw.cur', id);
+  M.at = null;
   if (!canPlayAAC()) { toast("This browser can't play the Dale-Fi's songs. The game works fine without them.", '', 4500); return false; }
   const url = trackURL(id);
   if (!url) { toast('The music is still arriving. Try again in a few seconds.', '', 3000); return false; }
@@ -1391,44 +1550,53 @@ function musicLoad(id) {
   clearMediaSession();
   return true;
 }
+/* Pressing a Dale-Fi button means you want the Dale-Fi: it ends any event song first. */
+function musicTakeover() { themeStop(); if (E.on) eventStop(); M.held = false; clearTimeout(M.fadeTimer); musicVol(); }
 function musicToggle(force) {
   ensureAudio();
-  if (ac && ac.state === 'suspended') ac.resume();
-  const play = force != null ? force : !musicPlaying();
+  acWake();
+  const play = force != null ? force : !anyPlaying();
   if (play && !soundOn) setSound(true, true);
+  musicTakeover();
+  M.want = play;
   if (play) {
     if ((M.loaded !== M.cur || !avail().includes(M.cur)) && !musicLoad(M.cur)) return;
-    M.audio.play().catch(() => toast('Tap play again to start the music.', '', 3000));
+    tryPlay(M.audio).then(err => { if (err && err !== 'AbortError') toast('Tap play again to start the music.', '', 3000); musicUI(); });
   } else M.audio.pause();
   musicUI();
 }
 function musicStep(d, auto) {
   const list = avail();
   const i = Math.max(0, list.indexOf(M.cur));
-  const was = musicPlaying() || auto || d > 0;
+  const was = musicPlaying() || auto || d > 0 || (d < 0 && eventPlaying());
+  if (!auto) musicTakeover();
   if (!musicLoad(list[(i + d + list.length) % list.length])) return;
-  if (was) M.audio.play().catch(() => {});
+  M.want = was;
+  if (was) tryPlay(M.audio).then(musicUI);
   musicUI();
 }
 function musicPick(id) {
-  if (id === M.cur && M.loaded === id) return musicToggle();
+  if (id === M.cur && M.loaded === id && !E.on) return musicToggle();
   if (!soundOn) setSound(true, true);
+  musicTakeover();
   if (!musicLoad(id)) return;
-  if (ac && ac.state === 'suspended') ac.resume();
-  M.audio.play().catch(() => {});
+  M.want = true;
+  tryPlay(M.audio).then(musicUI);
   musicUI();
 }
-/* One switch: muting stops the music and the effects; unmuting brings back the song you were playing. */
+/* One switch: muting stops the music and the effects; unmuting brings back the song you were playing.
+   An event song that gets muted is over; it doesn't come back with the sound. */
 function setSound(on, quiet) {
   soundOn = on; store.set('unpw.sound', on);
   if (!on) {
     if (T.el) { clearTimeout(T.stopTimer); T.el.pause(); }
-    M.mutedPlaying = musicPlaying();
-    if (M.mutedPlaying) M.audio.pause();
+    T.on = false;
+    if (E.on) { E.on = false; E.retry = false; E.el.pause(); }
+    if (musicPlaying()) M.audio.pause();
   } else {
     if (!quiet) SND.tap();
-    if (M.mutedPlaying && M.audio && M.loaded) M.audio.play().catch(() => {});
-    M.mutedPlaying = false;
+    acWake();
+    musicResume();
   }
   musicUI();
 }
@@ -1439,30 +1607,32 @@ function musicNudge(d) {
 }
 function eqHTML() {
   const fresh = inRun() && S.newSong;
-  return `<button type="button" class="iconbtn eq ${musicPlaying() ? 'on' : ''}" data-act="music" aria-label="${fresh ? 'Dale-Fi music player, new song' : 'Dale-Fi music player'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3v11.6a3.4 3.4 0 11-2-3.1V7.3l-8 1.8v7.5a3.4 3.4 0 11-2-3.1V6.6z"/></svg>${fresh ? '<b class="newdot" aria-hidden="true"></b>' : ''}</button>`;
+  return `<button type="button" class="iconbtn eq ${anyPlaying() ? 'on' : ''}" data-act="music" aria-label="${fresh ? 'Dale-Fi music player, new song' : 'Dale-Fi music player'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 3v11.6a3.4 3.4 0 11-2-3.1V7.3l-8 1.8v7.5a3.4 3.4 0 11-2-3.1V6.6z"/></svg>${fresh ? '<b class="newdot" aria-hidden="true"></b>' : ''}</button>`;
 }
 function musicUI() {
-  document.querySelectorAll('.eq').forEach(b => b.classList.toggle('on', musicPlaying()));
+  const on = anyPlaying();
+  document.querySelectorAll('.eq').forEach(b => b.classList.toggle('on', on));
   if (sheetKind !== 'music') return;
   const list = avail();
-  const t = TBYID[M.cur] || TBYID[list[0]];
-  const play = $('#mplay'); if (play) { play.setAttribute('aria-label', musicPlaying() ? 'Pause' : 'Play'); play.innerHTML = musicPlaying() ? ICON.pause : ICON.play; }
-  const ti = $('#lcdTitle'); if (ti && ti.dataset.id !== t.id) { ti.dataset.id = t.id; ti.innerHTML = `<span>${t.title} - ${t.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span><span aria-hidden="true">${t.title} - ${t.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span>`; }
-  const no = $('#lcdNo'); if (no) no.textContent = `${String(Math.max(1, list.indexOf(t.id) + 1)).padStart(2, '0')}/${String(list.length).padStart(2, '0')}`;
+  const ev = E.on ? { id: `ev-${E.id}`, ...EVENT_SONGS[E.id] } : null;
+  const t = TBYID[M.cur] || TBYID[list[0]], show = ev || t;
+  const play = $('#mplay'); if (play) { play.setAttribute('aria-label', on ? 'Pause' : 'Play'); play.innerHTML = on ? ICON.pause : ICON.play; }
+  const ti = $('#lcdTitle'); if (ti && ti.dataset.id !== show.id) { ti.dataset.id = show.id; ti.innerHTML = `<span>${show.title} - ${show.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span><span aria-hidden="true">${show.title} - ${show.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span>`; }
+  const no = $('#lcdNo'); if (no) no.textContent = ev ? 'EVENT' : `${String(Math.max(1, list.indexOf(t.id) + 1)).padStart(2, '0')}/${String(list.length).padStart(2, '0')}`;
   const vo = $('#lcdVol'); if (vo) vo.textContent = `VOL ${Math.round(M.vol * 10)}`;
   document.querySelectorAll('[data-track]').forEach(r => r.classList.toggle('cur', r.dataset.track === t.id));
   if (!M.raf) M.raf = requestAnimationFrame(lcdLoop);
 }
 function lcdLoop() {
   if (sheetKind !== 'music') { M.raf = null; return; }
-  const a = M.audio;
+  const a = E.on ? E.el : M.audio, an = E.on ? E.an : M.an;
   const cur = a ? a.currentTime : 0, dur = a && isFinite(a.duration) ? a.duration : 0;
   const bar = $('#lcdFill'); if (bar) bar.style.width = `${dur ? (cur / dur) * 100 : 0}%`;
   const tm = $('#lcdTime'); if (tm) tm.textContent = `${mmss(cur)} / ${mmss(dur)}`;
   const vis = document.querySelectorAll('#lcdBars i');
   if (vis.length) {
-    if (M.an && musicPlaying()) {
-      M.an.getByteFrequencyData(M.bins);
+    if (an && a && !a.paused) {
+      an.getByteFrequencyData(M.bins);
       vis.forEach((el, i) => { const v = M.bins[Math.min(M.bins.length - 1, 1 + i * 2)] / 255; el.style.height = `${Math.max(8, v * 100)}%`; });
     } else vis.forEach(el => { el.style.height = '8%'; });
   }
@@ -1580,7 +1750,7 @@ function gameHTML() {
     if (cls === 'hot') anyHot = true; if (cls === 'calm') anyCalm = true;
     const note = cls === 'hot' ? '<span class="sr">, in demand</span>' : cls === 'calm' ? '<span class="sr">, abundant</span>' : !p ? '<span class="sr">, not traded here</span>' : '';
     return `<button type="button" class="row ${p ? '' : 'na'}" data-item="${it.id}">
-      <span class="nm"><img class="ico" src="${itemIcon(it.id)}" alt="">${it.name}</span><span class="hv num">${have ? `${have} held` : ''}</span>
+      <span class="nm">${iconHTML(it.id, 'ico')}${it.name}</span><span class="hv num">${have ? `${have} held` : ''}</span>
       <span class="pr num ${cls}">${p ? fmt(p) : '—'}${note}</span></button>`;
   }).join('');
   const last = S.day >= S.days;
@@ -2016,7 +2186,7 @@ function handbookSheet() {
       <p>Every round she's still with you, she confiscates 12 to 25 percent of your most valuable goods, plus 2 percent more for each volunteer. She costs you 1 to 3 zen herself, and each volunteer may cost you 3 to 8 more. The check-in screen shows exactly what each attempt cost you, a running total, and what every option will cost before you pick it. Your choices:</p>
       <ul>
         <li><b>Slip away.</b> A gamble, and the button shows your odds. They drop with every volunteer and with every bit of weight in your cushion, from about three in five at best to about one in seven at worst. If it fails, she takes her cut and you choose again.</li>
-        <li><b>Send in your decoys</b>, if you've hired any. Each one has an even chance of pulling one person off you. Clear them all and you find a dropped fanny pack worth $100 to $400 per person. If any are left, she takes her cut.</li>
+        <li><b>Send in your decoys</b>, if you've hired any. Each one stages a breakthrough with an even chance of pulling one person off you, volunteers first and Guide Saffron last. Anyone they pull away stays gone for the rest of the check-in, so you can send them again next round. Clear everyone and you find a dropped fanny pack worth $100 to $400 per person. If anyone is left, she takes her cut. Every decoy you send uses up one breakthrough, whether it works or not, and the button shows how many you have left.</li>
         <li><b>Hand over a third of your most valuable goods.</b> She leaves for sure, and honestly it feels kind of good: 4 zen back.</li>
         <li><b>Donate 15 percent of your cash</b>, at least $50, to the scholarship fund. She leaves for sure.</li>
       </ul>
@@ -2030,7 +2200,7 @@ function handbookSheet() {
         <li>A room inspection, a forgotten robe or a bad decision that costs you 10 to 25 percent of the cash on you.</li>
         <li>A find: a handful of free snacks or espresso in a hollow log or the lost and found.</li>
         <li>A guest selling a bigger cushion: 40 more spaces, up to ${MAXCAP} in all. The first costs around $120, and each one after that costs about twice the last.</li>
-        <li>A guest from Marin offering to be your decoy. The first costs around $150 and each extra one about 80 percent more. You can keep up to ${MAXDECOY}, and they stay with you for the whole retreat.</li>
+        <li>A guest from Marin offering to be your decoy. The first costs around $150 and each extra one about 80 percent more. You can keep up to ${MAXDECOY}. Each has ${DECOY_SHARES} breakthroughs in her; once she's used them up she goes home, and the next offer is priced for the decoys you have left.</li>
         <li>A quiet moment that gives you zen back.</li>
       </ul>
       <p>Offers only show up when you can afford them. Say no if you'd rather keep the cash.</p>`),
@@ -2042,7 +2212,7 @@ function handbookSheet() {
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
       <p>The equalizer icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up.</p>
-      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
+      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
       <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, 1 to 6 pick a spot on the map, and Esc closes things.</p>
@@ -2054,7 +2224,7 @@ function handbookSheet() {
         <li>An orange price is where you let go. A green one is where you receive.</li>
         <li>A full cushion of burners late in a long retreat is exactly what Guide Saffron is looking for. Decide ahead of time what you'll hand over.</li>
         <li>Stash cash in the glovebox before you wander far from the van.</li>
-        <li>A decoy or two usually pays for itself.</li>
+        <li>A decoy or two usually pays for itself. Save their breakthroughs for a cushion worth protecting.</li>
       </ul>`),
   ].join('');
   openSheet(`<div class="grab"></div>
@@ -2168,7 +2338,7 @@ function act(a, el) {
     case 'encrun': return encRun();
     case 'encdecoy': return encDecoy();
     case 'encdonate': return encDonate();
-    case 'encdone': { enc = null; themeStop(); musicDuck(false); closeSheet(); const h = heldToasts; heldToasts = []; h.forEach((t, i) => setTimeout(() => toast(...t), 250 + i * 150)); return; }
+    case 'encdone': { enc = null; themeStop(); musicDuck(false); musicResume(); closeSheet(); const h = heldToasts; heldToasts = []; h.forEach((t, i) => setTimeout(() => toast(...t), 250 + i * 150)); return; }
     case 'enchand': return encHand();
     case 'music': return musicSheet();
     case 'buycd': buyCD(); return sheetKind === 'van' ? vanSheet() : musicSheet();
@@ -2179,7 +2349,7 @@ function act(a, el) {
     case 'mvoldn': return musicNudge(-0.1);
     case 'sign': return saveScore();
     case 'sound': setSound(!soundOn); return menuSheet();
-    case 'welcome': closeSheet(true); queue = []; $('#toasts').innerHTML = ''; screen = 'welcome'; return render();
+    case 'welcome': closeSheet(true); queue = []; $('#toasts').innerHTML = ''; screen = 'welcome'; if (E.on) { eventStop(); musicResume(); } return render();
     case 'close': return closeSheet();
   }
 }
@@ -2194,7 +2364,8 @@ document.addEventListener('click', e => {
   const row = t.closest('[data-item]'); if (row) return openTrade(row.dataset.item);
   const tr = t.closest('[data-track]'); if (tr) return musicPick(tr.dataset.track);
   const pg = t.closest('#lcdProg');
-  if (pg && M.audio && isFinite(M.audio.duration)) { const r = pg.getBoundingClientRect(); M.audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * M.audio.duration; return; }
+  const pa = E.on ? E.el : M.audio;
+  if (pg && pa && isFinite(pa.duration)) { const r = pg.getBoundingClientRect(); pa.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * pa.duration; return; }
   const tm = t.closest('[data-tmode]');
   if (tm && !tm.disabled) { trade.mode = tm.dataset.tmode; trade.q = tradeMax(); SND.tap(); return tradeSheet(); }
   const ts = t.closest('[data-tset]');
