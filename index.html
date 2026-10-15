@@ -534,15 +534,25 @@ const START_CASH = 400, START_DEBT = 1100, MAXDEBT = 5000, START_CAP = 100, MAXC
    Every attempt to pull someone off you costs one, whether it works or not. Your decoys share one pool,
    so a decoy goes home each time the pool drops past a multiple of this. */
 const DECOY_SHARES = 3;
+/* Market supply (proposed, pending approval). Each spot has a limited number of each good to sell you, rolled
+   per spot at the start of a run within these ranges (more where it runs cheap). Buying draws it down; each
+   morning it refills by REFILL of its usual amount, never past it. A crash in the gossip dumps extra stock.
+   Selling has no cap, but buyers fill up: at each spot they take about a typical stock's worth of a good at
+   full price, and past that the nth extra unit fetches 1 / (1 + n / depth) of the price, never less than
+   SAT_FLOOR of it, with depth = GLUT times the good's typical stock. Buyers
+   forget half of what you sold them each night, and a spike in the gossip makes them hungry again. */
+const STOCK = { burner: [3, 8], charger: [6, 16], wifi: [10, 26], petagotchi: [14, 36], wine: [24, 60], doritos: [30, 80], coke: [40, 100], choc: [50, 120], espresso: [60, 150] };
+const REFILL = 0.5, GLUT = 2, SAT_FLOOR = 0.4, FORGET = 0.5;
 
 /* Retreat lengths. Dale's hourly rate makes debt grow about 16x over any length.
    k scales per-walk event odds. Rank thresholds were calibrated per length by simulating
-   thousands of runs with a casual bot (always runs from Saffron) and an expert bot. */
+   thousands of runs with a casual bot (always runs from Saffron) and an expert bot. With market supply
+   (proposed, pending approval) they were re-matched percentile for percentile against the same bot. */
 const MODES = [
-  { id: 'weekend', name: 'A weekend reset', short: 'Weekend', days: 3, rate: 0.045, k: 1.25, rest: 10, ranks: [0, 5000, 25000, 120000, 450000], extra: '' },
-  { id: 'five', name: 'Five-day immersion', short: 'Five days', days: 5, rate: 0.025, k: 1.0, rest: 10, ranks: [0, 20000, 150000, 600000, 1300000], extra: '' },
-  { id: 'week', name: 'The full week', short: 'Full week', days: 7, rate: 0.0175, k: 0.85, rest: 10, ranks: [0, 50000, 400000, 1100000, 2200000], extra: '' },
-  { id: 'intensive', name: '30-day intensive', short: '30-day intensive', days: 30, rate: 0.004, k: 0.45, rest: 15, ranks: [0, 1000000, 5500000, 9000000, 14000000], extra: ' Clear your evening.' },
+  { id: 'weekend', name: 'A weekend reset', short: 'Weekend', days: 3, rate: 0.045, k: 1.25, rest: 10, ranks: [0, 5000, 20000, 60000, 125000], extra: '' },
+  { id: 'five', name: 'Five-day immersion', short: 'Five days', days: 5, rate: 0.025, k: 1.0, rest: 10, ranks: [0, 25000, 75000, 175000, 275000], extra: '' },
+  { id: 'week', name: 'The full week', short: 'Full week', days: 7, rate: 0.0175, k: 0.85, rest: 10, ranks: [0, 50000, 125000, 225000, 400000], extra: '' },
+  { id: 'intensive', name: '30-day intensive', short: '30-day intensive', days: 30, rate: 0.004, k: 0.45, rest: 15, ranks: [0, 200000, 1000000, 1600000, 2500000], extra: ' Clear your evening.' },
 ];
 const pct = r => `${+(r * 100).toFixed(2)}%`;
 
@@ -630,9 +640,15 @@ const SKIES = [
 
 /* ================= utils ================= */
 const $ = s => document.querySelector(s);
-const ri = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
-const rf = (a, b) => Math.random() * (b - a) + a;
-const pick = a => a[Math.floor(Math.random() * a.length)];
+/* Two random streams. rng() decides anything that changes how a run plays out: prices, supply, events, odds.
+   fx() only picks wording, faces and songs. Keeping them apart means a seeded run can stay repeatable
+   whatever the screen does. Both are plain Math.random for now. */
+const rng = () => Math.random();
+const fx = () => Math.random();
+const ri = (a, b) => Math.floor(rng() * (b - a + 1)) + a;
+const rf = (a, b) => rng() * (b - a) + a;
+const pick = a => a[Math.floor(rng() * a.length)];
+const line = a => a[Math.floor(fx() * a.length)];
 const fmt = n => (n < 0 ? '-' : '') + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
 const clock = h => { const hh = h % 24; return `${hh % 12 === 0 ? 12 : hh % 12}${hh < 12 ? 'am' : 'pm'}`; };
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -695,6 +711,7 @@ function startGame(m) {
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
   ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; });
+  S.mk = newMarkets();
   queue = []; enc = null; lastSaved = null; trade = null;
   closeSheet(true);
   screen = 'game';
@@ -712,17 +729,49 @@ const used = () => ITEMS.reduce((a, i) => a + S.inv[i.id], 0);
 const free = () => S.cap - used();
 function log(t) { S.log.push(t); if (S.log.length > 80) S.log.shift(); }
 
+/* One market per spot: s is what sellers have left, b their usual amount, d how much buyers have taken off you lately. */
+function newMarkets() {
+  return PLACES.map(P => {
+    const m = { day: S.day, s: {}, b: {}, d: {} };
+    ITEMS.forEach(it => { const [lo, hi] = STOCK[it.id]; m.b[it.id] = m.s[it.id] = Math.max(1, Math.round(rf(lo, hi) / (P.bias[it.id] || 1))); m.d[it.id] = 0; });
+    return m;
+  });
+}
+/* The market where you are, caught up on every morning since you last looked. */
+function market(loc = S.loc) {
+  const m = S.mk[loc];
+  for (; m.day < S.day; m.day++) ITEMS.forEach(it => {
+    const b = m.b[it.id];
+    if (m.s[it.id] < b) m.s[it.id] = Math.min(b, m.s[it.id] + Math.max(1, Math.round(b * REFILL)));
+    m.d[it.id] = Math.floor(m.d[it.id] * FORGET);
+  });
+  return m;
+}
+const stockLeft = id => (S.prices[id] ? market().s[id] : 0);
+const typical = id => (STOCK[id][0] + STOCK[id][1]) / 2;
+/* What the nth unit you let go of here fetches, counting what buyers here already took. */
+const unitSale = (id, n) => {
+  const extra = Math.max(0, market().d[id] + n - typical(id));
+  return Math.max(1, Math.floor(S.prices[id] * Math.max(SAT_FLOOR, 1 / (1 + extra / (GLUT * typical(id))))));
+};
+/* Every sale goes through here, so the preview and the payout can't disagree. */
+function saleTotal(id, q) {
+  if (!S.prices[id]) return 0;
+  let t = 0;
+  for (let n = 0; n < q; n++) t += unitSale(id, n);
+  return t;
+}
 function genPrices() {
-  const P = PLACES[S.loc];
-  const avail = ITEMS.filter(() => Math.random() < 0.7);
+  const P = PLACES[S.loc], m = market();
+  const avail = ITEMS.filter(() => rng() < 0.7);
   while (avail.length < 4) { const c = pick(ITEMS); if (!avail.includes(c)) avail.push(c); }
   const prices = {};
   avail.forEach(it => { prices[it.id] = Math.max(1, Math.round(rf(it.min, it.max) * (P.bias[it.id] || 1))); });
   const news = [];
-  if (Math.random() < 0.35) {
+  if (rng() < 0.35) {
     const it = pick(avail);
-    if (Math.random() < 0.5) { prices[it.id] = Math.round(prices[it.id] * rf(2, 3.5)); news.push({ text: it.up, kind: 'up', id: it.id }); }
-    else { prices[it.id] = Math.max(1, Math.round(prices[it.id] / rf(2, 4))); news.push({ text: it.down, kind: 'down', id: it.id }); }
+    if (rng() < 0.5) { prices[it.id] = Math.round(prices[it.id] * rf(2, 3.5)); m.d[it.id] = 0; news.push({ text: it.up, kind: 'up', id: it.id }); }
+    else { prices[it.id] = Math.max(1, Math.round(prices[it.id] / rf(2, 4))); m.s[it.id] = Math.min(Math.round(m.b[it.id] * 2.5), Math.max(m.s[it.id], m.b[it.id]) + Math.round(m.b[it.id] * rf(0.5, 1))); news.push({ text: it.down, kind: 'down', id: it.id }); }
   }
   S.prices = prices;
   return news;
@@ -778,7 +827,7 @@ function rest() {
     S.day += 1; S.hour = WAKE; ST().rests++;
     const md = MODES.find(m => m.id === S.mode) || MODES[2];
     const g = Math.min(md.rest, 100 - S.zen); S.zen += g;
-    S.flavor = `Morning. ${pick(['The fog is in.', 'Someone is chanting at the sunrise.', 'A gong goes off somewhere.', 'Your cushion is right where you left it.'])}`;
+    S.flavor = `Morning. ${line(['The fog is in.', 'Someone is chanting at the sunrise.', 'A gong goes off somewhere.', 'Your cushion is right where you left it.'])}`;
     log(`Day ${S.day}, ${clock(WAKE)}. You slept at ${PLACES[S.loc].name}.${g ? ` Zen +${g}.` : ''}`);
     const news = genPrices();
     render();
@@ -793,21 +842,21 @@ function rest() {
 function rollEvents() {
   const load = used() / S.cap, k = S.k, prog = S.day / S.days, vf = valueFactor();
   const chase = (0.03 + 0.06 * load + 0.16 * vf * vf + 0.04 * prog) * k;
-  if (used() > 0 && Math.random() < chase) {
+  if (used() > 0 && rng() < chase) {
     queue.push(startEncounter);
   } else {
-    const r = Math.random();
+    const r = rng();
     if (r < 0.06 * k && S.cash > 50) {
       const amt = Math.round(S.cash * rf(0.1, 0.25));
       S.cash -= amt; ST().raided += amt; SND.bad();
-      const t = pick(RAIDS).replace('$X', fmt(amt));
+      const t = line(RAIDS).replace('$X', fmt(amt));
       log(t); setTimeout(() => toast(t, 'bad', 5500), 300);
     } else if (r < 0.12 * k) {
       const it = BYID[pick(['espresso', 'choc', 'coke', 'doritos'])];
       const q = Math.min(ri(3, 10), free());
       if (q > 0) {
         S.inv[it.id] += q; ST().found += q;
-        const t = `You find ${q} ${it.plural} in ${pick(FINDS)}.`;
+        const t = `You find ${q} ${it.plural} in ${line(FINDS)}.`;
         log(t); setTimeout(() => { SND.good(); toast(t, 'good', 4500, null, itemIcon(it.id)); }, 300);
       }
     } else if (r < 0.17 * k && S.cap < MAXCAP) {
@@ -832,11 +881,11 @@ function rollEvents() {
     } else if (r < 0.26 * k && S.zen < 100) {
       const g = Math.min(ri(10, 25), 100 - S.zen);
       S.zen += g;
-      const t = `${pick(CALM)} Zen +${g}.`;
+      const t = `${line(CALM)} Zen +${g}.`;
       log(t); setTimeout(() => { SND.bowl(); toast(t, 'good', 4500); }, 300);
     }
   }
-  if (S.debt > 2 * START_DEBT && prog > 0.2 && Math.random() < 0.08 * k) {
+  if (S.debt > 2 * START_DEBT && prog > 0.2 && rng() < 0.08 * k) {
     const d = ri(5, 12);
     S.zen -= d;
     const t = `Dale left a note on your yurt. It's just a number: ${fmt(S.debt)}. Zen -${d}.`;
@@ -846,7 +895,7 @@ function rollEvents() {
 }
 
 /* ================= trading ================= */
-const canBuy = id => { const p = S.prices[id]; return p ? Math.max(0, Math.min(Math.floor(S.cash / p), free())) : 0; };
+const canBuy = id => { const p = S.prices[id]; return p ? Math.max(0, Math.min(Math.floor(S.cash / p), free(), stockLeft(id))) : 0; };
 function openTrade(id) {
   if (!S || S.over) return;
   const p = S.prices[id], have = S.inv[id];
@@ -869,11 +918,11 @@ function tradeSheet() {
       <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Close</button></div>`, 'trade');
     return;
   }
-  const max = tradeMax();
+  const max = tradeMax(), left = stockLeft(trade.id);
   trade.q = Math.min(Math.max(trade.q, max ? 1 : 0), max);
   openSheet(`<div class="grab"></div>
     <div class="item-head">${iconHTML(it.id)}<h3 id="sheetTitle">${it.name}</h3></div>
-    <p class="muted"><span class="num">${fmt(p)}</span> each here. ${held} Room for ${free()} more in your cushion.</p>
+    <p class="muted"><span class="num">${fmt(p)}</span> each here, ${left ? `${left} for sale` : 'sold out'}. ${held} Room for ${free()} more in your cushion.${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up on these, so each one you let go of fetches a little less.' : ''}</p>
     <div class="seg" role="group" aria-label="Trade">
       <button type="button" data-tmode="buy" aria-pressed="${trade.mode === 'buy'}" ${canBuy(trade.id) ? '' : 'disabled'}>Receive</button>
       <button type="button" data-tmode="sell" aria-pressed="${trade.mode === 'sell'}" ${have ? '' : 'disabled'}>Let go</button>
@@ -898,12 +947,13 @@ function updateTrade() {
   const go = $('#tgo');
   if (trade.mode === 'buy') {
     $('#tt').textContent = `${fmt(p * q)} of your ${fmt(S.cash)}`;
-    go.textContent = q ? `Receive ${q} for ${fmt(p * q)}` : (S.cash < p ? `Not enough cash for one` : `Your cushion is full`);
+    go.textContent = q ? `Receive ${q} for ${fmt(p * q)}` : !stockLeft(trade.id) ? `Sold out here` : S.cash < p ? `Not enough cash for one` : `Your cushion is full`;
   } else {
-    const have = S.inv[trade.id];
-    const gain = have ? p * q - S.paid[trade.id] * (q / have) : 0;
-    $('#tt').textContent = q ? `${gain >= 0 ? '+' : ''}${fmt(gain)} on what you paid` : '';
-    go.textContent = q ? `Let go of ${q} for ${fmt(p * q)}` : `You have none to let go of`;
+    const have = S.inv[trade.id], total = saleTotal(trade.id, q);
+    const gain = have ? total - S.paid[trade.id] * (q / have) : 0;
+    const each = q && total < p * q ? `about ${fmt(total / q)} each, ` : '';
+    $('#tt').textContent = q ? `${each}${gain >= 0 ? '+' : ''}${fmt(gain)} on what you paid` : '';
+    go.textContent = q ? `Let go of ${q} for ${fmt(total)}` : `You have none to let go of`;
   }
   go.disabled = !q;
   if (!q) go.setAttribute('aria-label', go.textContent); else go.removeAttribute('aria-label');
@@ -913,19 +963,19 @@ function doTrade() {
   if (!p || !q) return;
   if (trade.mode === 'buy') {
     if (q > canBuy(it.id)) return;
-    S.cash -= p * q; S.inv[it.id] += q; S.paid[it.id] += p * q; ST().bought += q;
+    S.cash -= p * q; S.inv[it.id] += q; S.paid[it.id] += p * q; market().s[it.id] -= q; ST().bought += q;
     SND.receive(); buzz(12);
     log(`Received ${q} ${it.plural} for ${fmt(p * q)}.`);
     toast(`Received ${q} ${it.plural} for ${fmt(p * q)}.`, '', 2600);
   } else {
     const have = S.inv[it.id]; if (q > have) return;
-    const basis = S.paid[it.id] * (q / have), gain = p * q - basis;
-    S.cash += p * q; S.inv[it.id] -= q; S.paid[it.id] -= basis;
+    const total = saleTotal(it.id, q), basis = S.paid[it.id] * (q / have), gain = total - basis;
+    S.cash += total; S.inv[it.id] -= q; S.paid[it.id] -= basis; market().d[it.id] += q;
     { const st = ST(); st.sold += q; st.profit += gain; if (!st.best || gain > st.best.gain) st.best = { id: it.id, q, gain }; if (TECH.includes(it.id)) st.tech += q; if (it.id === 'coke') st.coke += q; }
     if (!S.inv[it.id]) S.paid[it.id] = 0;
     SND.letgo(); buzz([10, 40, 10]);
-    log(`Let go of ${q} ${it.plural} for ${fmt(p * q)} (${gain >= 0 ? '+' : ''}${fmt(gain)}).`);
-    toast(`Let go of ${q} ${it.plural} for ${fmt(p * q)}. ${gain >= 0 ? `${fmt(gain)} gained.` : `${fmt(-gain)} lost.`}`, gain >= 0 ? 'good' : 'bad', 3000);
+    log(`Let go of ${q} ${it.plural} for ${fmt(total)} (${gain >= 0 ? '+' : ''}${fmt(gain)}).`);
+    toast(`Let go of ${q} ${it.plural} for ${fmt(total)}. ${gain >= 0 ? `${fmt(gain)} gained.` : `${fmt(-gain)} lost.`}`, gain >= 0 ? 'good' : 'bad', 3000);
   }
   trade = null;
   closeSheet();
@@ -980,8 +1030,8 @@ const nameOf = (it, q) => (q === 1 ? it.name.toLowerCase().replace(/s$/, '') : i
 const roundPct = p => `${Math.round(p * 20) * 5}%`;
 function startEncounter() {
   const n = 1 + ri(0, Math.min(4, Math.round(4 * (0.5 * S.day / S.days + 0.5 * valueFactor()))));
-  const vols = ['vol1', 'vol2', 'vol3', 'vol4'].sort(() => Math.random() - 0.5).slice(0, n - 1);
-  enc = { n, left: n, vols, gone: [], face: 'calm', say: pick(SAY_OPEN), round: [], lostValue: 0, lostGoods: {}, lostZen: 0, tries: 0, done: false };
+  const vols = ['vol1', 'vol2', 'vol3', 'vol4'].sort(() => fx() - 0.5).slice(0, n - 1);
+  enc = { n, left: n, vols, gone: [], face: 'calm', say: line(SAY_OPEN), round: [], lostValue: 0, lostGoods: {}, lostZen: 0, tries: 0, done: false };
   ST().checkins++;
   themeStart();
   enc.round.push({ t: n === 1 ? 'She found you alone.' : `She brought ${plural(n - 1, 'silent volunteer', 'silent volunteers')}.`, c: '' });
@@ -1007,31 +1057,31 @@ function saffronTurn() {
     log(`Guide Saffron confiscated ${c.q} ${c.it.plural}, about ${fmt(c.value)}.`);
   }
   const own = ri(1, 3); let total = own;
-  const parts = [`${pick(HER_ZEN)} (-${own})`];
+  const parts = [`${line(HER_ZEN)} (-${own})`];
   const vols = enc.vols.filter(v => !enc.gone.includes(v));
   for (let i = 0; i < vols.length; i++) {
-    if (Math.random() < 0.3) { const d = ri(3, 8); total += d; parts.push(`${pick(VOL_ZEN)} (-${d})`); }
+    if (rng() < 0.3) { const d = ri(3, 8); total += d; parts.push(`${line(VOL_ZEN)} (-${d})`); }
   }
   S.zen -= total; enc.lostZen += total;
   enc.round.push({ t: `Zen -${total}: ${parts.join(', ')}.`, c: 'bad' });
-  enc.face = 'side'; enc.say = pick(SAY_TAKE);
+  enc.face = 'side'; enc.say = line(SAY_TAKE);
   SND.bad(); buzz(25);
   if (S.zen <= 0) { S.zen = 0; enc = null; snap(); return false; }
   encFinishIfEmpty();
   return true;
 }
 function staffUSB() {
-  if (hasSong('w0') || Math.random() > 0.6) return;
+  if (hasSong('w0') || fx() > 0.6) return;
   enc.round.push({ t: 'In the scramble, a volunteer dropped a USB stick labeled STAFF LOUNGE.', c: 'good' });
   unlockSong('w0', 'You plug the STAFF LOUNGE stick into your Dale-Fi.');
 }
 function encRun() {
   const odds = runOdds();
   enc.round = []; enc.tries++;
-  if (Math.random() < odds) {
-    enc.round.push({ t: `You tried to slip away (${roundPct(odds)} chance) and made it. ${pick(ESCAPES)}`, c: 'good' });
+  if (rng() < odds) {
+    enc.round.push({ t: `You tried to slip away (${roundPct(odds)} chance) and made it. ${line(ESCAPES)}`, c: 'good' });
     staffUSB(); ST().escapes++;
-    enc.done = true; enc.face = 'puzzled'; enc.say = pick(SAY_ESCAPED); SND.good();
+    enc.done = true; enc.face = 'puzzled'; enc.say = line(SAY_ESCAPED); SND.good();
   } else {
     enc.round.push({ t: `You tried to slip away (${roundPct(odds)} chance). She was quicker.`, c: '' }); ST().failedRuns++;
     if (!saffronTurn()) return;
@@ -1052,7 +1102,7 @@ function encDecoy() {
   const sent = S.decoys;
   for (let i = 0; i < sent && enc.left > 0 && S.decoyShares > 0; i++) {
     S.decoyShares -= 1; spent++;
-    if (Math.random() < 0.5) {
+    if (rng() < 0.5) {
       enc.left -= 1; pulled++;
       const v = enc.vols.find(x => !enc.gone.includes(x)); if (v) enc.gone.push(v);
     }
@@ -1061,7 +1111,7 @@ function encDecoy() {
   const out = sent - S.decoys;
   const left = S.decoys ? `${plural(S.decoys, 'decoy', 'decoys')} and ${plural(S.decoyShares, 'breakthrough', 'breakthroughs')} left` : 'no decoys left';
   const used = ` ${plural(spent, 'breakthrough', 'breakthroughs')} used, ${S.decoyShares} left.`;
-  const tired = out ? [{ t: out === 1 ? pick(DECOY_SPENT) : `${out} decoys are all cried out and went home.`, c: '' }] : [];
+  const tired = out ? [{ t: out === 1 ? line(DECOY_SPENT) : `${out} decoys are all cried out and went home.`, c: '' }] : [];
   log(`Sent ${plural(spent, 'decoy', 'decoys')} at Guide Saffron. ${pulled ? `Pulled ${plural(pulled, 'person', 'people')} away` : 'Nobody bit'}${out ? `, and ${out === 1 ? 'one decoy' : `${out} decoys`} went home exhausted` : ''}. You have ${left}.`);
   if (enc.left === 0) {
     const found = ri(100, 400) * enc.n; ST().decoyWins++;
@@ -1069,7 +1119,7 @@ function encDecoy() {
     enc.round.push({ t: `Your decoys pulled everyone away, Guide Saffron included. Someone dropped a fanny pack with ${fmt(found)} in it.${used}`, c: 'good' }, ...tired);
     log(`Found ${fmt(found)} in a fanny pack.`);
     staffUSB();
-    enc.done = true; enc.face = 'shock'; enc.say = pick(SAY_DECOYED); SND.good();
+    enc.done = true; enc.face = 'shock'; enc.say = line(SAY_DECOYED); SND.good();
   } else {
     enc.round.push({ t: pulled ? `Your decoys pulled ${plural(pulled, 'person', 'people')} away. ${enc.left === 1 ? 'Guide Saffron is still with you.' : `${enc.left} are still with you.`}${used}` : `Your decoys just stood there, awkwardly.${used}`, c: pulled ? 'good' : '' }, ...tired);
     if (!saffronTurn()) return;
@@ -1084,7 +1134,7 @@ function encHand() {
   ST().handed += c.q; ST().handedValue += c.value;
   enc.round.push({ t: `You handed over ${c.q} ${nameOf(c.it, c.q)}, about ${fmt(c.value)}. Honestly, it felt kind of good.${g ? ` Zen +${g}.` : ''}`, c: '' });
   log(`Handed Guide Saffron ${c.q} ${c.it.plural}, about ${fmt(c.value)}.`);
-  enc.done = true; enc.face = 'joy'; enc.say = pick(SAY_PAID); SND.bowl();
+  enc.done = true; enc.face = 'joy'; enc.say = line(SAY_PAID); SND.bowl();
   encSheet();
 }
 function encDonate() {
@@ -1093,7 +1143,7 @@ function encDonate() {
   S.cash -= c; ST().donated += c;
   enc.round.push({ t: `You donated ${fmt(c)} to the scholarship fund.`, c: '' });
   log(`Donated ${fmt(c)} to the scholarship fund.`);
-  enc.done = true; enc.face = 'joy'; enc.say = pick(SAY_PAID); SND.bowl();
+  enc.done = true; enc.face = 'joy'; enc.say = line(SAY_PAID); SND.bowl();
   encSheet();
 }
 const FACES = {
@@ -1273,6 +1323,7 @@ function continueRun() {
   ITEMS.forEach(i => { if (!(S.inv[i.id] >= 0)) S.inv[i.id] = 0; if (!(S.paid[i.id] >= 0)) S.paid[i.id] = 0; });
   if (!(S.decoyShares >= 0)) S.decoyShares = (S.decoys || 0) * DECOY_SHARES;
   if (!S.stats) S.stats = newStats();
+  if (!Array.isArray(S.mk) || S.mk.length !== PLACES.length) S.mk = newMarkets();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
   queue = []; enc = null; lastSaved = null; trade = null;
   screen = 'game';
@@ -1311,7 +1362,7 @@ function unlockSong(id, how) {
 }
 function songEvents() {
   const P = PLACES[S.loc];
-  if (!hasSong('w1') && P.name === 'Meditation Hall' && Math.random() < 0.45) {
+  if (!hasSong('w1') && P.name === 'Meditation Hall' && fx() < 0.45) {
     unlockSong('w1', 'The sound-bath guy left his laptop open on the gong. You sideload a song.');
   } else if (P.van && !hasSong('w2') && !S.cdHint && !queue.length) {
     S.cdHint = true;
@@ -1750,7 +1801,7 @@ function gameHTML() {
     if (cls === 'hot') anyHot = true; if (cls === 'calm') anyCalm = true;
     const note = cls === 'hot' ? '<span class="sr">, in demand</span>' : cls === 'calm' ? '<span class="sr">, abundant</span>' : !p ? '<span class="sr">, not traded here</span>' : '';
     return `<button type="button" class="row ${p ? '' : 'na'}" data-item="${it.id}">
-      <span class="nm">${iconHTML(it.id, 'ico')}${it.name}</span><span class="hv num">${have ? `${have} held` : ''}</span>
+      <span class="nm">${iconHTML(it.id, 'ico')}${it.name}</span><span class="hv num">${have ? `${have} held` : p && !market().s[it.id] ? 'sold out' : ''}</span>
       <span class="pr num ${cls}">${p ? fmt(p) : '—'}${note}</span></button>`;
   }).join('');
   const last = S.day >= S.days;
@@ -1880,7 +1931,7 @@ function superlative() {
   if (st.donated >= 500) return 'Funded a scholarship that does not exist';
   return 'Attended';
 }
-const shuffle = a => a.map(v => [Math.random(), v]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+const shuffle = a => a.map(v => [fx(), v]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
 /* Staff comments: the most specific lines about your run come first; generic ones only fill gaps. */
 function chooseLines(specific, generic) {
   const out = specific.length ? [specific[0], ...shuffle(specific.slice(1, 4)).slice(0, 1)] : [];
@@ -1930,7 +1981,7 @@ function pickWho(prev) {
   const all = [{ kind: 'dale' }, { kind: 'saffron' }, ...['vol1', 'vol2', 'vol3', 'vol4'].map(v => ({ kind: 'vol', vol: v }))];
   const pool = all.filter(w => !prev || w.kind !== prev.kind);
   const weighted = pool.flatMap(w => (w.kind === 'vol' ? [w] : [w, w, w]));
-  return pick(weighted);
+  return line(weighted);
 }
 function whoInfo(who) {
   const st = ST();
@@ -2166,6 +2217,7 @@ function handbookSheet() {
       <p>Tap any item to trade it. <b>Receive</b> buys and <b>Let go</b> sells. Drag the slider or tap One, Half or All, then confirm. The sheet shows what you paid on average and how much you'd gain or lose by selling.</p>
       <p>Prices change every time you arrive somewhere and every morning. Most goods are on offer at any spot, but rarely all of them.</p>
       <p>About a third of the time you arrive, gossip hits: one item spikes to two to three and a half times its price, or crashes to between a half and a quarter of it. The notification tells you which.</p>
+      <p>Every spot only has so many of each good to sell you, and the sheet says how many are left. Buy it out and it stays sold out until morning, when about half the usual amount comes back. A crash in the gossip means extra stock just turned up. Buyers fill up too: let go of a lot of one thing at one spot and each one fetches a little less. They get their appetite back overnight, and a spike in the gossip makes them hungry again. The sheet always shows exactly what you'll get.</p>
       <p>Every spot also runs steadily cheap or pricey on certain goods. The kitchen has the staff espresso machine. Tech comes in through Dale's van. The deeper into the retreat you go, the more tech is worth. Working out the rest is the game.</p>
       <table class="hbt"><thead><tr><th>Goods, most to least valuable</th><th class="num">Usual price</th></tr></thead><tbody>${goods}</tbody></table>`),
     sec("Dale and his van", `

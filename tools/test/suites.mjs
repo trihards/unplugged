@@ -168,6 +168,69 @@ const trading = {
       eq(await g.run('[S.cash, S.van]'), [3900, 3000], 'glovebox moves');
       eq(await g.run('netWorth()'), 1900, 'net worth = cash + glovebox - debt');
     }),
+    tst('market supply: buying draws down stock and the sheet tracks it', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { charger: 300 }; market().s.charger = 7; S.cash = 100000; render()");
+      eq(await g.run("canBuy('charger')"), 7, 'buy max is the stock left');
+      await g.tap('[data-item="charger"]');
+      ok((await g.page.textContent('#sheet')).includes('7 for sale'), 'sheet shows stock left');
+      await g.run("trade.q = 3; doTrade()");
+      eq(await g.run("[S.inv.charger, market().s.charger, canBuy('charger')]"), [3, 4, 4], 'bought 3 of 7, 4 left');
+      await g.run("trade = { id: 'charger', mode: 'buy', q: 5 }; doTrade()");
+      eq(await g.run('S.inv.charger'), 3, 'buying past the stock is refused');
+      await g.run("market().s.charger = 0; render()");
+      ok((await g.page.textContent('[data-item="charger"]')).includes('3 held'), 'held count still shown');
+      await g.run("S.inv.charger = 0; S.paid.charger = 0; render()");
+      ok((await g.page.textContent('[data-item="charger"]')).includes('sold out'), 'row says sold out');
+      await g.tap('[data-item="charger"]');
+      eq(await g.page.textContent('#tgo'), 'Sold out here', 'button says sold out');
+      ok(await g.page.isDisabled('#tgo'), 'and is disabled');
+    }),
+    tst('market supply: no refill by walking away and back the same day; refills overnight', {}, async g => {
+      await g.start(3);
+      const here = await g.run('S.loc');
+      await g.run(`S.mk[${here}].s.wine = 0; S.mk[${here}].b.wine = 40; S.hour = 8; queue = []`);
+      const away = await g.run(`PLACES.findIndex((_, i) => i !== ${here} && HOURS[${here}][i] === 1)`);
+      await g.run(`walk(${away}); queue = []; closeSheet(true); walk(${here}); queue = []; closeSheet(true)`);
+      eq(await g.run('[S.loc, S.day]'), [here, 1], 'back where we started, same day');
+      // a wine crash in the gossip on the way back legitimately brings stock, so only check when there wasn't one
+      if (!(await g.run('S.log.includes(BYID.wine.down)'))) eq(await g.run(`S.mk[${here}].s.wine`), 0, 'same day: still sold out');
+      await g.run('S.day += 1'); await g.run(`market(${here})`);
+      eq(await g.run(`S.mk[${here}].s.wine`), 20, 'next morning: half the usual amount back');
+      await g.run('S.day += 3'); await g.run(`market(${here})`);
+      eq(await g.run(`S.mk[${here}].s.wine`), 40, 'never past the usual amount');
+    }),
+    tst('buyers fill up: the preview total is what you get, and selling never stops', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { charger: 400 }; S.inv.charger = 60; S.paid.charger = 6000; market().d.charger = 0; S.cash = 0; render()");
+      eq(await g.run("saleTotal('charger', 11)"), 4400, 'a typical stock\'s worth goes at full price');
+      const t = await g.run("saleTotal('charger', 60)");
+      ok(t < 24000 && t > 0.4 * 24000, 'a big batch fetches less, but not below the floor', t);
+      await g.tap('[data-item="charger"]'); await g.tap('[data-tset="max"]');
+      ok((await g.page.textContent('#tgo')).includes('$' + t.toLocaleString('en-US')), 'button shows the real total', await g.page.textContent('#tgo'));
+      ok((await g.page.textContent('#tt')).includes('each'), 'shows the average each');
+      await g.tap('#tgo');
+      eq(await g.run('[S.cash, S.inv.charger, market().d.charger]'), [t, 0, 60], 'paid exactly the preview');
+      await g.run("S.inv.charger = 500; S.paid.charger = 0");
+      const all = await g.run("[...Array(500)].map((_, n) => unitSale('charger', n))");
+      ok(all.every(v => Number.isInteger(v) && v >= 160), 'every unit is a whole dollar amount at or above the 40% floor', all.at(-1));
+      await g.run("S.prices = { espresso: 1 }; market().d.espresso = 9999");
+      eq(await g.run("saleTotal('espresso', 3)"), 3, 'cheap goods never fetch $0');
+      await g.run('S.day += 1; market()');
+      eq(await g.run('market().d.charger'), 30, 'buyers forget half overnight');
+    }),
+    tst('market supply survives a reload, and older saves get a market', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { wine: 40 }; market().s.wine = 5; market().d.wine = 12; render()");
+      const loc = await g.run('S.loc');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      await g.tap('[data-act="continue"]');
+      eq(await g.run(`[S.mk[${loc}].s.wine, S.mk[${loc}].d.wine]`), [5, 12], 'stock and buyer fill kept');
+      await g.run("const r = JSON.parse(localStorage.getItem('unpw.save')); delete r.mk; localStorage.setItem('unpw.save', JSON.stringify(r))");
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      await g.tap('[data-act="continue"]');
+      eq(await g.run('Array.isArray(S.mk) && S.mk.length === PLACES.length && S.mk.every(m => ITEMS.every(it => m.s[it.id] >= 1))'), true, 'old save loads with fresh markets');
+    }),
     tst('cushion upgrade offer adds 40 spaces for its price', {}, async g => {
       await g.start(2);
       await g.run('S.cash = 5000; queue = []');
