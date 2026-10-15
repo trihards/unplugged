@@ -264,10 +264,12 @@ input[type=range]:disabled { opacity: .35; }
 .note-err.ok { color: var(--sea); }
 
 /* journey map */
-.map { position: relative; width: 100%; aspect-ratio: 100 / 104; margin: 10px 0 2px; border-radius: 20px; overflow: hidden; background: var(--fog); }
-.map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.map .ocean { fill: var(--sea-soft); }
-.map .trail { stroke: var(--ink2); stroke-width: .5; stroke-dasharray: 1.4 1.4; opacity: .55; fill: none; }
+.map {
+  /* the art is light in both themes, so the map keeps the light-theme tokens */
+  --ink: #22382B; --ink2: #56695B; --mist: #FFF9EF; --poppy: #EE8A2E; --sea: #4F7A4B; --sea-soft: #DCE7D3; --cta: #22382B;
+  position: relative; width: 100%; aspect-ratio: 1 / 1; margin: 10px 0 2px; border-radius: 20px; overflow: hidden;
+  background: #8FB35A url(assets/img/map-bg.webp) center / 100% 100% no-repeat;
+}
 .node {
   position: absolute; transform: translate(-50%, -14px); display: flex; flex-direction: column; align-items: center;
   background: none; border: 0; padding: 0; min-width: 88px; color: var(--ink);
@@ -275,9 +277,11 @@ input[type=range]:disabled { opacity: .35; }
 .node .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--mist); box-shadow: 0 0 0 2px var(--ink); display: block; }
 .node .lbl { margin-top: 4px; font-size: 13.5px; font-weight: 700; line-height: 1.15; text-align: center; white-space: nowrap; }
 .node .eta { font-size: 12.5px; color: var(--ink2); font-weight: 500; white-space: nowrap; }
+.node .lbl, .node .eta { background: rgba(255, 249, 239, .86); padding: 1px 8px; border-radius: 999px; }
+.node .eta { margin-top: 2px; }
 .node.here .dot { background: var(--poppy); box-shadow: 0 0 0 2px var(--ink), 0 0 0 7px rgba(240, 138, 36, .25); }
 .node.van .dot { background: var(--sea-soft); }
-.node:disabled { opacity: .38; }
+.node:disabled { opacity: .7; }
 .node.here:disabled { opacity: 1; }
 .node:not(:disabled) .dot { background: var(--cta); }
 .node:not(:disabled).van .dot { background: var(--sea); }
@@ -2105,22 +2109,19 @@ let offerYes = null;
 
 function journeySheet() {
   if (!S || S.over) return;
-  const trails = [[0, 1], [0, 3], [0, 4], [1, 3], [1, 4], [2, 3], [4, 5], [0, 2], [1, 5]];
-  const lines = trails.map(([a, b]) => `<line class="trail" x1="${PLACES[a].x}" y1="${PLACES[a].y}" x2="${PLACES[b].x}" y2="${PLACES[b].y}"/>`).join('');
+  // PREVIEW ONLY, remove before merge: ?mapnodes=art puts each dot just below its landmark in the art
+  const ART = new URLSearchParams(location.search).get('mapnodes') === 'art' ? { 'Parking Lot': [58, 19], 'Kitchen Garden': [21, 28], 'Meditation Hall': [53, 42], 'Yurt Village': [20, 57], 'The Labyrinth': [71, 61], 'Hot Springs': [45, 80] } : {};
   const nodes = PLACES.map((p, i) => {
     const here = i === S.loc, ok = canReach(i), h = HOURS[S.loc][i];
     const eta = here ? 'You are here' : ok ? `${plural(h, 'hour', 'hours')}, ${clock(S.hour + h)}` : 'After quiet hours';
-    return `<button type="button" class="node ${here ? 'here' : ''} ${p.van ? 'van' : ''}" style="left:${p.x}%;top:${p.y}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
+    const [px, py] = ART[p.name] || [p.x, p.y];
+    return `<button type="button" class="node ${here ? 'here' : ''} ${p.van ? 'van' : ''}" style="left:${px}%;top:${py}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
       <span class="dot"></span><span class="lbl">${p.name}</span><span class="eta">${eta}</span></button>`;
   }).join('');
   openSheet(`<div class="grab"></div>
     <h3 id="sheetTitle">Where to?</h3>
     <p class="muted">It's ${clock(S.hour)}. Quiet hours start at ${clock(LIGHTS)}, and Dale's meter runs while you walk.</p>
     <div class="map">
-      <svg viewBox="0 0 100 104" preserveAspectRatio="none" aria-hidden="true">
-        <path class="ocean" d="M100 22 C 86 44, 92 66, 74 84 S 60 104, 52 104 L 100 104 Z"/>
-        ${lines}
-      </svg>
       ${nodes}
     </div>
     <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Stay here</button></div>`, 'journey');
