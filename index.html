@@ -922,7 +922,7 @@ function tradeSheet() {
   trade.q = Math.min(Math.max(trade.q, max ? 1 : 0), max);
   openSheet(`<div class="grab"></div>
     <div class="item-head">${iconHTML(it.id)}<h3 id="sheetTitle">${it.name}</h3></div>
-    <p class="muted"><span class="num">${fmt(p)}</span> each here, ${left ? `${left} for sale` : 'sold out'}. ${held} Room for ${free()} more in your cushion.${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up on these, so each one you let go of fetches a little less.' : ''}</p>
+    <p class="muted"><span class="num">${fmt(p)}</span> each here${trade.mode === 'buy' ? `, ${left ? `${left} for sale` : 'sold out'}` : ''}. ${held} Room for ${free()} more in your cushion.${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up.' : ''}</p>
     <div class="seg" role="group" aria-label="Trade">
       <button type="button" data-tmode="buy" aria-pressed="${trade.mode === 'buy'}" ${canBuy(trade.id) ? '' : 'disabled'}>Receive</button>
       <button type="button" data-tmode="sell" aria-pressed="${trade.mode === 'sell'}" ${have ? '' : 'disabled'}>Let go</button>
@@ -1323,7 +1323,7 @@ function continueRun() {
   ITEMS.forEach(i => { if (!(S.inv[i.id] >= 0)) S.inv[i.id] = 0; if (!(S.paid[i.id] >= 0)) S.paid[i.id] = 0; });
   if (!(S.decoyShares >= 0)) S.decoyShares = (S.decoys || 0) * DECOY_SHARES;
   if (!S.stats) S.stats = newStats();
-  if (!Array.isArray(S.mk) || S.mk.length !== PLACES.length) S.mk = newMarkets();
+  if (!Array.isArray(S.mk) || S.mk.length !== PLACES.length || !S.mk.every(m => m && m.day >= 1 && m.s && m.b && m.d && ITEMS.every(it => m.b[it.id] >= 1))) S.mk = newMarkets();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
   queue = []; enc = null; lastSaved = null; trade = null;
   screen = 'game';
@@ -2217,7 +2217,7 @@ function handbookSheet() {
       <p>Tap any item to trade it. <b>Receive</b> buys and <b>Let go</b> sells. Drag the slider or tap One, Half or All, then confirm. The sheet shows what you paid on average and how much you'd gain or lose by selling.</p>
       <p>Prices change every time you arrive somewhere and every morning. Most goods are on offer at any spot, but rarely all of them.</p>
       <p>About a third of the time you arrive, gossip hits: one item spikes to two to three and a half times its price, or crashes to between a half and a quarter of it. The notification tells you which.</p>
-      <p>Every spot only has so many of each good to sell you, and the sheet says how many are left. Buy it out and it stays sold out until morning, when about half the usual amount comes back. A crash in the gossip means extra stock just turned up. Buyers fill up too: let go of a lot of one thing at one spot and each one fetches a little less. They get their appetite back overnight, and a spike in the gossip makes them hungry again. The sheet always shows exactly what you'll get.</p>
+      <p>Every spot only has so many of each good to sell you, and the sheet says how many are left. Buy it out and it stays sold out until morning, when about half the usual amount comes back. A crash in the gossip means extra stock just turned up. Buyers fill up too: let go of a lot of one thing at one spot and each one fetches a little less. They get their appetite back over a night or two, and a spike in the gossip makes them hungry again. The sheet always shows exactly what you'll get.</p>
       <p>Every spot also runs steadily cheap or pricey on certain goods. The kitchen has the staff espresso machine. Tech comes in through Dale's van. The deeper into the retreat you go, the more tech is worth. Working out the rest is the game.</p>
       <table class="hbt"><thead><tr><th>Goods, most to least valuable</th><th class="num">Usual price</th></tr></thead><tbody>${goods}</tbody></table>`),
     sec("Dale and his van", `
