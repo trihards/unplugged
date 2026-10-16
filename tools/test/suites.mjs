@@ -97,6 +97,26 @@ const smoke = {
       eq([s.day, s.hour], [2, 7], 'woke on day 2 at 7am');
       ok(s.zen > 80 && s.zen <= 100, 'rest restores some zen', s.zen);
     }),
+    tst('Options › What\'s New shows Guide Saffron\'s notes, newest first, without popping up on its own', {}, async g => {
+      eq(await g.run('sheetKind'), null, 'nothing opens by itself on load');
+      await g.tap('[data-act="options"]'); await g.tap('[data-act="news"]');
+      eq(await g.run("$('#sheetTitle').textContent"), 'A Note from Guide Saffron', 'title');
+      const dates = await g.page.$$eval('.note time', t => t.map(x => x.getAttribute('datetime')));
+      ok(dates.length >= 1 && dates.every((d, i) => i === 0 || d <= dates[i - 1]), 'dated, newest first', dates);
+      ok((await g.page.textContent('.note')).includes('On Dependence and Resolution'), 'first release present');
+      await g.tap('[data-act="close"]');
+      eq(await g.run('sheetKind'), null, 'closes');
+    }),
+    tst('in-game menu › What\'s New opens the same sheet and leaves the run untouched', {}, async g => {
+      await g.start(2);
+      await g.run("S.cash = 1234; S.zen = 77; render()");
+      const before = await g.run('JSON.stringify(S)');
+      await g.tap('[data-act="menu"]'); await g.tap('[data-act="news"]');
+      eq(await g.run("$('#sheetTitle').textContent"), 'A Note from Guide Saffron', 'same sheet');
+      await g.tap('[data-act="close"]');
+      eq([await g.run('screen'), await g.run('sheetKind')], ['game', null], 'back in the run');
+      eq(await g.run('JSON.stringify(S)'), before, 'run state unchanged');
+    }),
     tst('last day: checkout ends the retreat with the right score', {}, async g => {
       await g.start(0);
       await g.run('S.day = S.days; S.cash = 9000; S.van = 1000; S.debt = 2500; render()');
