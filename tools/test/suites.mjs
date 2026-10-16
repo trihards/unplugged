@@ -99,7 +99,10 @@ const smoke = {
     }),
     tst('Options › What\'s New shows Guide Saffron\'s notes, newest first, without popping up on its own', {}, async g => {
       eq(await g.run('sheetKind'), null, 'nothing opens by itself on load');
-      await g.tap('[data-act="options"]'); await g.tap('[data-act="news"]');
+      await g.tap('[data-act="options"]');
+      const v = await g.run('GAME_VERSION');
+      eq(await g.page.textContent('[data-act="news"] .ver'), 'v' + v, 'Options shows the version');
+      await g.tap('[data-act="news"]');
       eq(await g.run("$('#sheetTitle').textContent"), 'A Note from Guide Saffron', 'title');
       const dates = await g.page.$$eval('.note time', t => t.map(x => x.getAttribute('datetime')));
       ok(dates.length >= 1 && dates.every((d, i) => i === 0 || d <= dates[i - 1]), 'dated, newest first', dates);
@@ -111,7 +114,9 @@ const smoke = {
       await g.start(2);
       await g.run("S.cash = 1234; S.zen = 77; render()");
       const before = await g.run('JSON.stringify(S)');
-      await g.tap('[data-act="menu"]'); await g.tap('[data-act="news"]');
+      await g.tap('[data-act="menu"]');
+      eq(await g.page.textContent('[data-act="news"] .ver'), 'v' + await g.run('GAME_VERSION'), 'menu shows the same version');
+      await g.tap('[data-act="news"]');
       eq(await g.run("$('#sheetTitle').textContent"), 'A Note from Guide Saffron', 'same sheet');
       await g.tap('[data-act="close"]');
       eq([await g.run('screen'), await g.run('sheetKind')], ['game', null], 'back in the run');

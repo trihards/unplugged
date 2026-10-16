@@ -137,6 +137,8 @@ button:disabled { cursor: default; }
 .btn.primary { background: var(--cta); color: var(--cta-ink); }
 .btn.quiet { background: var(--mist); color: var(--ink); }
 .btn.soft { background: var(--sea-soft); color: var(--ink); }
+.btn .ver { position: absolute; right: 18px; font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--ink2); }
+.btn.news { position: relative; }
 .btn.warn { background: var(--urchin); color: var(--mist); }
 .btn:disabled { opacity: .4; box-shadow: none; }
 .welcome .btn { border-color: #22382B; box-shadow: 0 3px 0 #22382B; background: #FBEBD3; color: #22382B; }
@@ -1304,6 +1306,9 @@ const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
 /* What's New, written by Guide Saffron: the permanent release history under Options. Newest first.
    For each release that has actually shipped, add an entry at the TOP and leave the older ones as they are.
    date is YYYY-MM-DD; body is a list of paragraphs, verbatim from the approved text; sign is the sign-off lines. */
+/* The game's version, shown beside What's New. Bump it only when a release ships, together with its note above.
+   1.0 was the launch on 2026-10-09; 1.1 is the 2026-10-15 release. */
+const GAME_VERSION = '1.1';
 const NOTES = [
   {
     date: '2026-10-15',
@@ -1760,7 +1765,7 @@ function optionsSheet() {
   openSheet(`<div class="grab"></div><h3 id="sheetTitle">Options</h3>
     <div class="sheet-actions">
       <button type="button" class="btn soft" data-act="how">How it works</button>
-      <button type="button" class="btn soft" data-act="news">What's New</button>
+      <button type="button" class="btn soft news" data-act="news">What's New<span class="ver">v${GAME_VERSION}</span></button>
       <button type="button" class="btn soft" data-act="scores">Guestbook</button>
       <button type="button" class="btn soft" data-act="music">Dale-Fi music player</button>
       <button type="button" class="btn soft" data-act="soundopt">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
@@ -2305,7 +2310,7 @@ function menuSheet() {
     <div class="sheet-actions">
       <button type="button" class="btn soft" data-act="journal">Your journal</button>
       <button type="button" class="btn soft" data-act="handbook">Retreat handbook</button>
-      <button type="button" class="btn soft" data-act="news">What's New</button>
+      <button type="button" class="btn soft news" data-act="news">What's New<span class="ver">v${GAME_VERSION}</span></button>
       <button type="button" class="btn soft" data-act="scores">Guestbook</button>
       <button type="button" class="btn soft" data-act="sound">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
       <button type="button" class="btn quiet" data-act="welcome">Save and leave</button>
