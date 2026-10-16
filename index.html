@@ -266,23 +266,34 @@ input[type=range]:disabled { opacity: .35; }
 .note-err.ok { color: var(--sea); }
 
 /* journey map */
-.map { position: relative; width: 100%; aspect-ratio: 100 / 104; margin: 10px 0 2px; border-radius: 20px; overflow: hidden; background: var(--fog); }
-.map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.map .ocean { fill: var(--sea-soft); }
-.map .trail { stroke: var(--ink2); stroke-width: .5; stroke-dasharray: 1.4 1.4; opacity: .55; fill: none; }
-.node {
-  position: absolute; transform: translate(-50%, -14px); display: flex; flex-direction: column; align-items: center;
-  background: none; border: 0; padding: 0; min-width: 88px; color: var(--ink);
+.map {
+  /* the art is light in both themes, so the map keeps the light-theme tokens */
+  --ink: #22382B; --ink2: #56695B; --mist: #FFF9EF; --poppy: #EE8A2E; --sea: #4F7A4B; --sea-soft: #DCE7D3; --cta: #22382B;
+  position: relative; width: 100%; aspect-ratio: 1 / 1; margin: 10px 0 2px; border-radius: 20px; overflow: hidden;
+  background: #8FB35A url(assets/img/map-bg.webp) center / 100% 100% no-repeat;
 }
-.node .dot { width: 28px; height: 28px; border-radius: 50%; background: var(--mist); box-shadow: 0 0 0 2px var(--ink); display: block; }
-.node .lbl { margin-top: 4px; font-size: 13.5px; font-weight: 700; line-height: 1.15; text-align: center; white-space: nowrap; }
-.node .eta { font-size: 12.5px; color: var(--ink2); font-weight: 500; white-space: nowrap; }
-.node.here .dot { background: var(--poppy); box-shadow: 0 0 0 2px var(--ink), 0 0 0 7px rgba(240, 138, 36, .25); }
-.node.van .dot { background: var(--sea-soft); }
-.node:disabled { opacity: .38; }
-.node.here:disabled { opacity: 1; }
+/* Each spot is a 44px tap target centered on a small dot, with a one-line label beside it (b/t/l/r of the dot). */
+.node {
+  position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; padding: 0; color: var(--ink);
+}
+.node .dot { width: 13px; height: 13px; border-radius: 50%; display: block; background: var(--mist); box-shadow: 0 0 0 2px var(--mist), 0 0 0 3px rgba(34, 56, 43, .35); }
+.node .lbl {
+  position: absolute; padding: 1px 7px; font-size: 12px; font-weight: 700; line-height: 1.3; white-space: nowrap; border-radius: 999px;
+  background: rgba(255, 249, 239, .88); box-shadow: 0 1px 2px rgba(34, 56, 43, .28);
+}
+.node .lbl i { font-style: normal; color: var(--ink2); }
+.node.pb .lbl { top: calc(50% + 10px); left: 50%; transform: translateX(-50%); }
+.node.pt .lbl { bottom: calc(50% + 10px); left: 50%; transform: translateX(-50%); }
+.node.pr .lbl { left: calc(50% + 11px); top: 50%; transform: translateY(-50%); }
+.node.pl .lbl { right: calc(50% + 11px); top: 50%; transform: translateY(-50%); }
+.node.here .dot { width: 14px; height: 14px; background: var(--poppy); box-shadow: 0 0 0 2px var(--mist), 0 0 0 8px rgba(238, 138, 46, .35); }
 .node:not(:disabled) .dot { background: var(--cta); }
 .node:not(:disabled).van .dot { background: var(--sea); }
+.node:disabled:not(.here) .dot { opacity: .5; }
+.node:disabled:not(.here) .lbl { color: var(--ink2); }
+.node:focus-visible { outline: none; }
+.node:focus-visible .dot, .node:focus-visible .lbl { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* encounter */
 .enc-log p { margin: 4px 0; font-size: 15.5px; }
@@ -591,14 +602,14 @@ const BYID = Object.fromEntries(ITEMS.map(i => [i.id, i]));
 const itemIcon = id => IMG[`it_${id}`];
 const iconHTML = (id, cls = '') => (itemIcon(id) ? `<img${cls ? ` class="${cls}"` : ''} src="${itemIcon(id)}" alt="">` : `<span class="noart ${cls}" aria-hidden="true"></span>`);
 
-/* x/y place each spot on the journey map (percent of the map) */
+/* x/y place each spot's dot on the journey map, at its landmark in the art (percent of the map); at puts its label below, above, left or right of the dot */
 const PLACES = [
-  { name: 'Yurt Village', via: 'You shuffle back to the yurts. Someone is playing a singing bowl.', bias: { wine: .85, doritos: 1.15, petagotchi: 1.2 }, x: 26, y: 55 },
-  { name: 'Meditation Hall', via: 'You slip into the meditation hall mid-sit.', bias: { espresso: 1.35, burner: 1.2, charger: 1.15 }, x: 56, y: 36 },
-  { name: 'Hot Springs', via: 'A man named River explains breathwork to you, unprompted.', bias: { wine: 1.3, doritos: 1.2, wifi: 1.2 }, x: 56, y: 86 },
-  { name: 'The Labyrinth', via: 'You walk the labyrinth. It takes forty minutes to go nowhere.', bias: { coke: 1.2, choc: 1.15 }, x: 80, y: 58 },
-  { name: 'Kitchen Garden', via: 'You weed kale in silence for your work-study hours.', bias: { espresso: .7, choc: .75, coke: .8 }, x: 20, y: 25 },
-  { name: 'Parking Lot', via: 'One bar of signal flickers. Dale is asleep in the van.', bias: { burner: .75, charger: .8, wifi: .8 }, van: true, x: 54, y: 8 },
+  { name: 'Yurt Village', via: 'You shuffle back to the yurts. Someone is playing a singing bowl.', bias: { wine: .85, doritos: 1.15, petagotchi: 1.2 }, x: 24, y: 55, at: 'b' },
+  { name: 'Meditation Hall', via: 'You slip into the meditation hall mid-sit.', bias: { espresso: 1.35, burner: 1.2, charger: 1.15 }, x: 56, y: 40, at: 'b' },
+  { name: 'Hot Springs', via: 'A man named River explains breathwork to you, unprompted.', bias: { wine: 1.3, doritos: 1.2, wifi: 1.2 }, x: 52, y: 83, at: 'b' },
+  { name: 'The Labyrinth', via: 'You walk the labyrinth. It takes forty minutes to go nowhere.', bias: { coke: 1.2, choc: 1.15 }, x: 70, y: 60, at: 'b' },
+  { name: 'Kitchen Garden', via: 'You weed kale in silence for your work-study hours.', bias: { espresso: .7, choc: .75, coke: .8 }, x: 20, y: 29, at: 'r' },
+  { name: 'Parking Lot', via: 'One bar of signal flickers. Dale is asleep in the van.', bias: { burner: .75, charger: .8, wifi: .8 }, van: true, x: 58, y: 16, at: 'b' },
 ];
 const VAN_IX = PLACES.findIndex(p => p.van);
 const HOURS = [
@@ -1307,9 +1318,21 @@ const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
    For each release that has actually shipped, add an entry at the TOP and leave the older ones as they are.
    date is YYYY-MM-DD; body is a list of paragraphs, verbatim from the approved text; sign is the sign-off lines. */
 /* The game's version, shown beside What's New. Bump it only when a release ships, together with its note above.
-   1.0 was the launch on 2026-10-09; 1.1 is the 2026-10-15 release. */
-const GAME_VERSION = '1.1';
+   1.0 was the launch on 2026-10-09; 1.1 the 2026-10-15 release; 1.2 the 2026-10-16 map. */
+const GAME_VERSION = '1.2';
 const NOTES = [
+  {
+    date: '2026-10-16',
+    title: 'On the Importance of Knowing Where You Are',
+    body: [
+      'Dear Guests,',
+      'We are pleased to present a newly illustrated map of the retreat grounds.',
+      'Each path, garden, and designated area of reflection has been thoughtfully represented to support your journey toward greater presence.',
+      'Travel times are provided for your convenience. We encourage you to regard them as opportunities for contemplation rather than measures of efficiency.',
+      'Please remember that knowing where you are going is not the same as knowing why.',
+    ],
+    sign: ['With gentle authority,', 'Guide Saffron'],
+  },
   {
     date: '2026-10-15',
     title: 'On Dependence and Resolution',
@@ -2141,22 +2164,18 @@ let offerYes = null;
 
 function journeySheet() {
   if (!S || S.over) return;
-  const trails = [[0, 1], [0, 3], [0, 4], [1, 3], [1, 4], [2, 3], [4, 5], [0, 2], [1, 5]];
-  const lines = trails.map(([a, b]) => `<line class="trail" x1="${PLACES[a].x}" y1="${PLACES[a].y}" x2="${PLACES[b].x}" y2="${PLACES[b].y}"/>`).join('');
+  /* Labels show the walk in hours; the arrival time only when it's 8pm or later, close to quiet hours. Screen readers get both. */
   const nodes = PLACES.map((p, i) => {
-    const here = i === S.loc, ok = canReach(i), h = HOURS[S.loc][i];
-    const eta = here ? 'You are here' : ok ? `${plural(h, 'hour', 'hours')}, ${clock(S.hour + h)}` : 'After quiet hours';
-    return `<button type="button" class="node ${here ? 'here' : ''} ${p.van ? 'van' : ''}" style="left:${p.x}%;top:${p.y}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
-      <span class="dot"></span><span class="lbl">${p.name}</span><span class="eta">${eta}</span></button>`;
+    const here = i === S.loc, ok = canReach(i), h = HOURS[S.loc][i], arr = S.hour + h;
+    const eta = here ? 'You are here' : ok ? `${plural(h, 'hour', 'hours')}, ${clock(arr)}` : 'After quiet hours';
+    const tail = here || !ok ? '' : ` <i>· ${h}h${arr >= 20 ? `, ${clock(arr)}` : ''}</i>`;
+    return `<button type="button" class="node p${p.at} ${here ? 'here' : ''} ${p.van ? 'van' : ''}" style="left:${p.x}%;top:${p.y}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
+      <span class="dot"></span><span class="lbl">${p.name}${tail}</span></button>`;
   }).join('');
   openSheet(`<div class="grab"></div>
     <h3 id="sheetTitle">Where to?</h3>
     <p class="muted">It's ${clock(S.hour)}. Quiet hours start at ${clock(LIGHTS)}, and Dale's meter runs while you walk.</p>
     <div class="map">
-      <svg viewBox="0 0 100 104" preserveAspectRatio="none" aria-hidden="true">
-        <path class="ocean" d="M100 22 C 86 44, 92 66, 74 84 S 60 104, 52 104 L 100 104 Z"/>
-        ${lines}
-      </svg>
       ${nodes}
     </div>
     <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Stay here</button></div>`, 'journey');
@@ -2194,7 +2213,7 @@ function handbookSheet() {
       <p>The list shows what's for sale where you are. A price in an orange pill is in demand, above its usual range. A price in a green pill is abundant, below it. Goods you're holding that nobody here is trading show a dash instead of a price.</p>
       <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened.</p>`),
     sec('Time and walking', `
-      <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes and when you'd arrive. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
+      <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes, and when you'd arrive if that's 8pm or later. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
       <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
       <p>Tap <b>Rest</b> whenever you want to end the day. You sleep where you are and wake at 7am with up to 10 zen back, and the market where you slept sets new prices.</p>
       <p>Dale's meter runs every hour, while you walk and while you sleep.</p>`),
