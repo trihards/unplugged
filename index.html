@@ -494,6 +494,16 @@ input[type=range]:disabled { opacity: .35; }
 .hbb ul { margin: 0 0 10px; padding-left: 20px; }
 .hbb li { margin: 0 0 8px; }
 .hbb b { font-weight: 700; }
+
+/* What's New: "A Note from Guide Saffron" */
+.notes .saf { display: flex; align-items: center; gap: 12px; margin: 2px 0 6px; }
+.notes .saf img { width: 64px; height: 64px; object-fit: contain; flex: 0 0 auto; }
+.notes .saf h3 { padding-right: 48px; } /* clear the sheet's close button */
+.note { border-top: 1px solid var(--line); padding: 16px 0 6px; font-size: 15.5px; line-height: 1.55; }
+.note .when { margin: 0 0 2px; font-size: 13.5px; font-weight: 600; color: var(--ink2); }
+.note h4 { margin: 0 0 12px; font-family: var(--serif); font-weight: 600; font-size: 21px; line-height: 1.2; }
+.note p { margin: 0 0 10px; }
+.note .sig { margin-top: 14px; font-family: var(--serif); font-size: 17px; line-height: 1.35; }
 .hbt { width: 100%; border-collapse: collapse; font-size: 15px; margin: 2px 0 12px; }
 .hbt th { text-align: left; font-weight: 600; color: var(--ink2); font-size: 13.5px; padding: 4px 0; }
 .hbt td { padding: 6px 0; border-top: 1px solid var(--line); }
@@ -1290,6 +1300,26 @@ const TRACKS = [
   { id: 'w2', title: 'Late Night Record Shop', artist: 'TORiTiA', hint: 'Dale keeps a burned CD in his van.' },
 ];
 const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
+
+/* What's New, written by Guide Saffron: the permanent release history under Options. Newest first.
+   For each release that has actually shipped, add an entry at the TOP and leave the older ones as they are.
+   date is YYYY-MM-DD; body is a list of paragraphs, verbatim from the approved text; sign is the sign-off lines. */
+const NOTES = [
+  {
+    date: '2026-10-15',
+    title: 'On Dependence and Resolution',
+    body: [
+      'Dear Guests,',
+      'We have become aware of a growing number of Pocket Petagotchis circulating among our guests.',
+      'These small electronic companions require precisely the kind of attention you came here to release. We invite you to reflect on why being needed by something with a battery feels so rewarding.',
+      'Additionally, guests who have settled their financial obligations with Dale may now experience a musical acknowledgment of the occasion.',
+      'Dale calls this recording “You’re Square.”',
+      'We have reminded him that financial closure does not require musical accompaniment. He has acknowledged our feedback without agreeing to anything.',
+      'May you find freedom from all attachments, including those with replaceable batteries.',
+    ],
+    sign: ['With gentle authority,', 'Guide Saffron'],
+  },
+];
 const CD_PRICE = 150;
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
   want: false, held: false, at: null, fadeTimer: null };
@@ -1730,6 +1760,7 @@ function optionsSheet() {
   openSheet(`<div class="grab"></div><h3 id="sheetTitle">Options</h3>
     <div class="sheet-actions">
       <button type="button" class="btn soft" data-act="how">How it works</button>
+      <button type="button" class="btn soft" data-act="news">What's New</button>
       <button type="button" class="btn soft" data-act="scores">Guestbook</button>
       <button type="button" class="btn soft" data-act="music">Dale-Fi music player</button>
       <button type="button" class="btn soft" data-act="soundopt">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
@@ -2250,6 +2281,19 @@ function scoresSheet() {
     ${body || '<p class="muted">No one has signed yet. Finish a retreat to add your name.</p>'}
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'scores');
 }
+function newsSheet() {
+  const when = d => new Date(`${d}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const notes = NOTES.map(n => `<article class="note">
+      <p class="when"><time datetime="${n.date}">${when(n.date)}</time></p>
+      <h4>${esc(n.title)}</h4>
+      ${n.body.map(t => `<p>${esc(t)}</p>`).join('')}
+      <p class="sig">${n.sign.map(esc).join('<br>')}</p>
+    </article>`).join('');
+  openSheet(`<div class="grab"></div><div class="notes">
+    <div class="saf"><img src="${IMG.saffronCalm}" alt=""><h3 id="sheetTitle">A Note from Guide Saffron</h3></div>
+    ${notes}</div>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'news');
+}
 function journalSheet() {
   const lines = S.log.slice(-20).reverse().map(t => `<p>${t}</p>`).join('');
   openSheet(`<div class="grab"></div><h3 id="sheetTitle">Your journal</h3><div class="journal">${lines}</div>
@@ -2324,6 +2368,7 @@ function act(a, el) {
     case 'soundopt': setSound(!soundOn); return optionsSheet();
     case 'handbook': return handbookSheet();
     case 'scores': return scoresSheet();
+    case 'news': return newsSheet();
     case 'journal': return journalSheet();
     case 'menu': return menuSheet();
     case 'journey': return journeySheet();
