@@ -106,7 +106,8 @@ const smoke = {
       eq(await g.run("$('#sheetTitle').textContent"), 'A Note from Guide Saffron', 'title');
       const dates = await g.page.$$eval('.note time', t => t.map(x => x.getAttribute('datetime')));
       ok(dates.length >= 1 && dates.every((d, i) => i === 0 || d <= dates[i - 1]), 'dated, newest first', dates);
-      ok((await g.page.textContent('.note')).includes('On Dependence and Resolution'), 'first release present');
+      const all = await g.page.textContent('.notes');
+      ok(all.includes('On the Importance of Knowing Where You Are') && all.includes('On Dependence and Resolution'), 'every release kept');
       await g.tap('[data-act="close"]');
       eq(await g.run('sheetKind'), null, 'closes');
     }),
@@ -121,6 +122,23 @@ const smoke = {
       await g.tap('[data-act="close"]');
       eq([await g.run('screen'), await g.run('sheetKind')], ['game', null], 'back in the run');
       eq(await g.run('JSON.stringify(S)'), before, 'run state unchanged');
+    }),
+    tst('journey map: one tap walks, 44px targets, hours always and the arrival clock only late', {}, async g => {
+      await g.start(3);
+      await g.tap('[data-act="journey"]');
+      const sizes = await g.page.$$eval('.node', ns => ns.map(n => { const r = n.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; }));
+      ok(sizes.length === 6 && sizes.every(([w, h]) => w >= 44 && h >= 44), 'six 44px targets', sizes);
+      const lbl = await g.page.textContent('.node:not(.here):not(:disabled) .lbl');
+      ok(/· \dh$/.test(lbl), 'morning label shows hours only', lbl);
+      ok((await g.page.getAttribute('.node:not(.here):not(:disabled)', 'aria-label')).includes('am'), 'screen readers still get the arrival time');
+      const to = await g.page.getAttribute('.node:not(.here):not(:disabled)', 'data-go');
+      await g.tap(`.node[data-go="${to}"]`);
+      eq(await g.run('S.loc'), +to, 'one tap walks there');
+      await g.run("queue = []; closeSheet(true); S.hour = 19; render()");
+      await g.tap('[data-act="journey"]');
+      const late = await g.page.$$eval('.node:not(.here):not(:disabled) .lbl', ls => ls.map(l => l.textContent));
+      ok(late.length && late.every(t => /pm$/.test(t)), 'arriving 8pm or later shows the clock', late);
+      ok(await g.page.isVisible('.node:disabled'), 'spots past quiet hours are disabled');
     }),
     tst('last day: checkout ends the retreat with the right score', {}, async g => {
       await g.start(0);
