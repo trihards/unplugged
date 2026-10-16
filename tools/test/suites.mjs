@@ -140,6 +140,14 @@ const smoke = {
       ok(late.length && late.every(t => /pm$/.test(t)), 'arriving 8pm or later shows the clock', late);
       ok(await g.page.isVisible('.node:disabled'), 'spots past quiet hours are disabled');
     }),
+    tst('handbook marks only the sections the current release changed, and drops stale marks', {}, async g => {
+      await g.run('handbookSheet()');
+      const marks = await g.page.$$eval('.hb summary', ss => ss.map(s => [s.firstChild.textContent, s.querySelector('.hbmark')?.textContent || '']).filter(m => m[1]));
+      const want = await g.run("HB_MARKS.updated.map(t => [t, 'Updated · v' + GAME_VERSION]).concat(HB_MARKS.added.map(t => [t, 'New · v' + GAME_VERSION]))");
+      eq(marks.sort(), want.sort(), 'marks match HB_MARKS');
+      await g.run("closeSheet(true); HB_MARKS.version = '0.9'; handbookSheet()");
+      eq(await g.page.$$eval('.hbmark', m => m.length), 0, 'marks from an older release never show');
+    }),
     tst('last day: checkout ends the retreat with the right score', {}, async g => {
       await g.start(0);
       await g.run('S.day = S.days; S.cash = 9000; S.van = 1000; S.debt = 2500; render()');

@@ -500,6 +500,7 @@ input[type=range]:disabled { opacity: .35; }
 .hb { border-top: 1px solid var(--line); }
 .hb summary { list-style: none; cursor: pointer; padding: 14px 36px 14px 0; font-family: var(--serif); font-size: 19px; position: relative; min-height: 48px; }
 .hb summary::-webkit-details-marker { display: none; }
+.hb summary .hbmark { margin-left: 8px; font-family: var(--sans); font-size: 12.5px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
 .hb summary::after { content: "+"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-family: var(--sans); font-size: 24px; font-weight: 500; color: var(--ink2); }
 .hb[open] summary::after { content: "\2212"; }
 .hbb { padding: 0 0 12px; font-size: 15.5px; line-height: 1.5; }
@@ -2196,8 +2197,12 @@ function modeSheet() {
     <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Not yet</button></div>`, 'mode');
   const el = $(`#sheet [data-mode="${Math.max(0, MODES.findIndex(m => m.id === last))}"]`); if (el) el.focus({ preventScroll: true });
 }
+/* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
+   Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
+const HB_MARKS = { version: '1.2', updated: ['Time and walking'], added: [] };
 function handbookSheet() {
-  const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}</summary><div class="hbb">${body}</div></details>`;
+  const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
+  const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
   const goods = ITEMS.map(it => `<tr><td>${it.name}</td><td class="num">${fmt(it.min)} to ${fmt(it.max)}</td></tr>`).join('');
   const lengths = MODES.map(m => `<tr><td>${m.name}</td><td class="num">${m.days}</td><td class="num">${pct(m.rate)}</td></tr>`).join('');
   const kk = n => n >= 1e6 ? `$${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${+(n / 1e3).toFixed(0)}k` : `$${n}`;
@@ -2215,13 +2220,13 @@ function handbookSheet() {
     sec('Time and walking', `
       <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes, and when you'd arrive if that's 8pm or later. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
       <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
-      <p>Tap <b>Rest</b> whenever you want to end the day. You sleep where you are and wake at 7am with up to 10 zen back, and the market where you slept sets new prices.</p>
+      <p>Tap <b>Rest</b> whenever you want to end the day. You sleep where you are and wake at 7am with up to 10 zen back (15 on the 30-day intensive), and the market where you slept sets new prices.</p>
       <p>Dale's meter runs every hour, while you walk and while you sleep.</p>`),
     sec('Buying and selling', `
       <p>Tap any item to trade it. <b>Receive</b> buys and <b>Let go</b> sells. Drag the slider or tap One, Half or All, then confirm. The sheet shows what you paid on average and how much you'd gain or lose by selling.</p>
       <p>Prices change every time you arrive somewhere and every morning. Most goods are on offer at any spot, but rarely all of them.</p>
-      <p>About a third of the time you arrive, gossip hits: one item spikes to two to three and a half times its price, or crashes to between a half and a quarter of it. The notification tells you which.</p>
-      <p>Every spot also runs steadily cheap or pricey on certain goods. The kitchen has the staff espresso machine. Tech comes in through Dale's van. The deeper into the retreat you go, the more tech is worth. Working out the rest is the game.</p>
+      <p>About a third of the time prices change, gossip hits: one item spikes to two to three and a half times its price, or crashes to between a half and a quarter of it. The notification tells you which.</p>
+      <p>Every spot also runs steadily cheap or pricey on certain goods. The kitchen has the staff espresso machine. Tech comes in through Dale's van. Working out the rest is the game.</p>
       <table class="hbt"><thead><tr><th>Goods, most to least valuable</th><th class="num">Usual price</th></tr></thead><tbody>${goods}</tbody></table>`),
     sec("Dale and his van", `
       <img class="hbimg" src="${IMG.daleCalm}" alt="Dale">
@@ -2266,11 +2271,11 @@ function handbookSheet() {
       <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
-      <p>The equalizer icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up.</p>
+      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up.</p>
       <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
-      <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, 1 to 6 pick a spot on the map, and Esc closes things.</p>
+      <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, and Esc closes things.</p>
       <p>There's also a secret, and it involves the wordmark. You'll know it when you find it.</p>`),
     sec('Tips from past guests', `
       <ul>
