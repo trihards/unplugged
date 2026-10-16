@@ -286,6 +286,25 @@ input[type=range]:disabled { opacity: .35; }
 .node:not(:disabled) .dot { background: var(--cta); }
 .node:not(:disabled).van .dot { background: var(--sea); }
 
+/* preview C: small dot, 44px hit box, one-line pill label; the pill sits b/t/l/r of the dot */
+.map.c .node { transform: translate(-50%, -50%); width: 44px; height: 44px; min-width: 0; justify-content: center; }
+.map.c .node:focus-visible { outline: none; }
+.map.c .node .dot { width: 13px; height: 13px; box-shadow: 0 0 0 2px var(--mist), 0 0 0 3px rgba(34, 56, 43, .35); }
+.map.c .node.here .dot { width: 14px; height: 14px; box-shadow: 0 0 0 2px var(--mist), 0 0 0 8px rgba(238, 138, 46, .35); }
+.map.c .node .lbl {
+  position: absolute; margin: 0; padding: 1px 7px; font-size: 12px; font-weight: 700; line-height: 1.3; border-radius: 999px;
+  background: rgba(255, 249, 239, .88); box-shadow: 0 1px 2px rgba(34, 56, 43, .28);
+}
+.map.c .node .lbl i { font-style: normal; font-weight: 700; color: var(--ink2); }
+.map.c .node.pb .lbl { top: calc(50% + 10px); left: 50%; transform: translateX(-50%); }
+.map.c .node.pt .lbl { bottom: calc(50% + 10px); left: 50%; transform: translateX(-50%); }
+.map.c .node.pr .lbl { left: calc(50% + 11px); top: 50%; transform: translateY(-50%); }
+.map.c .node.pl .lbl { right: calc(50% + 11px); top: 50%; transform: translateY(-50%); }
+.map.c .node:disabled { opacity: 1; }
+.map.c .node:disabled:not(.here) .dot { opacity: .5; }
+.map.c .node:disabled:not(.here) .lbl { color: var(--ink2); }
+.map.c .node:focus-visible .dot, .map.c .node:focus-visible .lbl { outline: 2px solid var(--ink); outline-offset: 2px; }
+
 /* encounter */
 .enc-log p { margin: 4px 0; font-size: 15.5px; }
 .enc-log .bad { color: var(--urchin); font-weight: 600; }
@@ -2109,19 +2128,24 @@ let offerYes = null;
 
 function journeySheet() {
   if (!S || S.over) return;
-  // PREVIEW ONLY, remove before merge: ?mapnodes=art puts each dot just below its landmark in the art
-  const ART = new URLSearchParams(location.search).get('mapnodes') === 'art' ? { 'Parking Lot': [58, 19], 'Kitchen Garden': [21, 28], 'Meditation Hall': [53, 42], 'Yurt Village': [20, 57], 'The Labyrinth': [71, 61], 'Hot Springs': [45, 80] } : {};
+  // PREVIEW ONLY, remove before merge. ?mapnodes=current: original spots, big dots; =art: dots at the landmarks, big dots; default (C): landmark spots, small dots, compact labels
+  const mode = new URLSearchParams(location.search).get('mapnodes'), C = mode !== 'current' && mode !== 'art';
+  const B = { 'Parking Lot': [58, 19], 'Kitchen Garden': [21, 28], 'Meditation Hall': [53, 42], 'Yurt Village': [20, 57], 'The Labyrinth': [71, 61], 'Hot Springs': [45, 80] };
+  // dot at each landmark's foot; label side where below would hit the next landmark or the frame
+  const CPOS = { 'Parking Lot': [58, 16, 'b'], 'Kitchen Garden': [20, 29, 'r'], 'Meditation Hall': [56, 40, 'b'], 'Yurt Village': [24, 55, 'b'], 'The Labyrinth': [70, 60, 'b'], 'Hot Springs': [52, 83, 'b'] };
   const nodes = PLACES.map((p, i) => {
-    const here = i === S.loc, ok = canReach(i), h = HOURS[S.loc][i];
-    const eta = here ? 'You are here' : ok ? `${plural(h, 'hour', 'hours')}, ${clock(S.hour + h)}` : 'After quiet hours';
-    const [px, py] = ART[p.name] || [p.x, p.y];
-    return `<button type="button" class="node ${here ? 'here' : ''} ${p.van ? 'van' : ''}" style="left:${px}%;top:${py}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
-      <span class="dot"></span><span class="lbl">${p.name}</span><span class="eta">${eta}</span></button>`;
+    const here = i === S.loc, ok = canReach(i), h = HOURS[S.loc][i], arr = S.hour + h;
+    const eta = here ? 'You are here' : ok ? `${plural(h, 'hour', 'hours')}, ${clock(arr)}` : 'After quiet hours';
+    const [px, py, pl] = C ? CPOS[p.name] : mode === 'art' ? [...B[p.name], ''] : [p.x, p.y, ''];
+    const cls = `node ${here ? 'here' : ''} ${p.van ? 'van' : ''} ${C ? 'p' + pl : ''}`;
+    const tail = !C || here || !ok ? '' : ` <i>· ${h}h${arr >= 20 ? ', ' + clock(arr) : ''}</i>`;
+    return `<button type="button" class="${cls}" style="left:${px}%;top:${py}%" data-go="${i}" ${ok ? '' : 'disabled'} aria-label="${p.name}. ${eta}">
+      <span class="dot"></span><span class="lbl">${p.name}${tail}</span>${C ? '' : `<span class="eta">${eta}</span>`}</button>`;
   }).join('');
   openSheet(`<div class="grab"></div>
     <h3 id="sheetTitle">Where to?</h3>
     <p class="muted">It's ${clock(S.hour)}. Quiet hours start at ${clock(LIGHTS)}, and Dale's meter runs while you walk.</p>
-    <div class="map">
+    <div class="map ${C ? 'c' : ''}">
       ${nodes}
     </div>
     <div class="sheet-actions"><button type="button" class="btn quiet" data-act="close">Stay here</button></div>`, 'journey');
