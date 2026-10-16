@@ -107,6 +107,16 @@ const smoke = {
       await g.tap('[data-act="close"]');
       eq(await g.run('sheetKind'), null, 'closes');
     }),
+    tst('in-game menu › What\'s New opens the same sheet and leaves the run untouched', {}, async g => {
+      await g.start(2);
+      await g.run("S.cash = 1234; S.zen = 77; render()");
+      const before = await g.run('JSON.stringify(S)');
+      await g.tap('[data-act="menu"]'); await g.tap('[data-act="news"]');
+      eq(await g.run("$('#sheetTitle').textContent"), 'A Note from Guide Saffron', 'same sheet');
+      await g.tap('[data-act="close"]');
+      eq([await g.run('screen'), await g.run('sheetKind')], ['game', null], 'back in the run');
+      eq(await g.run('JSON.stringify(S)'), before, 'run state unchanged');
+    }),
     tst('last day: checkout ends the retreat with the right score', {}, async g => {
       await g.start(0);
       await g.run('S.day = S.days; S.cash = 9000; S.van = 1000; S.debt = 2500; render()');
