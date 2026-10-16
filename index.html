@@ -757,15 +757,15 @@ function market(loc = S.loc) {
 const stockLeft = id => (S.prices[id] ? market().s[id] : 0);
 const typical = id => (STOCK[id][0] + STOCK[id][1]) / 2;
 /* What the nth unit you let go of here fetches, counting what buyers here already took. */
-const unitSale = (id, n) => {
+const unitSale = (id, n, edge = zenEdge()) => {
   const extra = Math.max(0, market().d[id] + n - typical(id));
-  return Math.max(1, Math.floor(S.prices[id] * (1 + zenEdge()) * Math.max(SAT_FLOOR, 1 / (1 + extra / (GLUT * typical(id))))));
+  return Math.max(1, Math.floor(S.prices[id] * (1 + edge) * Math.max(SAT_FLOOR, 1 / (1 + extra / (GLUT * typical(id))))));
 };
 /* Every sale goes through here, so the preview and the payout can't disagree. */
-function saleTotal(id, q) {
+function saleTotal(id, q, edge = zenEdge()) {
   if (!S.prices[id]) return 0;
   let t = 0;
-  for (let n = 0; n < q; n++) t += unitSale(id, n);
+  for (let n = 0; n < q; n++) t += unitSale(id, n, edge);
   return t;
 }
 function genPrices() {
@@ -939,7 +939,7 @@ function tradeSheet() {
   trade.q = Math.min(Math.max(trade.q, max ? 1 : 0), max);
   openSheet(`<div class="grab"></div>
     <div class="item-head">${iconHTML(it.id)}<h3 id="sheetTitle">${it.name}</h3></div>
-    <p class="muted"><span class="num">${fmt(p)}</span> each here${trade.mode === 'buy' ? `, ${left ? `${left} for sale` : 'sold out'}` : ''}. ${held}${trade.mode === 'buy' ? ` Room for ${free()} more in your cushion.` : ''}${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up.' : ''}${trade.mode === 'sell' && Math.round(zenEdge() * 100) ? ` Your zen adds ${Math.round(zenEdge() * 100)}%.` : ''}</p>
+    <p class="muted"><span class="num">${fmt(p)}</span> each here${trade.mode === 'buy' ? `, ${left ? `${left} for sale` : 'sold out'}` : ''}. ${held}${trade.mode === 'buy' ? ` Room for ${free()} more in your cushion.` : ''}${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up.' : ''}${trade.mode === 'sell' && saleTotal(trade.id, have) > saleTotal(trade.id, have, 0) ? ` Your zen adds ${Math.max(1, Math.round(zenEdge() * 100))}%.` : ''}</p>
     <div class="seg" role="group" aria-label="Trade">
       <button type="button" data-tmode="buy" aria-pressed="${trade.mode === 'buy'}" ${canBuy(trade.id) ? '' : 'disabled'}>Receive</button>
       <button type="button" data-tmode="sell" aria-pressed="${trade.mode === 'sell'}" ${have ? '' : 'disabled'}>Let go</button>
@@ -2263,7 +2263,7 @@ function handbookSheet() {
       <p>If your cushion ends up empty, she leaves on her own. Getting away by running or with decoys sometimes shakes something loose for your Dale-Fi.</p>`),
     sec('Zen', `
       <p>Zen is your sanity, and it starts at 100. Rest gives back up to 20 a night, and quiet moments on your walks give back 10 to 25. Guide Saffron, her volunteers and Dale's notes take it away. If you run from her every time, zen is what runs out.</p>
-      <p>Zen is also your composure. A calm seller gets a better price: at full zen buyers pay you ${Math.round(ZEN.edge * 100)} percent more, and the edge fades to nothing as zen drops to ${ZEN.from}. The sell sheet shows what yours is worth. Every walk wears a little off, more for long ones, but walking alone never takes you below ${ZEN.floor}. A night's rest puts it back.</p>
+      <p>Zen is also your composure. A calm seller gets a better price: at full zen buyers pay you ${Math.round(ZEN.edge * 100)} percent more, and the edge fades to nothing as zen drops to ${ZEN.from}. When it's helping, the sell sheet says so. Every walk wears a little off, more for long ones, but walking alone never takes you below ${ZEN.floor}, and rest brings back up to 20 a night.</p>
       <p>At zero you snap, break Noble Silence, and leave to start a podcast. The retreat ends right there, and your net worth at that moment goes in the guestbook as Snapped.</p>`),
     sec('Things that happen on your walks', `
       <p>Besides gossip, a walk can bring:</p>
