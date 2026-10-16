@@ -543,16 +543,22 @@ const DECOY_SHARES = 3;
    forget half of what you sold them each night, and a spike in the gossip makes them hungry again. */
 const STOCK = { burner: [3, 8], charger: [6, 16], wifi: [10, 26], petagotchi: [14, 36], wine: [24, 60], doritos: [30, 80], coke: [40, 100], choc: [50, 120], espresso: [60, 150] };
 const REFILL = 0.5, GLUT = 2, SAT_FLOOR = 0.4, FORGET = 0.5;
+/* Zen as composure (proposed, pending approval). A calm seller gets a better price: buyers pay up to edge
+   more at full zen, sliding to nothing at from zen and below. Low zen costs you the edge, never more.
+   Walking wears zen down by wear per hour, but walking alone never takes it below floor, where the edge
+   runs out: the hustle can dull your edge all the way, but it never pushes you toward snapping. Rest (20 a night) and quiet moments bring it back. */
+const ZEN = { edge: 0.06, from: 70, wear: 1, floor: 70 };
+const zenEdge = () => ZEN.edge * Math.min(1, Math.max(0, (S.zen - ZEN.from) / (100 - ZEN.from)));
 
 /* Retreat lengths. Dale's hourly rate makes debt grow about 16x over any length.
    k scales per-walk event odds. Rank thresholds were calibrated per length by simulating
    thousands of runs with a casual bot (always runs from Saffron) and an expert bot. With market supply
    (proposed, pending approval) they were re-matched percentile for percentile against the same bot. */
 const MODES = [
-  { id: 'weekend', name: 'A weekend reset', short: 'Weekend', days: 3, rate: 0.045, k: 1.25, rest: 10, ranks: [0, 5000, 20000, 60000, 125000], extra: '' },
-  { id: 'five', name: 'Five-day immersion', short: 'Five days', days: 5, rate: 0.025, k: 1.0, rest: 10, ranks: [0, 25000, 75000, 175000, 275000], extra: '' },
-  { id: 'week', name: 'The full week', short: 'Full week', days: 7, rate: 0.0175, k: 0.85, rest: 10, ranks: [0, 50000, 125000, 225000, 400000], extra: '' },
-  { id: 'intensive', name: '30-day intensive', short: '30-day intensive', days: 30, rate: 0.004, k: 0.45, rest: 15, ranks: [0, 200000, 1000000, 1600000, 2500000], extra: ' Clear your evening.' },
+  { id: 'weekend', name: 'A weekend reset', short: 'Weekend', days: 3, rate: 0.045, k: 1.25, rest: 20, ranks: [0, 5000, 20000, 60000, 125000], extra: '' },
+  { id: 'five', name: 'Five-day immersion', short: 'Five days', days: 5, rate: 0.025, k: 1.0, rest: 20, ranks: [0, 25000, 75000, 175000, 275000], extra: '' },
+  { id: 'week', name: 'The full week', short: 'Full week', days: 7, rate: 0.0175, k: 0.85, rest: 20, ranks: [0, 50000, 125000, 225000, 400000], extra: '' },
+  { id: 'intensive', name: '30-day intensive', short: '30-day intensive', days: 30, rate: 0.004, k: 0.45, rest: 20, ranks: [0, 200000, 1000000, 1600000, 2500000], extra: ' Clear your evening.' },
 ];
 const pct = r => `${+(r * 100).toFixed(2)}%`;
 
@@ -753,7 +759,7 @@ const typical = id => (STOCK[id][0] + STOCK[id][1]) / 2;
 /* What the nth unit you let go of here fetches, counting what buyers here already took. */
 const unitSale = (id, n) => {
   const extra = Math.max(0, market().d[id] + n - typical(id));
-  return Math.max(1, Math.floor(S.prices[id] * Math.max(SAT_FLOOR, 1 / (1 + extra / (GLUT * typical(id))))));
+  return Math.max(1, Math.floor(S.prices[id] * (1 + zenEdge()) * Math.max(SAT_FLOOR, 1 / (1 + extra / (GLUT * typical(id))))));
 };
 /* Every sale goes through here, so the preview and the payout can't disagree. */
 function saleTotal(id, q) {
@@ -798,6 +804,7 @@ function walk(ix) {
   if (!S || S.over || !canReach(ix)) return;
   const h = HOURS[S.loc][ix];
   accrue(h); S.hour += h; S.loc = ix;
+  if (S.zen > ZEN.floor) S.zen = Math.max(ZEN.floor, S.zen - Math.round(h * ZEN.wear));
   { const st = ST(); st.walks++; st.hours += h; st.visits[ix] = (st.visits[ix] || 0) + 1; if (S.hour >= 20) st.lateNights++; }
   S.flavor = PLACES[ix].via;
   closeSheet(true);
@@ -932,7 +939,7 @@ function tradeSheet() {
   trade.q = Math.min(Math.max(trade.q, max ? 1 : 0), max);
   openSheet(`<div class="grab"></div>
     <div class="item-head">${iconHTML(it.id)}<h3 id="sheetTitle">${it.name}</h3></div>
-    <p class="muted"><span class="num">${fmt(p)}</span> each here${trade.mode === 'buy' ? `, ${left ? `${left} for sale` : 'sold out'}` : ''}. ${held} Room for ${free()} more in your cushion.${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up.' : ''}</p>
+    <p class="muted"><span class="num">${fmt(p)}</span> each here${trade.mode === 'buy' ? `, ${left ? `${left} for sale` : 'sold out'}` : ''}. ${held}${trade.mode === 'buy' ? ` Room for ${free()} more in your cushion.` : ''}${trade.mode === 'sell' && market().d[trade.id] >= typical(trade.id) ? ' Buyers here are filling up.' : ''}${trade.mode === 'sell' && Math.round(zenEdge() * 100) ? ` Your zen adds ${Math.round(zenEdge() * 100)}%.` : ''}</p>
     <div class="seg" role="group" aria-label="Trade">
       <button type="button" data-tmode="buy" aria-pressed="${trade.mode === 'buy'}" ${canBuy(trade.id) ? '' : 'disabled'}>Receive</button>
       <button type="button" data-tmode="sell" aria-pressed="${trade.mode === 'sell'}" ${have ? '' : 'disabled'}>Let go</button>
@@ -961,7 +968,7 @@ function updateTrade() {
   } else {
     const have = S.inv[trade.id], total = saleTotal(trade.id, q);
     const gain = have ? total - S.paid[trade.id] * (q / have) : 0;
-    const each = q && total < p * q ? `Avg. ${fmt(total / q)} each, ` : '';
+    const each = q && total !== p * q ? `Avg. ${fmt(total / q)} each, ` : '';
     $('#tt').textContent = q ? `${each}${gain >= 0 ? '+' : ''}${fmt(gain)} on what you paid` : '';
     go.textContent = q ? `Let go of ${q} for ${fmt(total)}` : `You have none to let go of`;
   }
@@ -1916,8 +1923,9 @@ function grades() {
     : G('B', `Checked in ${st.checkins === 1 ? 'once' : st.checkins === 2 ? 'twice' : `${st.checkins} times`}. Talked it out.`);
   const z = st.zenMin;
   const peace = S.reason === 'zen' ? G('F', 'Screamed during Noble Silence.')
-    : z >= 85 ? G('A', 'Barely rattled.') : z >= 65 ? G('B', `Zen dipped to ${z}. Breathed through it.`)
-    : z >= 45 ? G('C', `Zen dipped to ${z}.`) : z >= 25 ? G('D', `Zen bottomed out at ${z}.`) : G('F', `Zen hit ${z}. Held together with tape.`);
+    /* Walking wears zen down to ZEN.floor on its own, so grades start below that (proposed, pending approval). */
+    : z >= ZEN.floor ? G('A', 'Barely rattled.') : z >= 55 ? G('B', `Zen dipped to ${z}. Breathed through it.`)
+    : z >= 40 ? G('C', `Zen dipped to ${z}.`) : z >= 25 ? G('D', `Zen bottomed out at ${z}.`) : G('F', `Zen hit ${z}. Held together with tape.`);
   const money = S.debt > 0 && st.paidDay == null ? G('F', `Still owes Dale ${fmt(S.debt)}.`)
     : st.paidDay === 1 ? G('A+', `Square with Dale on day one.${st.borrowed ? ' Then borrowed more.' : ''}`)
     : st.paidDay === 2 ? G('A', `Square with Dale by day two.${st.borrowed ? ' Then borrowed more.' : ''}`)
@@ -2221,7 +2229,7 @@ function handbookSheet() {
     sec('Time and walking', `
       <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes and when you'd arrive. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
       <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
-      <p>Tap <b>Rest</b> whenever you want to end the day. You sleep where you are and wake at 7am with up to 10 zen back, and the market where you slept sets new prices.</p>
+      <p>Tap <b>Rest</b> whenever you want to end the day. You sleep where you are and wake at 7am with up to 20 zen back, and the market where you slept sets new prices.</p>
       <p>Dale's meter runs every hour, while you walk and while you sleep.</p>`),
     sec('Buying and selling', `
       <p>Tap any item to trade it. <b>Receive</b> buys and <b>Let go</b> sells. Drag the slider or tap One, Half or All, then confirm. The sheet shows what you paid on average and how much you'd gain or lose by selling.</p>
@@ -2254,7 +2262,8 @@ function handbookSheet() {
       </ul>
       <p>If your cushion ends up empty, she leaves on her own. Getting away by running or with decoys sometimes shakes something loose for your Dale-Fi.</p>`),
     sec('Zen', `
-      <p>Zen is your sanity, and it starts at 100. Rest gives back up to 10 a night, or 15 on the 30-day intensive, and quiet moments on your walks give back 10 to 25. Guide Saffron, her volunteers and Dale's notes take it away. If you run from her every time, zen is what runs out.</p>
+      <p>Zen is your sanity, and it starts at 100. Rest gives back up to 20 a night, and quiet moments on your walks give back 10 to 25. Guide Saffron, her volunteers and Dale's notes take it away. If you run from her every time, zen is what runs out.</p>
+      <p>Zen is also your composure. A calm seller gets a better price: at full zen buyers pay you ${Math.round(ZEN.edge * 100)} percent more, and the edge fades to nothing as zen drops to ${ZEN.from}. The sell sheet shows what yours is worth. Every walk wears a little off, more for long ones, but walking alone never takes you below ${ZEN.floor}. A night's rest puts it back.</p>
       <p>At zero you snap, break Noble Silence, and leave to start a podcast. The retreat ends right there, and your net worth at that moment goes in the guestbook as Snapped.</p>`),
     sec('Things that happen on your walks', `
       <p>Besides gossip, a walk can bring:</p>

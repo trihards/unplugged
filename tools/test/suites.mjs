@@ -127,7 +127,7 @@ const trading = {
     }),
     tst('let go: cash, cost basis and profit', {}, async g => {
       await g.start(2);
-      await g.run("S.prices = { charger: 400 }; S.inv.charger = 10; S.paid.charger = 3000; S.cash = 0; render()");
+      await g.run("S.zen = ZEN.from; S.prices = { charger: 400 }; S.inv.charger = 10; S.paid.charger = 3000; S.cash = 0; render()");
       await g.tap('[data-item="charger"]');
       eq(await g.run('trade.mode'), 'sell', 'sheet opens on Let go when the price beats what you paid');
       await g.tap('[data-tset="half"]'); await g.tap('#tgo');
@@ -202,7 +202,7 @@ const trading = {
     }),
     tst('buyers fill up: the preview total is what you get, and selling never stops', {}, async g => {
       await g.start(2);
-      await g.run("S.prices = { charger: 400 }; S.inv.charger = 60; S.paid.charger = 6000; market().d.charger = 0; S.cash = 0; render()");
+      await g.run("S.zen = ZEN.from; S.prices = { charger: 400 }; S.inv.charger = 60; S.paid.charger = 6000; market().d.charger = 0; S.cash = 0; render()");
       eq(await g.run("saleTotal('charger', 11)"), 4400, 'a typical stock\'s worth goes at full price');
       const t = await g.run("saleTotal('charger', 60)");
       ok(t < 24000 && t > 0.4 * 24000, 'a big batch fetches less, but not below the floor', t);
@@ -236,6 +236,39 @@ const trading = {
       await g.run('S.day += 1; market().s.burner = 0; market().d.burner = 30');
       await g.rolls(seq, crash, 0.1);
       ok(await g.run('market().s.burner') > 0, 'next day gossip works again');
+    }),
+    tst('zen as composure: a calm seller gets a better price, and the sheet says so', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { charger: 400 }; S.inv.charger = 10; S.paid.charger = 3000; market().d.charger = 0");
+      await g.run('S.zen = ZEN.from'); const flat = await g.run("saleTotal('charger', 10)");
+      await g.run('S.zen = 100'); const calm = await g.run("saleTotal('charger', 10)");
+      await g.run('S.zen = 10'); const low = await g.run("saleTotal('charger', 10)");
+      eq([flat, calm, low], [4000, 4240, 4000], 'full zen +6%, low zen no penalty');
+      await g.run("S.zen = 85; S.cash = 0; render()");
+      const mid = await g.run("saleTotal('charger', 10)");
+      ok(mid > 4000 && mid < 4240, 'edge slides between', mid);
+      await g.tap('[data-item="charger"]'); await g.tap('[data-tset="max"]');
+      ok((await g.page.textContent('#sheet')).includes('Your zen adds 3%'), 'sheet names the edge', await g.page.textContent('#sheet .muted'));
+      ok((await g.page.textContent('#tgo')).includes('$' + mid.toLocaleString('en-US')), 'button shows the real total');
+      await g.tap('#tgo');
+      eq(await g.run('S.cash'), mid, 'paid exactly the preview');
+    }),
+    tst('walking wears zen down to the floor and no further; rest brings 20 back', {}, async g => {
+      await g.start(3);
+      const near = await g.run('PLACES.findIndex((_, i) => i !== S.loc && HOURS[S.loc][i] === 1)');
+      await g.run(`S.zen = 100; S.inv = Object.fromEntries(ITEMS.map(i => [i.id, 0])); walk(${near}); queue = []; closeSheet(true)`);
+      const after = await g.run('S.zen');
+      ok(after >= 99, 'a one-hour walk costs 1 (a quiet moment may add some back)', after);
+      await g.run('S.zen = ZEN.floor + 1; S.hour = 8');
+      const back = await g.run('PLACES.findIndex((_, i) => i !== S.loc && HOURS[S.loc][i] === 1)');
+      await g.run(`walk(${back}); queue = []; closeSheet(true)`);
+      ok(await g.run('S.zen') >= await g.run('ZEN.floor'), 'stops at the floor');
+      await g.run('S.zen = 30; S.hour = 8');
+      const again = await g.run('PLACES.findIndex((_, i) => i !== S.loc && HOURS[S.loc][i] === 1)');
+      await g.run(`walk(${again}); queue = []; closeSheet(true)`);
+      ok(await g.run('S.zen') >= 30, 'below the floor, walking costs nothing');
+      await g.run('S.zen = 50; S.hour = 21; rest()'); await g.wait(200);
+      eq(await g.run('S.zen'), 70, 'rest gives 20 back');
     }),
     tst('market supply survives a reload, and older saves get a market', {}, async g => {
       await g.start(2);
