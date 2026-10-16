@@ -729,10 +729,11 @@ const used = () => ITEMS.reduce((a, i) => a + S.inv[i.id], 0);
 const free = () => S.cap - used();
 function log(t) { S.log.push(t); if (S.log.length > 80) S.log.shift(); }
 
-/* One market per spot: s is what sellers have left, b their usual amount, d how much buyers have taken off you lately. */
+/* One market per spot: s is what sellers have left, b their usual amount, d how much buyers have taken off you lately,
+   g the day gossip last moved them. */
 function newMarkets() {
   return PLACES.map(P => {
-    const m = { day: S.day, s: {}, b: {}, d: {} };
+    const m = { day: S.day, g: 0, s: {}, b: {}, d: {} };
     ITEMS.forEach(it => { const [lo, hi] = STOCK[it.id]; m.b[it.id] = m.s[it.id] = Math.max(1, Math.round(rf(lo, hi) / (P.bias[it.id] || 1))); m.d[it.id] = 0; });
     return m;
   });
@@ -770,8 +771,17 @@ function genPrices() {
   const news = [];
   if (rng() < 0.35) {
     const it = pick(avail);
-    if (rng() < 0.5) { prices[it.id] = Math.round(prices[it.id] * rf(2, 3.5)); m.d[it.id] = 0; news.push({ text: it.up, kind: 'up', id: it.id }); }
-    else { prices[it.id] = Math.max(1, Math.round(prices[it.id] / rf(2, 4))); m.s[it.id] = Math.min(Math.round(m.b[it.id] * 2.5), Math.max(m.s[it.id], m.b[it.id]) + Math.round(m.b[it.id] * rf(0.5, 1))); news.push({ text: it.down, kind: 'down', id: it.id }); }
+    /* Gossip moves a spot's stock or buyers at most once a day, so walking back and forth can't farm it.
+       The rolls happen either way, so the random sequence doesn't depend on it. */
+    const fresh = m.g !== S.day;
+    if (rng() < 0.5) {
+      prices[it.id] = Math.round(prices[it.id] * rf(2, 3.5)); news.push({ text: it.up, kind: 'up', id: it.id });
+      if (fresh) { m.d[it.id] = 0; m.g = S.day; }
+    } else {
+      prices[it.id] = Math.max(1, Math.round(prices[it.id] / rf(2, 4))); news.push({ text: it.down, kind: 'down', id: it.id });
+      const extra = Math.round(m.b[it.id] * rf(0.5, 1));
+      if (fresh) { m.s[it.id] = Math.min(Math.round(m.b[it.id] * 2.5), Math.max(m.s[it.id], m.b[it.id]) + extra); m.g = S.day; }
+    }
   }
   S.prices = prices;
   return news;
@@ -951,7 +961,7 @@ function updateTrade() {
   } else {
     const have = S.inv[trade.id], total = saleTotal(trade.id, q);
     const gain = have ? total - S.paid[trade.id] * (q / have) : 0;
-    const each = q && total < p * q ? `about ${fmt(total / q)} each, ` : '';
+    const each = q && total < p * q ? `Avg. ${fmt(total / q)} each, ` : '';
     $('#tt').textContent = q ? `${each}${gain >= 0 ? '+' : ''}${fmt(gain)} on what you paid` : '';
     go.textContent = q ? `Let go of ${q} for ${fmt(total)}` : `You have none to let go of`;
   }

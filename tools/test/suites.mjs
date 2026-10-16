@@ -208,7 +208,7 @@ const trading = {
       ok(t < 24000 && t > 0.4 * 24000, 'a big batch fetches less, but not below the floor', t);
       await g.tap('[data-item="charger"]'); await g.tap('[data-tset="max"]');
       ok((await g.page.textContent('#tgo')).includes('$' + t.toLocaleString('en-US')), 'button shows the real total', await g.page.textContent('#tgo'));
-      ok((await g.page.textContent('#tt')).includes('each'), 'shows the average each');
+      ok((await g.page.textContent('#tt')).startsWith('Avg. $'), 'shows the average each');
       await g.tap('#tgo');
       eq(await g.run('[S.cash, S.inv.charger, market().d.charger]'), [t, 0, 60], 'paid exactly the preview');
       await g.run("S.inv.charger = 500; S.paid.charger = 0");
@@ -218,6 +218,24 @@ const trading = {
       eq(await g.run("saleTotal('espresso', 3)"), 3, 'cheap goods never fetch $0');
       await g.run('S.day += 1; market()');
       eq(await g.run('market().d.charger'), 30, 'buyers forget half overnight');
+    }),
+    tst('gossip moves stock and buyers once per spot per day, not on every revisit', {}, async g => {
+      await g.start(3);
+      // all goods on offer, gossip fires, it picks burners (first in the list), and the 21st roll makes it a crash
+      const crash = "genPrices()", seq = [...Array(20).fill(0.1), 0.6];
+      await g.run("const m = market(); m.b.burner = 4; m.s.burner = 0; m.g = 0");
+      await g.rolls(seq, crash, 0.1);
+      const first = await g.run('market().s.burner');
+      ok(first >= 6 && first <= 8, 'a crash brings extra stock', first);
+      await g.run('market().s.burner = 0');
+      await g.rolls(seq, crash, 0.1);
+      eq(await g.run('market().s.burner'), 0, 'a second crash at the same spot the same day brings nothing');
+      await g.run('market().d.burner = 30');
+      await g.rolls([...Array(20).fill(0.1), 0.2], crash, 0.1);
+      eq(await g.run('market().d.burner'), 30, 'nor does a spike the same day reset buyers');
+      await g.run('S.day += 1; market().s.burner = 0; market().d.burner = 30');
+      await g.rolls(seq, crash, 0.1);
+      ok(await g.run('market().s.burner') > 0, 'next day gossip works again');
     }),
     tst('market supply survives a reload, and older saves get a market', {}, async g => {
       await g.start(2);
