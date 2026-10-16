@@ -148,6 +148,57 @@ const smoke = {
       await g.run("closeSheet(true); HB_MARKS.version = '0.9'; handbookSheet()");
       eq(await g.page.$$eval('.hbmark', m => m.length), 0, 'marks from an older release never show');
     }),
+    tst('Dale-Fi cards: a fresh player owns only the retreat track, with its card and no reveal', {}, async g => {
+      eq(await g.run('collected()'), ['s0'], 'fresh collection');
+      await g.tap('[data-act="options"]'); await g.tap('#sheet [data-act="music"]');
+      eq(await g.page.$$eval('.cardthumb', b => b.map(x => x.dataset.id)), ['s0'], 'one card on the welcome Dale-Fi');
+      await g.tap('.cardthumb[data-id="s0"]');
+      eq(await g.run('sheetKind'), 'card', 'card opens');
+      ok((await g.page.textContent('#sheet')).includes('complete absence of musical surprises'), 'review shown');
+      ok(!(await g.page.isVisible('.cardkick')), 'browsing, not a reveal');
+      await g.tap('#sheet [data-act="music"]'); eq(await g.run('sheetKind'), 'music', 'Back returns to the Dale-Fi');
+      await g.run('closeSheet(true)'); await g.start(2);
+      eq(await g.run('sheetKind'), null, 'starting a retreat shows no reveal');
+    }),
+    tst('Dale-Fi cards: songs owned before the update already have their cards', { storage: { 'unpw.collected': '["s0","w1","w2"]' } }, async g => {
+      await g.tap('[data-act="options"]'); await g.tap('#sheet [data-act="music"]');
+      eq(await g.page.$$eval('.cardthumb', b => b.map(x => x.dataset.id)), ['s0', 'w1', 'w2'], 'cards for every owned song, no rediscovery');
+    }),
+    tst('Dale-Fi cards: the meditation hall find reveals its card after the walk, once ever', {}, async g => {
+      await g.start(2);
+      await g.rolls([0.1], "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Meditation Hall'); songEvents(); runQueue()");
+      eq(await g.run('sheetKind'), 'card', 'reveal shown');
+      ok((await g.page.textContent('.cardkick')).includes('sound-bath guy'), 'says how you found it');
+      ok((await g.page.textContent('#sheet')).includes('The Higher Frequencies'), 'right card');
+      eq(await g.run('collected()'), ['s0', 'w1'], 'collected');
+      await g.tap('#sheet [data-act="cardplay"]');
+      eq(await g.run('[M.cur, M.want, sheetKind]'), ['w1', true, 'music'], 'Listen plays it in the Dale-Fi');
+      await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(1);
+      await g.rolls([0.1], "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Meditation Hall'); songEvents(); runQueue()");
+      eq(await g.run('[sheetKind, S.songs.includes("w1")]'), [null, true], 'found again on a later retreat: back in this run, no second reveal');
+    }),
+    tst('Dale-Fi cards: the staff USB card waits until the check-in is over', {}, async g => {
+      await g.start(2);
+      await g.run("S.inv.burner = 5; S.paid.burner = 5000; S.prices = { burner: 2000 }; queue = []; startEncounter()");
+      await g.rolls([0.01, 0.5, 0.1], 'encRun()'); // escape, its line, the staff USB
+      eq([await g.run('sheetKind'), await g.run('enc.done')], ['enc', true], 'still on the check-in');
+      ok(await g.run("collected().includes('w0')"), 'collected during the escape');
+      await g.tap('[data-act="encdone"]');
+      eq(await g.run('sheetKind'), 'card', 'card after carrying on');
+      ok((await g.page.textContent('#sheet')).includes('Staff USB'), 'right card');
+      await g.tap('[data-act="close"]'); eq(await g.run('sheetKind'), null, 'Later dismisses');
+    }),
+    tst('Dale-Fi cards: buying the CD reveals it on the spot; the collection survives reloads and new retreats', {}, async g => {
+      await g.start(2);
+      await g.run('S.loc = VAN_IX; S.cash = 1000; render()');
+      await g.tap('[data-act="van"]'); await g.tap('.cdoffer [data-act="buycd"]');
+      eq(await g.run('[sheetKind, S.cash]'), ['card', 850], 'card right away, $150 paid');
+      ok((await g.page.textContent('#sheet')).includes('Drunken Unk'), 'right card');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      eq(await g.run('collected()'), ['s0', 'w2'], 'kept after reload');
+      await g.start(0);
+      eq(await g.run('[collected(), S.songs]'), [['s0', 'w2'], ['s0']], 'kept into a new retreat, which starts with the retreat track as before');
+    }),
     tst('last day: checkout ends the retreat with the right score', {}, async g => {
       await g.start(0);
       await g.run('S.day = S.days; S.cash = 9000; S.van = 1000; S.debt = 2500; render()');
@@ -253,7 +304,7 @@ const encounters = {
     }),
     tst('successful escape ends it with nothing taken', {}, async g => {
       await g.start(2); await g.run(ENC);
-      await g.rolls([0.01], 'encRun()');
+      await g.rolls([0.01, 0.5, 0.99], 'encRun()'); // escape, its line, and no staff USB this time
       eq(await g.run('[enc.done, S.inv.burner, S.zen]'), [true, 20, 100], 'got away clean');
       await g.tap('[data-act="encdone"]');
       eq(await g.run('[enc, sheetKind]'), [null, null], 'check-in closed');

@@ -456,6 +456,18 @@ input[type=range]:disabled { opacity: .35; }
 .trk.locked { cursor: default; }
 .trk.locked .tt { color: var(--ink2); font-weight: 500; font-style: normal; }
 .trk.locked .n { opacity: .5; }
+.trkline { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); }
+.trkline:last-child { border-bottom: 0; }
+.trkline .trk { flex: 1; min-width: 0; border-bottom: 0; }
+.cardthumb { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; background: var(--fog); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.cardthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cardkick { margin: 2px 0 10px; padding-right: 48px; font-size: 14.5px; font-weight: 600; color: var(--sea); }
+.ccard { text-align: center; }
+.cardart { display: block; margin: 4px auto 14px; max-width: 100%; max-height: min(34vh, 320px); width: auto; height: auto; border-radius: 10px; box-shadow: var(--lift); }
+.cardtt { margin: 0; }
+.cardby { margin: 4px 0 0; font-weight: 700; font-size: 15.5px; }
+.cardmeta { margin: 2px 0 12px; font-size: 13.5px; color: var(--ink2); }
+.cardrev { margin: 0 0 6px; text-align: left; font-size: 15.5px; line-height: 1.55; }
 .eq { position: relative; }
 .eq .newdot { position: absolute; top: 6px; right: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--poppy); box-shadow: 0 0 0 2px var(--mist); }
 .cdoffer { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--fog); border-radius: 14px; padding: 8px 8px 8px 12px; margin: 8px 0 2px; font-size: 14.5px; }
@@ -540,7 +552,7 @@ input[type=range]:disabled { opacity: .35; }
 <body>
 <div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
 <div id="backdrop" aria-hidden="true"></div>
-<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp"};</script>
+<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp"};</script>
 <div id="app"></div>
 <div id="toasts" aria-live="polite"></div>
 <div id="veil" aria-hidden="true"></div>
@@ -1314,14 +1326,37 @@ const TRACKS = [
   { id: 'w2', title: 'Late Night Record Shop', artist: 'TORiTiA', hint: 'Dale keeps a burned CD in his van.' },
 ];
 const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
+/* Companion cards: the in-world liner notes for each recording, shown from the Dale-Fi and when you first find one.
+   Keyed by track id; a future multi-track release can point several tracks at one card. Copy is approved, verbatim. */
+const CARDS = {
+  s0: { art: 'card_s0', title: 'Thank You for Your Grounding Presence', artist: 'Uncredited', meta: 'Retreat Issue · Ambient',
+    review: 'An exercise in carefully measured serenity, pairing glassy percussion with warm, unhurried textures. Originally distributed as part of the retreat’s welcome materials, the recording is notable for its complete absence of musical surprises.' },
+  w0: { art: 'card_w0', title: 'Wellness Lounge Groove', artist: 'Uncredited', meta: 'Staff USB · Nu-Disco',
+    review: 'A polished, irresistibly buoyant blend of rubbery bass, silky keyboards, and crisp guitar. Apparently intended for private staff listening, this improbably sophisticated production raises interesting questions about the retreat’s recreational priorities.' },
+  w1: { art: 'card_w1', title: 'Meditate This Way', artist: 'The Higher Frequencies', meta: '1982 · Disco / Boogie',
+    review: 'An exuberant collision of dance-floor funk and New Age optimism, with glittering keys and a bassline that refuses to sit still. The Higher Frequencies’ brief spiritual reinvention produced some of their most assured playing.' },
+  w2: { art: 'card_w2', title: 'Late Night Record Shop', artist: 'Unknown', meta: 'CD-R · Date Unknown · Jazzy Hip-Hop / Downtempo',
+    review: 'Dusty breaks, warm keys, and understated vibraphone give this mysterious recording an effortless after-hours charm. Various copies have been attributed to Jake’s Bait Shop, Milton and the Undertones, and Drunken Unk. None has been authenticated. All three have their advocates.' },
+};
 
 /* What's New, written by Guide Saffron: the permanent release history under Options. Newest first.
    For each release that has actually shipped, add an entry at the TOP and leave the older ones as they are.
    date is YYYY-MM-DD; body is a list of paragraphs, verbatim from the approved text; sign is the sign-off lines. */
 /* The game's version, shown beside What's New. Bump it only when a release ships, together with its note above.
-   1.0 was the launch on 2026-10-09; 1.1 the 2026-10-15 release; 1.2 the 2026-10-16 map. */
-const GAME_VERSION = '1.2';
+   1.0 was the launch on 2026-10-09; 1.1 the 2026-10-15 release; 1.2 the 2026-10-16 map; 1.3 the Dale-Fi companion cards. */
+const GAME_VERSION = '1.3';
 const NOTES = [
+  {
+    date: '2026-10-16',
+    title: 'On Listening Closely',
+    body: [
+      'Dear Guests,',
+      'It has come to our attention that certain unsanctioned recordings now circulate with small printed companions describing their contents.',
+      'We have read them. They are thoughtfully written. This does not make the recordings sanctioned.',
+      'Please remember that understanding something more deeply is not the same as needing more of it.',
+    ],
+    sign: ['With gentle authority,', 'Guide Saffron'],
+  },
   {
     date: '2026-10-16',
     title: 'On the Importance of Knowing Where You Are',
@@ -1353,20 +1388,47 @@ const CD_PRICE = 150;
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
   want: false, held: false, at: null, fadeTimer: null };
 const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) { /* not supported */ }
 const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
 const inRun = () => screen === 'game' && S && !S.over;
 const avail = () => (inRun() ? S.songs : collected()).filter(id => TBYID[id]);
 const hasSong = id => S && S.songs && S.songs.includes(id);
 
-function unlockSong(id, how) {
+/* A song turns up. The first time you ever find it, its companion card is revealed: right away if you asked for it
+   (now, e.g. buying the CD), otherwise queued so it waits for any check-in or offer to finish. Finding it again
+   on a later retreat just gets the usual note. */
+function unlockSong(id, how, now) {
   if (!S || hasSong(id)) return;
   S.songs.push(id);
-  const c = collected(); if (!c.includes(id)) { c.push(id); store.set('unpw.collected', c); }
+  const c = collected(), first = !c.includes(id);
+  if (first) { c.push(id); store.set('unpw.collected', c); }
   S.newSong = true;
   const t = TBYID[id];
   log(`New song on your Dale-Fi: ${t.title}.`);
-  setTimeout(() => { chime([[659, 0], [988, .1], [1319, .2]], .7, .04); toast(`${how} New on your Dale-Fi: “${t.title}.”`, 'song', 6500); }, 350);
+  if (first && CARDS[id]) {
+    setTimeout(() => chime([[659, 0], [988, .1], [1319, .2]], .7, .04), 350);
+    if (now) cardSheet(id, how);
+    else queue.push(() => cardSheet(id, how));
+  } else setTimeout(() => { chime([[659, 0], [988, .1], [1319, .2]], .7, .04); toast(`${how} New on your Dale-Fi: “${t.title}.”`, 'song', 6500); }, 350);
   render();
+}
+/* A companion card. reveal is the line about how you found it; without one, it was opened from the Dale-Fi. */
+function cardSheet(id, reveal) {
+  const k = CARDS[id], t = TBYID[id]; if (!k) return;
+  const can = avail().includes(id);
+  openSheet(`<div class="grab"></div>
+    ${reveal ? `<p class="cardkick">${reveal} New on your Dale-Fi.</p>` : ''}
+    <div class="ccard">
+      <img class="cardart" src="${IMG[k.art]}" alt="Cover of ${esc(k.title)}">
+      <h3 id="sheetTitle" class="cardtt">${esc(k.title)}</h3>
+      <p class="cardby">${esc(k.artist)}</p>
+      <p class="cardmeta">${esc(k.meta)}</p>
+      <p class="cardrev">${esc(k.review)}</p>
+    </div>
+    <div class="sheet-actions two">
+      ${reveal ? '<button type="button" class="btn quiet" data-act="close">Later</button>' : '<button type="button" class="btn quiet" data-act="music">Back</button>'}
+      ${can ? `<button type="button" class="btn primary" data-act="cardplay" data-id="${id}">Listen</button>` : ''}
+    </div>`, 'card');
 }
 function songEvents() {
   const P = PLACES[S.loc];
@@ -1381,7 +1443,7 @@ function buyCD() {
   if (!S || hasSong('w2') || S.cash < CD_PRICE) return;
   S.cash -= CD_PRICE;
   log(`Bought Dale's burned CD for ${fmt(CD_PRICE)}.`);
-  unlockSong('w2', `Dale hands over a burned CD for ${fmt(CD_PRICE)}.`);
+  unlockSong('w2', `Dale hands over a burned CD for ${fmt(CD_PRICE)}.`, true);
 }
 
 function trackURL(id) { return `assets/audio/${id}.m4a`; }
@@ -1710,8 +1772,8 @@ function musicSheet() {
   if (!list.includes(M.cur)) M.cur = list[0];
   const run = inRun();
   const rows = TRACKS.map((t, i) => list.includes(t.id)
-    ? `<button type="button" class="trk ${t.id === M.cur ? 'cur' : ''}" data-track="${t.id}">
-        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${t.artist}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>`
+    ? `<div class="trkline"><button type="button" class="trk ${t.id === M.cur ? 'cur' : ''}" data-track="${t.id}">
+        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${t.artist}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}</div>`
     : `<div class="trk locked"><span class="n num">${i + 1}</span><span><span class="tt">Not found yet</span><span class="ta">${run ? t.hint : 'Turns up somewhere on a retreat.'}</span></span>
         ${run && t.id === 'w2' && PLACES[S.loc].van ? `<button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button>` : ''}</div>`).join('');
   openSheet(`<div class="grab"></div>
@@ -2199,7 +2261,7 @@ function modeSheet() {
 }
 /* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
    Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
-const HB_MARKS = { version: '1.2', updated: ['Time and walking'], added: [] };
+const HB_MARKS = { version: '1.3', updated: ['The Dale-Fi'], added: [] };
 function handbookSheet() {
   const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
   const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
@@ -2271,7 +2333,7 @@ function handbookSheet() {
       <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
-      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up.</p>
+      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
       <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
@@ -2416,7 +2478,9 @@ function act(a, el) {
     case 'encdone': { enc = null; themeStop(); musicDuck(false); musicResume(); closeSheet(); const h = heldToasts; heldToasts = []; h.forEach((t, i) => setTimeout(() => toast(...t), 250 + i * 150)); return; }
     case 'enchand': return encHand();
     case 'music': return musicSheet();
-    case 'buycd': buyCD(); return sheetKind === 'van' ? vanSheet() : musicSheet();
+    case 'buycd': { const from = sheetKind; buyCD(); if (sheetKind === 'card') return; return from === 'van' ? vanSheet() : musicSheet(); }
+    case 'card': return cardSheet(el.dataset.id);
+    case 'cardplay': musicPick(el.dataset.id); return musicSheet();
     case 'mplay': return musicToggle();
     case 'mprev': return musicStep(-1);
     case 'mnext': return musicStep(1);
