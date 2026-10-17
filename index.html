@@ -749,7 +749,7 @@ function startGame(m) {
 
 const used = () => ITEMS.reduce((a, i) => a + S.inv[i.id], 0);
 const free = () => S.cap - used();
-function log(t) { S.log.push(t); if (S.log.length > 80) S.log.shift(); }
+function log(t) { S.log.push(t); }
 
 function genPrices() {
   const P = PLACES[S.loc];
@@ -1253,14 +1253,13 @@ function vanGo() {
 
 /* ================= end ================= */
 const netWorth = () => S.cash + S.van - S.debt;
-/* Takeaways from WIN_RANK up are wins (they get a winning song). Nobody wins while they still owe Dale:
-   a checkout that would otherwise win, with any debt left, is Dale's ending and takes the bottom takeaway.
-   Net worth and the guestbook score are unchanged. */
+/* Takeaways from WIN_RANK up are wins (they get a winning song). You always repay Dale: checking out with any debt,
+   even $1, is the Dale Fail, whatever your net worth. Net worth and the guestbook score are unchanged. */
 const WIN_RANK = 2;
-const unsquared = () => S.reason !== 'zen' && S.debt > 0 && rankIndex() >= WIN_RANK;
+const unsquared = () => S.reason !== 'zen' && S.debt > 0;
 function rankFor(n, reason) {
   if (reason === 'zen') return 'Snapped. Started a podcast';
-  if (unsquared()) return RANKS[0][1];
+  if (unsquared()) return 'Dale Fail: Owes Dale forever';
   const md = MODES.find(m => m.id === S.mode) || MODES[2];
   let t = RANKS[0][1];
   md.ranks.forEach((min, i) => { if (n >= min) t = RANKS[i + 1][1]; });
@@ -1361,7 +1360,8 @@ const NOTES = [
     body: [
       'Dear Guests,',
       'Financial attachments may persist beyond the completion of your retreat. Guests are encouraged to resolve all outstanding interpersonal balances before departure.',
-      'Your personal journey remains available for reflection after checkout.',
+      'We are also pleased to share that your journal will now remain available after checkout, in its entirety. Every step, every exchange, every moment you may have preferred to forget has been gently preserved for your reflection.',
+      'Please remember that departure is a privilege, not a formality. We trust you will leave nothing unresolved.',
     ],
     sign: ['With care,', 'Guide Saffron'],
   },
@@ -1624,7 +1624,7 @@ const EVENT_SONGS = {
   'win-moment': { title: 'The Winning Moment', artist: 'TORiTiA' },
   'win-thats': { title: "That's Winning", artist: 'TORiTiA' },
   checkout: { title: 'the checkout (sadder)', artist: 'TORiTiA' },
-  'dale-tab': { title: 'disappointed dale', artist: 'TORiTiA' },
+  'dale-tab': { title: 'The Unsettled Account', artist: 'TORiTiA' },
 };
 const E = { el: null, gain: null, an: null, id: null, on: false, retry: false, stopTimer: null };
 function eventSong(id) {
@@ -1671,7 +1671,7 @@ function eventStop() {
 }
 /* Checkout and results music. PROVISIONAL mapping, pending approval: the top two takeaways get
    The Winning Moment, the middle two That's Winning, and snapping, debt or going broke get the sad checkout.
-   Winning money with Dale still owed gets Dale's own short cue instead. */
+   Checking out with Dale still owed gets Dale's own short cue instead. */
 function endingSong() {
   if (unsquared()) return 'dale-tab';
   const i = rankIndex();
@@ -1940,12 +1940,13 @@ function overHTML() {
   const head = zen ? 'You snapped.' : tab ? "You didn't square up, man." : 'Your retreat is complete.';
   const lede = zen
     ? `On day ${S.day} you broke Noble Silence, screamed at a volunteer, and left to start a podcast about it.`
-    : tab ? 'You had the money. Dale had the tab.'
+    : tab ? (n >= 0 ? 'You had the money. Dale had the tab.' : "You couldn't pay. Dale still had the tab.")
     : used() > 0 ? 'The front desk confiscated what was left in your cushion. Nonattachment.' : 'You leave with an empty cushion and a full heart.';
   return `<div class="over${tab ? ' tab' : ''}">
     <h1>${head}</h1>
     ${tab ? `<img class="tabart" src="${IMG.daleTab}" width="480" height="556" alt="Dale, disappointed, holding a clipboard marked TAB with OUTSTANDING BALANCE circled in red">` : ''}
     <p class="lede">${lede}</p>
+    ${tab ? `<p class="lede">Dale still gave you a ride to the airport. He didn't say a word the entire way.</p>` : ''}
     <div class="ledger">
       <span>On you</span><span class="v num">${fmt(S.cash)}</span>
       <span>In the glovebox</span><span class="v num">${fmt(S.van)}</span>
@@ -2275,7 +2276,7 @@ function journeySheet() {
 function checkoutSheet() {
   openSheet(`<div class="grab"></div><h3 id="sheetTitle">Check out?</h3>
     <p class="muted">Your score is cash on you plus the glovebox, minus what you owe Dale. Anything still in your cushion gets confiscated at the gate.</p>
-    ${S.debt > 0 ? `<p class="dueline">You still owe Dale <span class="num dale">${fmt(S.debt)}</span>. Nobody leaves a winner with an open tab.</p>` : ''}
+    ${S.debt > 0 ? `<p class="dueline">You still owe Dale <span class="num dale">${fmt(S.debt)}</span>.</p>` : ''}
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="checkoutgo">Check out</button>
     <button type="button" class="btn quiet" data-act="close">Keep going</button></div>`, 'checkout');
 }
@@ -2304,12 +2305,12 @@ function handbookSheet() {
       <p>You're a guest at a silent digital detox in Big Sur. The brochure bans phones, wifi, sugar and snacks. You sell them anyway.</p>
       <p>You start at Yurt Village at 7am on day one with ${fmt(START_CASH)} on you, an empty meditation cushion that holds ${START_CAP} things, full zen, and a ${fmt(START_DEBT)} debt to Dale the shuttle driver.</p>
       <p>When the retreat ends, your score is the cash on you plus whatever is in Dale's glovebox, minus what you still owe him. Anything still in your cushion at checkout gets confiscated, so let go of everything before you leave.</p>
-      <p>Square up with Dale before you check out. If you still owe him anything, you don't get a winning takeaway, however much you made.</p>`, true),
+      <p>Always square up with Dale before you check out. Owe him anything, even a dollar, and it won't matter how much you made.</p>`, true),
     sec('Reading the screen', `
       <p>The sky shows the time of day. The sun crosses it between 7am and quiet hours. Under it are where you are, the day and hour, and a line about what's going on.</p>
       <p>The ring is your zen. <b>On you</b> is the cash you're carrying, with your glovebox balance underneath once you have one. <b>Cushion</b> is how much you're holding out of how much you can hold, plus your decoys if you've hired any. <b>Owed to Dale</b> is your debt and how fast it grows.</p>
       <p>The list shows what's for sale where you are. A price in an orange pill is in demand, above its usual range. A price in a green pill is abundant, below it. Goods you're holding that nobody here is trading show a dash instead of a price.</p>
-      <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened. After checkout, <b>Review your journal</b> on the results screen opens it one more time.</p>`),
+      <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened. After checkout, <b>Review your journal</b> on the results screen shows your whole retreat.</p>`),
     sec('Time and walking', `
       <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes, and when you'd arrive if that's 8pm or later. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
       <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
@@ -2362,7 +2363,7 @@ function handbookSheet() {
       <table class="hbt"><thead><tr><th>Retreat</th><th class="num">Days</th><th class="num">Dale per hour</th></tr></thead><tbody>${lengths}</tbody></table>
       <p>Your takeaway at checkout depends on your net worth and how long you stayed. You need at least this much:</p>
       <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
-      <p>Side hustle sage and up also need you square with Dale. Check out owing him anything and your takeaway is Owes Dale forever, whatever your net worth.</p>
+      <p>Every takeaway assumes you're square with Dale. Owe him anything at checkout, even a dollar, and none of them apply.</p>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
@@ -2393,7 +2394,7 @@ function howSheet() {
     <p>Walks take one to three hours. Quiet hours start at 10pm; rest to begin the next day with a little more zen.</p>
     <p>You owe Dale the shuttle driver ${fmt(START_DEBT)}, and his meter runs every hour, overnight too. Pay him, borrow more, or stash cash in his glovebox up in the parking lot. Cash on you can go missing.</p>
     <p>Carrying goods draws Guide Saffron. Slip away, send in a decoy, or donate your way out. Run out of zen and you snap.</p>
-    <p>On the last day, let go of everything and check out. Your score is cash plus glovebox minus what you owe. Leave still owing Dale and you don't win, however much you made. The game saves as you play.</p>
+    <p>On the last day, let go of everything and check out. Your score is cash plus glovebox minus what you owe. Square up with Dale before you go: owe him anything and it won't matter how much you made. The game saves as you play.</p>
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Got it</button>
     <button type="button" class="btn quiet" data-act="handbook">Read the full handbook</button></div>`, 'how');
 }
@@ -2417,8 +2418,9 @@ function newsSheet() {
     ${notes}</div>
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'news');
 }
+/* During a retreat the journal shows the last 20 entries; after checkout, the whole retreat. */
 function journalSheet() {
-  const lines = S.log.slice(-20).reverse().map(t => `<p>${t}</p>`).join('');
+  const lines = (S.over ? S.log.slice() : S.log.slice(-20)).reverse().map(t => `<p>${t}</p>`).join('');
   openSheet(`<div class="grab"></div><h3 id="sheetTitle">Your journal</h3><div class="journal">${lines}</div>
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'journal');
 }

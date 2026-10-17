@@ -392,52 +392,57 @@ const debt = {
       const s = await checkoutWith(g, { cash: 500000, debt: 0 });
       eq([s.screen, s.reason, s.net, s.take, s.head, s.art, s.song], ['over', 'time', 500000, 'Opened your own retreat', 'Your retreat is complete.', false, 'win-moment'], 'top takeaway when square');
     }),
-    tst("the reported run: $898,451 net worth with $959 owed gets Dale's ending, not a win", {}, async g => {
+    tst("the reported run: $898,451 net worth with $959 owed is the Dale Fail", {}, async g => {
       await g.start(0);
       const s = await checkoutWith(g, { cash: 899000, van: 410, debt: 959 });
-      eq([s.reason, s.net, s.take, s.head, s.art, s.song], ['time', 898451, 'Owes Dale forever', "You didn't square up, man.", true, 'dale-tab'], "Dale's ending");
+      eq([s.reason, s.net, s.take, s.head, s.art, s.song], ['time', 898451, 'Dale Fail: Owes Dale forever', "You didn't square up, man.", true, 'dale-tab'], 'Dale Fail');
       const txt = await g.page.textContent('.over');
-      ok(txt.includes('You had the money. Dale had the tab.'), 'supporting copy');
+      ok(txt.includes('You had the money. Dale had the tab.'), 'could-afford line');
+      ok(txt.includes("Dale still gave you a ride to the airport. He didn't say a word the entire way."), 'airport line, in the ending');
       for (const v of ['$899,000', '$410', '-$959', '$898,451']) ok(txt.includes(v), `ledger shows ${v}`);
       ok(await g.page.isVisible('.over .tabart'), 'Dale is on screen');
+      eq(await g.run('superlative()'), "Dale's favorite liability", 'superlative');
       await g.run("$('#signname').value = 'Tester'"); await g.tap('[data-act="sign"]');
-      eq(await g.run("store.get('unpw.scores', []).map(e => [e.s, e.t])"), [[898451, 'Owes Dale forever']], 'guestbook keeps the score, with the honest takeaway');
+      eq(await g.run("store.get('unpw.scores', []).map(e => [e.s, e.t])"), [[898451, 'Dale Fail: Owes Dale forever']], 'guestbook keeps the real net worth');
       eq(await g.run('grades()[4][1]'), { g: 'F', c: 'Still owes Dale $959.' }, 'report card: Financial Wellness');
     }),
-    tst('every length and every winning takeaway needs a zero balance; $1 is enough to lose it', {}, async g => {
+    tst('any debt at all is the Dale Fail, at every length; with none, the original takeaways', {}, async g => {
+      const CASES = [ // [label, cash, debt, could afford it]
+        ['wealthy', 5e6, 2000, true], ['modestly profitable', 30000, 2000, true], ['broke', 1500, 1200, true],
+        ['negative net worth', 300, 4000, false], ['owing exactly $1', 2e6, 1, true]];
       for (let m = 0; m < 4; m++) {
-        await g.run(`closeSheet(true); startGame(MODES[${m}])`);
-        const mins = await g.run('MODES.find(x => x.id === S.mode).ranks');
-        for (let i = 1; i < mins.length; i++) {
-          const net = mins[i];
-          await g.run(`S.over = false; S.cash = ${net + 1}; S.van = 0; S.debt = 1; S.reason = 'time'`);
-          eq(await g.run('[rankFor(netWorth(), S.reason), endingSong()]'), ['Owes Dale forever', 'dale-tab'], `mode ${m}, takeaway ${i + 1}, owing $1`);
-          await g.run(`S.cash = ${net}; S.debt = 0`);
-          eq(await g.run('rankFor(netWorth(), S.reason)'), await g.run(`RANKS[${i + 1}][1]`), `mode ${m}, takeaway ${i + 1}, square`);
+        for (const [label, cash, debt, afford] of CASES) {
+          await g.run(`closeSheet(true); startGame(MODES[${m}])`);
+          const s = await checkoutWith(g, { cash, debt });
+          eq([s.net, s.take, s.head, s.art, s.song], [cash - debt, 'Dale Fail: Owes Dale forever', "You didn't square up, man.", true, 'dale-tab'], `mode ${m}, ${label}`);
+          eq(await g.page.textContent('.over .lede'), afford ? 'You had the money. Dale had the tab.' : "You couldn't pay. Dale still had the tab.", `mode ${m}, ${label}: lede`);
+        }
+        const mins = await g.run(`MODES[${m}].ranks`);
+        for (let i = 0; i < mins.length; i++) {
+          await g.run(`closeSheet(true); startGame(MODES[${m}])`);
+          const s = await checkoutWith(g, { cash: mins[i], debt: 0 });
+          const want = await g.run(`[RANKS[${i + 1}][1], ${i + 1} >= 4 ? 'win-moment' : ${i + 1} >= WIN_RANK ? 'win-thats' : 'checkout']`);
+          eq([s.take, s.song, s.head, s.art], [...want, 'Your retreat is complete.', false], `mode ${m}, square, takeaway ${i + 1}`);
         }
       }
     }),
-    tst('ordinary failures with debt keep their own endings', {}, async g => {
+    tst('snapping is still snapping, debt or not', {}, async g => {
       await g.start(0);
-      let s = await checkoutWith(g, { cash: 3000, debt: 900 });
-      eq([s.net, s.take, s.head, s.art, s.song], [2100, 'Broke but centered', 'Your retreat is complete.', false, 'checkout'], 'broke but centered, owing Dale');
-      await g.run('closeSheet(true); startGame(MODES[0])');
-      s = await checkoutWith(g, { cash: 100, debt: 2500 });
-      eq([s.net, s.take, s.art, s.song], [-2400, 'Owes Dale forever', false, 'checkout'], 'in the hole');
-      await g.run("closeSheet(true); startGame(MODES[0]); S.cash = 900000; S.debt = 959; endGame('zen')");
-      eq(await g.run("[rankFor(netWorth(), S.reason), $('.over h1').textContent, !!$('.over .tabart'), endingSong()]"), ['Snapped. Started a podcast', 'You snapped.', false, 'checkout'], 'snapping is still snapping');
+      await g.run("S.cash = 900000; S.debt = 959; endGame('zen')");
+      eq(await g.run("[rankFor(netWorth(), S.reason), $('.over h1').textContent, !!$('.over .tabart'), endingSong()]"), ['Snapped. Started a podcast', 'You snapped.', false, 'checkout'], 'snap ending');
     }),
-    tst('paid off once, then borrowed again: still Dale\'s ending and an F', {}, async g => {
+    tst('paid off once, then borrowed again: still the Dale Fail and an F', {}, async g => {
       await g.start(0);
       await g.run("S.stats.paidDay = 1; S.stats.borrowed = 2000");
       const s = await checkoutWith(g, { cash: 600000, debt: 2000 });
-      eq([s.take, s.song], ['Owes Dale forever', 'dale-tab'], 'ending');
+      eq([s.take, s.song], ['Dale Fail: Owes Dale forever', 'dale-tab'], 'ending');
       eq(await g.run('grades()[4][1].g'), 'F', 'Financial Wellness');
     }),
     tst('checkout and the last morning say what you owe; nothing when square', {}, async g => {
       await g.start(0);
       await g.run('S.day = S.days; S.debt = 1234; render()'); await g.tap('[data-act="checkout"]');
-      ok((await g.page.textContent('#sheet .dueline')).includes('$1,234'), 'checkout sheet shows the balance');
+      const due = await g.page.textContent('#sheet .dueline');
+      ok(due.includes('$1,234') && !/winner|win\b|takeaway/.test(due), 'checkout sheet shows the balance, without announcing the ending', due);
       eq(await g.run("[...document.querySelectorAll('#sheet button')].map(b => b.dataset.act)"), ['close', 'checkoutgo', 'close'], 'no new payment option');
       await g.run('closeSheet(true); S.debt = 0; render()'); await g.tap('[data-act="checkout"]');
       eq(await g.run("!!$('#sheet .dueline')"), false, 'no line when square');
@@ -468,14 +473,19 @@ const debt = {
     }),
     tst('after checkout: Review your journal shows the finished run, changes nothing, and returns to the results', {}, async g => {
       await g.start(0);
-      await g.run("for (let i = 0; i < 30; i++) log('Entry ' + i + '.')");
+      await g.run("for (let i = 0; i < 400; i++) log('Entry ' + i + '.')");
+      ok((await g.run('S.log.length')) > 400, 'nothing dropped from a long run');
+      await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]');
+      eq(await g.page.$$eval('.journal p', ps => ps.length), 20, 'during the retreat: the last 20, as before');
+      await g.run('closeSheet(true)');
       await checkoutWith(g, { cash: 899000, debt: 959 });
       await g.run("$('.over').scrollTop = 200");
       const top = await g.run("$('.over').scrollTop");
       const before = await g.run('JSON.stringify(S)');
       await g.tap('[data-act="journal"]');
       eq(await g.run('sheetKind'), 'journal', 'journal opens');
-      eq(await g.page.$$eval('.journal p', ps => ps.map(p => p.textContent)), await g.run('S.log.slice(-20).reverse()'), 'same entries as in the run, newest first');
+      eq(await g.page.$$eval('.journal p', ps => ps.map(p => p.textContent)), await g.run('S.log.slice().reverse()'), 'the whole retreat, newest first');
+      ok(await g.run("$('.journal p:last-child').textContent.startsWith('Day 1, 7am.')"), 'back to the first entry');
       eq(await g.run("[...document.querySelectorAll('#sheet button')].map(b => b.dataset.act)"), ['close', 'close'], 'nothing to do but close');
       await g.tap('.sheet-actions [data-act="close"]');
       eq(await g.run("[screen, sheetKind, !!$('.over .tabart')]"), ['over', null, true], 'back on the results screen');
@@ -617,7 +627,7 @@ const audio = {
     }),
     tst('checkout plays the ending song for the takeaway, alone; leaving results brings back the Dale-Fi', {}, async g => {
       await g.start(2); await startMusic(g);
-      for (const [net, want] of [[3e6, 'win-moment'], [1e5, 'win-thats'], [-500, 'checkout']]) {
+      for (const [net, want] of [[3e6, 'win-moment'], [1e5, 'win-thats'], [100, 'checkout'], [-500, 'dale-tab']]) {
         await g.run(`if (S.over) { closeSheet(true); startGame(MODES[2]); } S.cash = ${Math.max(0, net)}; S.debt = ${Math.max(0, -net)}; endGame('time')`); await g.wait(900);
         eq(await g.run(`[E.id, !E.el.paused, ${AUDIBLE}]`), [want, true, 1], `ending song for net worth ${net}`);
       }

@@ -17,7 +17,7 @@ As of 2026-10-17. Live version: **1.3** (`main` at `83203fe`, deployed to GitHub
 
 | Item | Branch | Status | Blocked on | Next action |
 | --- | --- | --- | --- | --- |
-| Release 1.4: Dale's Outstanding Balance (no winning ending while owing Dale; Dale's ending with art and cue; balance reminders at checkout; Review your journal after checkout) | `claude/optimistic-dijkstra-9bdhx3` | Built and tested; awaiting owner review. | Owner approval of the proposed copy listed in the branch report; iPhone checks for the new cue. | Owner reviews; merge and release. |
+| Release 1.4: Dale's Outstanding Balance (any debt at checkout is the Dale Fail; ending art and cue; balance reminders; complete journal after checkout) | `claude/optimistic-dijkstra-9bdhx3` | Owner's final-review adjustments made and tested. | Creative approval of Saffron's note; approval of The Unprocessed Self's acquisition method, plus its audio and card. | Owner reviews; then add the track, merge and release. |
 | Stage 01: market scarcity (handoff 01) | `stage-01-market-scarcity` | Provisionally approved. Built, reviewed, 3 commits, behind `main`. | Final text of Saffron's "On the Nature of Abundance"; the decision whether Stage 02 ships with it. | Once decided: bring `main` in, docs accuracy check, release. |
 | Stage 02: zen as composure (handoff 02) | `stage-02-zen-composure` (contains Stage 01) | Proposed. Built and reviewed; numbers not approved. | Owner decisions listed in `decisions.md` under Stage 02. | Owner decides; then integrate with or after Stage 01. |
 
