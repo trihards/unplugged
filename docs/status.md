@@ -17,7 +17,7 @@ As of 2026-10-17. Live version: **1.3** (`main` at `83203fe`, deployed to GitHub
 
 | Item | Branch | Status | Blocked on | Next action |
 | --- | --- | --- | --- | --- |
-| Release 1.4: Dale's Outstanding Balance (Dale Fail on any debt at checkout; complete post-game journal; transparent Dale art; new Dale-Fi song The Unprocessed Self, found in the Kitchen Garden) | `claude/optimistic-dijkstra-9bdhx3` | Implemented and tested with stand-in assets. Blocks release: `assets/audio/w3.m4a` and `assets/img/card-w3.webp` not yet supplied (the static and offline tests fail until they are). | The two assets; creative approval of Saffron's note; iPhone checks. | Add the assets, re-run the full suite, owner reviews, merge and release. |
+| Release 1.4: Dale's Outstanding Balance (Dale Fail on any debt at checkout; complete post-game journal; transparent Dale art; new Dale-Fi song The Unprocessed Self, found in the Kitchen Garden) | `claude/optimistic-dijkstra-9bdhx3` | Complete; all assets in; full suite green. | Creative approval of Saffron's note and the card subtitle; iPhone checks. | Owner reviews, merge and release. |
 | Stage 01: market scarcity (handoff 01) | `stage-01-market-scarcity` | Provisionally approved. Built, reviewed, 3 commits, behind `main`. | Final text of Saffron's "On the Nature of Abundance"; the decision whether Stage 02 ships with it. | Once decided: bring `main` in, docs accuracy check, release. |
 | Stage 02: zen as composure (handoff 02) | `stage-02-zen-composure` (contains Stage 01) | Proposed. Built and reviewed; numbers not approved. | Owner decisions listed in `decisions.md` under Stage 02. | Owner decides; then integrate with or after Stage 01. |
 
