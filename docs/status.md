@@ -21,7 +21,9 @@ As of 2026-10-17. Live version: **1.4** (deployed to GitHub Pages from `main`).
 | Stage 01: market scarcity (handoff 01) | `stage-01-market-scarcity` | Provisionally approved. Built, reviewed, 3 commits, behind `main`. | Final text of Saffron's "On the Nature of Abundance"; the decision whether Stage 02 ships with it. | Once decided: bring `main` in, docs accuracy check, release. |
 | Stage 02: zen as composure (handoff 02) | `stage-02-zen-composure` (contains Stage 01) | Proposed. Built and reviewed; numbers not approved. | Owner decisions listed in `decisions.md` under Stage 02. | Owner decides; then integrate with or after Stage 01. |
 
-Both branches predate What's New, the version label, the map, the handbook marks and the companion cards. They conflict with `main` in `index.html` and `sw.js`; integration is a careful merge, not a fast-forward. The Dale's Outstanding Balance release takes **1.4**; the market release becomes **1.5**.
+Both branches predate What's New, the version label, the map, the handbook marks and the companion cards. They conflict with `main` in `index.html` and `sw.js`; integration is a careful merge, not a fast-forward. The market release is **1.5**.
+
+They also predate 1.4. When integrating, keep: the Dale Fail override in `rankFor`, `endingSong` and `superlative` (any debt at checkout, ahead of the re-matched rank thresholds); the `debt` test suite; the uncapped journal (`log()`); the save fields `dunDay` and `dunSaid` with their `continueRun()` defaults; and Dale's morning check-in (`daleCheckIn()` in `rest()`). Stage 02's zen changes should account for Dale's notes (zen cost) and his free morning check-ins.
 
 ## Approved and queued
 
@@ -38,6 +40,8 @@ Both branches predate What's New, the version label, the map, the handbook marks
 | No systematic iPhone or offline regression pass is recorded for 1.2 or 1.3. The owner has personally tested and approved the 1.3 companion cards; that is an approval of the feature, not a regression test. Still unchecked: the map image offline after an update, What's New and the version label, cards at iPhone SE size, map label crowding at 320 px late in the day. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | In-game menu at 320 px scrolls slightly; its bottom Close button sits partly below the fold. The X at the top is always visible. | Minor, cosmetic. | Owner decides whether it matters. |
 | Meditate This Way: in the 1.4 playtest (a fresh browser), its companion card didn't open on the first find; the notification, journal entry and song all worked. **Cause unknown.** It didn't recur on retest, and the automated reveal tests pass. The commit message of `3431b78` ("the missing reveal was a repeat find") is wrong: the owner confirmed none of the proposed explanations applied (repeat find from shared saved data or an earlier retreat, an accidental tap closing the card, or closing the app while the card was queued). | Dropped by the owner; no code change. | If it recurs, note what was on screen just before. |
+| The journal has no entry cap since 1.4, so saves grow with long runs: an extreme 3,000-entry run measured about 184 KB, about 13 ms per screen update in desktop Chromium. Not measured on an iPhone. | Acceptable so far; no reports. | Watch on long 30-day runs. |
+| The Dale Fail's airport line breaks between its sentences using `text-wrap: balance` (Safari 17.5 and later). Older Safari wraps normally. | By design. | None. |
 | A first-time song discovery whose card is still queued is lost if the app is closed first. The song and its card are kept. | Minor edge case. | None unless it's reported. |
 | On iPhone, the home-screen app and Safari keep separate storage, and Safari can clear storage for sites not visited for about seven days. Collections can look reset. | Platform behavior; the game requests persistent storage where supported. | None in code. |
 | During a retreat the Dale-Fi plays only songs found on that retreat (by design and in the handbook); players could read it as losing songs. | Open question for the owner. | Owner decides whether to change it. |
@@ -51,8 +55,7 @@ Both branches predate What's New, the version label, the map, the handbook marks
 | `stage-01-market-scarcity`, `stage-02-zen-composure` | Active, unmerged (see above). |
 | `map-preview` | Superseded by `release-map` (merged as 1.2). Kept, not deleted. |
 | `docs-project-state` | This documentation. |
-| `claude/optimistic-dijkstra-9bdhx3` | Release 1.4. Fully merged into `main`. |
-| `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards` | Fully merged into `main`. Safe to delete when the owner chooses. |
+| `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
 
 ## Tools
 

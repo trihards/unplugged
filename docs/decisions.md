@@ -6,15 +6,28 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 - **Approved.** Release notes ("A Note from Guide Saffron") are published only for features that actually ship, newest first, under Options and the in-game menu. Published notes stay as they are; the one exception so far is the owner-approved sign-off correction below.
 - **Approved.** All of Guide Saffron's notes sign off "With care, Guide Saffron". She believes her authority is entirely benevolent and never sounds self-aware about it.
-- **Approved.** `GAME_VERSION` (shown beside What's New) changes only when a release ships, together with its note. 1.0 was the launch, then 1.1, 1.2, 1.3 as in `status.md`.
+- **Approved.** `GAME_VERSION` (shown beside What's New) changes only when a release ships, together with its note. 1.0 was the launch, then 1.1, 1.2, 1.3, 1.4 as in `status.md`.
 - **Approved.** Every release that changes player-facing mechanics includes a handbook and "How it works" accuracy check against the final approved tuning. `HB_MARKS` marks only the sections the latest feature release changed and is replaced each release. (Also in `CLAUDE.md`.)
 - **Approved.** Market balancing ships as its own release, separate from other improvements.
 - **Approved.** Balance numbers are calibrated with human play-testing, not only bot simulation.
+- **Approved.** iPhone testing of an unreleased build: with the owner's go-ahead, a byte-identical copy of the branch goes into `/preview/` on `main` (the live game at the root is untouched) and is removed at release. The preview shares saved data with the live game on the same device, so a half-finished preview run shows up as Continue in the live game.
 
 ## Credits and voice
 
 - **Approved.** TORiTiA is the production and metadata credit only: kept in the Options credit line, the README and the track metadata in code, never shown as an in-world artist. The Dale-Fi shows each song's companion-card artist.
 - **Approved.** The handbook stays the practical reference; it doesn't reveal hidden encounters or collectible unlock conditions.
+
+## Dale's Outstanding Balance (1.4)
+
+**Shipped** in 1.4. Owner playtest (Safari on macOS) and physical iPhone checks passed, except background playback (deferred, see `parking-lot.md`).
+
+- **You always repay Dale.** Any debt at checkout, even $1, is the Dale Fail, whatever the net worth: heading "You didn't square up, man.", Dale's clipboard art, the one-shot cue "The Unsettled Account", takeaway "Dale Fail: Owes Dale forever", superlative "Dale's favorite liability". The lede is "You had the money. Dale had the tab." when net worth covers the debt, otherwise "You couldn't pay. Dale still had the tab.", followed by "Dale still gave you a ride to the airport. He didn't say a word the entire way." Snapping stays its own ending (you never reach checkout). Net worth, the guestbook score and the report card's financial numbers are unchanged; nothing is deducted at checkout and there is no last-minute payment.
+- The checkout sheet and the last-morning notification show the balance but don't announce the ending; discovering the Dale Fail keeps some surprise. The handbook and "How it works" state the rule; Saffron's notes never spoil it.
+- Financial Wellness is F whenever any debt remains, even after an earlier payoff.
+- **Journal:** the 80-entry cap is gone; during a retreat it shows the last 20; after checkout, **Review your journal** shows the whole run, read only. A book icon in the header opens it in one tap; the menu entry stays.
+- **Dale's morning check-in:** once each morning while you owe him anything, folded into the morning notification and journaled with the balance. Approved lines, never the same twice running; the "six grand" line only for balances of $5,500–6,499. No zen cost; his random notes (over $2,200 owed, after the first fifth of the retreat) are unchanged.
+- **The Unprocessed Self** (The Low Maintenance Orchestra, Sunspill Records, 1977, funk; production credit TORiTiA): Dale-Fi song `w3`, a 45% find per Kitchen Garden visit (the Meditation Hall's odds). Card subtitle "45 · Sunspill Records · 1977 · Funk" (45 is the format). Hint "Some things grow better with a little funk." Discovery line and review are the approved copy. The sleeve's "A quieter kind of funk" against the review's "gloriously filthy" is intentional.
+- Calm moments on walks are time-neutral ("A deer walks right up to you.", "The fog lifts off the Pacific and you forget your inbox exists.").
 
 ## Stage 01: market scarcity (handoff 01)
 
