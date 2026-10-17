@@ -11,7 +11,7 @@ As of 2026-10-17. Live version: **1.3** (`main` at `83203fe`, deployed to GitHub
 | — | 2026-10-16 | What's New (Options and in-game menu) and the version label; no version bump | none |
 | 1.2 | 2026-10-16 | Illustrated journey map (handoff 04, layout "C") | On the Importance of Knowing Where You Are |
 | — | 2026-10-16 | Handbook accuracy fixes and section marks (docs only) | none |
-| 1.3 | 2026-10-17 | Dale-Fi companion cards; in-world artist credits; all notes sign "With care" | On Listening Closely |
+| 1.3 | 2026-10-17 | Dale-Fi companion cards; in-world artist credits; all notes sign "With care". Personally tested and approved by the owner. | On Listening Closely |
 
 ## In progress
 
@@ -34,7 +34,7 @@ Both branches predate What's New, the version label, the map, the handbook marks
 | Issue | Status | Next action |
 | --- | --- | --- |
 | Two live code comments still say "pending approval": decoy endurance (`DECOY_SHARES`) and the checkout-music mapping (`endingSong`). Both shipped in 1.1. | Ambiguous: approval may have happened at release, or may still be outstanding. | Owner confirms; then update the comments. Not changed by guesswork. |
-| No physical-iPhone checks recorded for 1.2 and 1.3 (map image offline, What's New, cards at iPhone SE size, map label crowding at 320 px late in the day). | Outstanding. | Run the README's manual iPhone checklist items that apply. |
+| No systematic iPhone or offline regression pass is recorded for 1.2 or 1.3. The owner has personally tested and approved the 1.3 companion cards; that is an approval of the feature, not a regression test. Still unchecked: the map image offline after an update, What's New and the version label, cards at iPhone SE size, map label crowding at 320 px late in the day. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | In-game menu at 320 px scrolls slightly; its bottom Close button sits partly below the fold. The X at the top is always visible. | Minor, cosmetic. | Owner decides whether it matters. |
 | A first-time song discovery whose card is still queued is lost if the app is closed first. The song and its card are kept. | Minor edge case. | None unless it's reported. |
 | On iPhone, the home-screen app and Safari keep separate storage, and Safari can clear storage for sites not visited for about seven days. Collections can look reset. | Platform behavior; the game requests persistent storage where supported. | None in code. |

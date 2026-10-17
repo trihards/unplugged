@@ -66,7 +66,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 ## Dale-Fi companion cards
 
-**Shipped** in 1.3: one card per recording (approved art and editorial copy), opened from the cover on each Dale-Fi row. A card is revealed the first time a song is ever found: queued after any check-in for the Meditation Hall and staff USB finds, immediately when buying Dale's CD. Unlock paths, odds and prices are unchanged.
+**Shipped** in 1.3, and personally tested and approved by the owner (not a comprehensive iPhone or offline regression pass): one card per recording (approved art and editorial copy), opened from the cover on each Dale-Fi row. A card is revealed the first time a song is ever found: queued after any check-in for the Meditation Hall and staff USB finds, immediately when buying Dale's CD. Unlock paths, odds and prices are unchanged.
 
 ## Handbook
 
