@@ -160,6 +160,15 @@ const smoke = {
       await g.run('closeSheet(true)'); await g.start(2);
       eq(await g.run('sheetKind'), null, 'starting a retreat shows no reveal');
     }),
+    tst('Dale-Fi credits: in-world artists only; TORiTiA stays in the Options credit', { storage: { 'unpw.collected': '["s0","w0","w1","w2"]' } }, async g => {
+      await g.tap('[data-act="options"]');
+      ok((await g.page.textContent('#sheet')).includes('Music by TORiTiA'), 'Options credit kept');
+      await g.tap('#sheet [data-act="music"]'); await g.wait(200);
+      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown'], 'row credits');
+      ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'no TORiTiA anywhere in the Dale-Fi, LCD included');
+      await g.run('handbookSheet()');
+      ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'nor in the handbook');
+    }),
     tst('Dale-Fi cards: songs owned before the update already have their cards', { storage: { 'unpw.collected': '["s0","w1","w2"]' } }, async g => {
       await g.tap('[data-act="options"]'); await g.tap('#sheet [data-act="music"]');
       eq(await g.page.$$eval('.cardthumb', b => b.map(x => x.dataset.id)), ['s0', 'w1', 'w2'], 'cards for every owned song, no rediscovery');

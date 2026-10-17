@@ -1355,7 +1355,7 @@ const NOTES = [
       'We have read them. They are thoughtfully written. This does not make the recordings sanctioned.',
       'Please remember that understanding something more deeply is not the same as needing more of it.',
     ],
-    sign: ['With gentle authority,', 'Guide Saffron'],
+    sign: ['With care,', 'Guide Saffron'],
   },
   {
     date: '2026-10-16',
@@ -1412,6 +1412,9 @@ function unlockSong(id, how, now) {
   } else setTimeout(() => { chime([[659, 0], [988, .1], [1319, .2]], .7, .04); toast(`${how} New on your Dale-Fi: “${t.title}.”`, 'song', 6500); }, 350);
   render();
 }
+/* The artist a player sees: the in-world credit from the song's card. TORiTiA is the production credit, kept in
+   TRACKS/EVENT_SONGS metadata and the Options credit line, never shown as an in-world artist. Event songs have none. */
+const shownArtist = id => (CARDS[id] ? CARDS[id].artist : '');
 /* A companion card. reveal is the line about how you found it; without one, it was opened from the Dale-Fi. */
 function cardSheet(id, reveal) {
   const k = CARDS[id], t = TBYID[id]; if (!k) return;
@@ -1738,7 +1741,7 @@ function musicUI() {
   const ev = E.on ? { id: `ev-${E.id}`, ...EVENT_SONGS[E.id] } : null;
   const t = TBYID[M.cur] || TBYID[list[0]], show = ev || t;
   const play = $('#mplay'); if (play) { play.setAttribute('aria-label', on ? 'Pause' : 'Play'); play.innerHTML = on ? ICON.pause : ICON.play; }
-  const ti = $('#lcdTitle'); if (ti && ti.dataset.id !== show.id) { ti.dataset.id = show.id; ti.innerHTML = `<span>${show.title} - ${show.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span><span aria-hidden="true">${show.title} - ${show.artist}&nbsp;&nbsp;&nbsp;&nbsp;</span>`; }
+  const ti = $('#lcdTitle'); if (ti && ti.dataset.id !== show.id) { ti.dataset.id = show.id; const lbl = `${show.title}${ev ? '' : shownArtist(t.id) ? ` - ${shownArtist(t.id)}` : ''}`; ti.innerHTML = `<span>${lbl}&nbsp;&nbsp;&nbsp;&nbsp;</span><span aria-hidden="true">${lbl}&nbsp;&nbsp;&nbsp;&nbsp;</span>`; }
   const no = $('#lcdNo'); if (no) no.textContent = ev ? 'EVENT' : `${String(Math.max(1, list.indexOf(t.id) + 1)).padStart(2, '0')}/${String(list.length).padStart(2, '0')}`;
   const vo = $('#lcdVol'); if (vo) vo.textContent = `VOL ${Math.round(M.vol * 10)}`;
   document.querySelectorAll('[data-track]').forEach(r => r.classList.toggle('cur', r.dataset.track === t.id));
@@ -1773,7 +1776,7 @@ function musicSheet() {
   const run = inRun();
   const rows = TRACKS.map((t, i) => list.includes(t.id)
     ? `<div class="trkline"><button type="button" class="trk ${t.id === M.cur ? 'cur' : ''}" data-track="${t.id}">
-        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${t.artist}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}</div>`
+        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${esc(shownArtist(t.id))}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}</div>`
     : `<div class="trk locked"><span class="n num">${i + 1}</span><span><span class="tt">Not found yet</span><span class="ta">${run ? t.hint : 'Turns up somewhere on a retreat.'}</span></span>
         ${run && t.id === 'w2' && PLACES[S.loc].van ? `<button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button>` : ''}</div>`).join('');
   openSheet(`<div class="grab"></div>
@@ -2333,7 +2336,7 @@ function handbookSheet() {
       <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
-      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs by TORiTiA are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
+      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
       <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
