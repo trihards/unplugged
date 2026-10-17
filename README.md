@@ -27,6 +27,8 @@ The cache is versioned by the `VERSION` line at the top of `sw.js`. If you edit 
 - `assets/audio/`: songs as AAC (.m4a)
 - `sw.js`, `manifest.webmanifest`, `icon-*.png`: offline support and home-screen install
 - `favicon.svg`, `apple-touch-icon.png`, `og-image.jpg`: icons and the link preview image
+- `tools/test/`: regression tests; `tools/sim/`: the balance simulator
+- `docs/`: project status, decisions, deferred ideas and handoff briefs
 
 Saves, settings and the guestbook live in the browser's local storage, so each browser starts fresh.
 
