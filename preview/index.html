@@ -343,6 +343,7 @@ input[type=range]:disabled { opacity: .35; }
 .over .take { font-family: var(--serif); font-size: 24px; margin: 14px 0 4px; color: var(--sea); }
 .over .tabart { display: block; width: min(60vw, 240px); height: auto; margin: 6px auto 10px; }
 .over.tab .take { color: var(--urchin); }
+.over .ride { text-wrap: balance; }
 .sign { display: flex; gap: 10px; margin: 14px 0 6px; }
 .sign input { flex: 1; min-width: 0; min-height: 52px; border-radius: 16px; border: 0; padding: 0 16px; background: var(--mist); box-shadow: 0 0 0 1.5px var(--line) inset; font-size: 17px; }
 .over h2 { font-family: var(--serif); font-weight: 600; font-size: 20px; margin: 22px 0 4px; }
@@ -645,7 +646,17 @@ const RAIDS = [
   'You paid $X for a private session that was just a man holding eye contact.',
 ];
 const FINDS = ['a hollow log', 'the lost-and-found basket', 'a yoga bolster', 'the props closet'];
-const CALM = ['A deer walks right up to you at dawn.', 'The fog burns off the Pacific and you forget your inbox exists.', 'You accidentally enjoy a sound bath.'];
+const CALM = ['A deer walks right up to you.', 'The fog lifts off the Pacific and you forget your inbox exists.', 'You accidentally enjoy a sound bath.'];
+/* Dale checks in once each morning while you owe him anything. Approved lines; when lets a line wait for the right balance. */
+const DUN = [
+  { t: 'Hey, man. Just checking on that tab. No rush. I mean, some rush.' },
+  { t: "Yo, man. You're harshin' my vibes here." },
+  { t: "That interest isn't decorative, buddy." },
+  { t: "I've been real patient about this. Like, financially irresponsible patient." },
+  { t: "Been working on letting go of material attachments, man. Your tab's really testing that." },
+  { t: "I'm trying not to attach myself to outcomes. But six grand is, like, a pretty significant outcome.", when: d => d >= 5500 && d < 6500 },
+  { t: "I can release the attachment, man. Doesn't mean I'm releasing the debt." },
+];
 const CITES = [
   'They make you share in circle.', 'They assign you a 4am silent walk.', "They make you journal about why you're like this.",
   'They make you hug a stranger for twenty seconds.', 'They sign you up for kitchen duty.',
@@ -730,7 +741,7 @@ function startGame(m) {
   S = {
     mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
     day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, decoyShares: 0, zen: 100,
-    loc: 0, prices: {}, inv: {}, paid: {}, log: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
+    loc: 0, prices: {}, inv: {}, paid: {}, log: [], dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
   ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; });
@@ -822,11 +833,26 @@ function rest() {
     const news = genPrices();
     render();
     veil.classList.remove('on');
-    toast(`Day ${S.day}. ${g ? `You slept well. Zen +${g}. ` : ''}Dale's meter ran all night: you owe ${fmt(S.debt)}.`, g ? 'good' : 'bad', 5000);
+    const dun = daleCheckIn();
+    toast(`Day ${S.day}. ${g ? `You slept well. Zen +${g}. ` : ''}${dun || `Dale's meter ran all night: you owe ${fmt(S.debt)}.`}`, g ? 'good' : 'bad', dun ? 7500 : 5000, dun ? (S.debt > 2 * START_DEBT ? IMG.daleMad : IMG.daleCalm) : undefined);
     news.forEach(n => whisper(n));
     if (S.day === S.days) toast(`Last day. Checkout is at quiet hours tonight, and the front desk searches every cushion. Let go of everything.${S.debt > 0 ? ` And square up with Dale: you still owe him ${fmt(S.debt)}.` : ''}`, 'hot', 7000);
     runQueue();
   }, reduce ? 0 : 1100);
+}
+
+/* Dale's morning check-in: at most once a day, only while you owe him, never the line he used last time.
+   It costs no zen; his random notes on your walks still do. Returns the line (also journaled), or null. */
+function daleCheckIn() {
+  if (!(S.debt > 0) || S.dunDay === S.day) return null;
+  S.dunDay = S.day;
+  const ok = i => !DUN[i].when || DUN[i].when(S.debt);
+  let pool = DUN.map((_, i) => i).filter(i => ok(i) && !S.dunSaid.includes(i));
+  if (!pool.length) { S.dunSaid = S.dunSaid.slice(-1); pool = DUN.map((_, i) => i).filter(i => ok(i) && !S.dunSaid.includes(i)); }
+  const i = pick(pool); S.dunSaid.push(i);
+  const t = `Dale: “${DUN[i].t}” You owe him ${fmt(S.debt)}.`;
+  log(t);
+  return t;
 }
 
 function rollEvents() {
@@ -1317,6 +1343,8 @@ function continueRun() {
   ITEMS.forEach(i => { if (!(S.inv[i.id] >= 0)) S.inv[i.id] = 0; if (!(S.paid[i.id] >= 0)) S.paid[i.id] = 0; });
   if (!(S.decoyShares >= 0)) S.decoyShares = (S.decoys || 0) * DECOY_SHARES;
   if (!S.stats) S.stats = newStats();
+  if (!(S.dunDay >= 0)) S.dunDay = 0;
+  if (!Array.isArray(S.dunSaid)) S.dunSaid = [];
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
   queue = []; enc = null; lastSaved = null; trade = null;
   screen = 'game';
@@ -1364,6 +1392,8 @@ const NOTES = [
       'Dear Guests,',
       'Financial attachments may persist beyond the completion of your retreat. Guests are encouraged to resolve all outstanding interpersonal balances before departure.',
       'We are also pleased to share that your journal will now remain available after checkout, in its entirety. Every step, every exchange, every moment you may have preferred to forget has been gently preserved for your reflection.',
+      'During your stay, your journal now rests within a single touch, so that reflection need never wait.',
+      'Dale has kindly offered to check in each morning with guests who remain in his care. We have asked him to be gentle. He has agreed to be consistent.',
       'Guests tending the Kitchen Garden may notice that it has begun to yield more than kale. We ask that you receive whatever you find there as you would any harvest: gratefully, and without asking where it came from.',
       'We encourage you to depart with the same openness with which you arrived. Unresolved obligations have a way of accompanying us.',
     ],
@@ -1913,6 +1943,7 @@ function gameHTML() {
     <div class="topbar">
       <button type="button" class="mark" data-egg="1" aria-label="unplugged"><span class="logo-mark"></span></button>
       <span class="spacer"></span>
+      <button type="button" class="iconbtn" data-act="journal" aria-label="Your journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 6.6C9.8 5 6.9 4.5 3.5 5v13.2c3.4-.5 6.3 0 8.5 1.6 2.2-1.6 5.1-2.1 8.5-1.6V5c-3.4-.5-6.3 0-8.5 1.6z"/><path d="M12 6.6v13.2"/></svg></button>
       ${eqHTML()}
       <button type="button" class="iconbtn" data-act="menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
@@ -1952,7 +1983,7 @@ function overHTML() {
     <h1>${head}</h1>
     ${tab ? `<img class="tabart" src="${IMG.daleTab}" width="480" height="630" alt="Dale, disappointed, holding a clipboard marked TAB with OUTSTANDING BALANCE circled in red">` : ''}
     <p class="lede">${lede}</p>
-    ${tab ? `<p class="lede">Dale still gave you a ride to the airport. He didn't say a word the entire way.</p>` : ''}
+    ${tab ? `<p class="lede ride">Dale still gave you a ride to the airport. He didn't say a word the entire way.</p>` : ''}
     <div class="ledger">
       <span>On you</span><span class="v num">${fmt(S.cash)}</span>
       <span>In the glovebox</span><span class="v num">${fmt(S.van)}</span>
@@ -2298,7 +2329,7 @@ function modeSheet() {
 }
 /* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
    Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
-const HB_MARKS = { version: '1.4', updated: ['The goal', 'Reading the screen', 'Retreat lengths and scoring', 'The Dale-Fi'], added: [] };
+const HB_MARKS = { version: '1.4', updated: ['The goal', 'Reading the screen', 'Dale and his van', 'Retreat lengths and scoring', 'The Dale-Fi'], added: [] };
 function handbookSheet() {
   const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
   const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
@@ -2316,7 +2347,7 @@ function handbookSheet() {
       <p>The sky shows the time of day. The sun crosses it between 7am and quiet hours. Under it are where you are, the day and hour, and a line about what's going on.</p>
       <p>The ring is your zen. <b>On you</b> is the cash you're carrying, with your glovebox balance underneath once you have one. <b>Cushion</b> is how much you're holding out of how much you can hold, plus your decoys if you've hired any. <b>Owed to Dale</b> is your debt and how fast it grows.</p>
       <p>The list shows what's for sale where you are. A price in an orange pill is in demand, above its usual range. A price in a green pill is abundant, below it. Goods you're holding that nobody here is trading show a dash instead of a price.</p>
-      <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened. After checkout, <b>Review your journal</b> on the results screen shows your whole retreat.</p>`),
+      <p>Notifications drop in at the top; tap one to dismiss it. Your journal keeps the last 20 things that happened; open it from the book icon in the header or from the menu. After checkout, <b>Review your journal</b> on the results screen shows your whole retreat.</p>`),
     sec('Time and walking', `
       <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes, and when you'd arrive if that's 8pm or later. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
       <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
@@ -2338,7 +2369,8 @@ function handbookSheet() {
         <li><b>Stash</b> cash in the glovebox, or <b>Take out</b> what's there.</li>
       </ul>
       <p>The glovebox doesn't earn anything, but cash in it can't go missing. Cash on you can.</p>
-      <p>Once you owe more than ${fmt(2 * START_DEBT)} and you're a fifth of the way through your retreat, Dale starts leaving notes on your yurt. Each one costs you zen.</p>`),
+      <p>Once you owe more than ${fmt(2 * START_DEBT)} and you're a fifth of the way through your retreat, Dale starts leaving notes on your yurt. Each one costs you zen.</p>
+      <p>While you owe him anything, Dale also checks in with you each morning. That one's free.</p>`),
     sec('Guide Saffron', `
       <img class="hbimg" src="${IMG.saffronCalm}" alt="Guide Saffron">
       <p>You'll know she's here. She has her own theme music.</p>
