@@ -123,6 +123,20 @@ const smoke = {
       eq([await g.run('screen'), await g.run('sheetKind')], ['game', null], 'back in the run');
       eq(await g.run('JSON.stringify(S)'), before, 'run state unchanged');
     }),
+    tst('header journal icon: one tap opens the journal, closing returns to the retreat; the menu entry stays', {}, async g => {
+      await g.start(2);
+      await g.run("for (let i = 0; i < 30; i++) log('Entry ' + i + '.'); render()");
+      const before = await g.run('JSON.stringify(S)');
+      await g.tap('.topbar [data-act="journal"]');
+      eq(await g.run('sheetKind'), 'journal', 'one tap');
+      eq(await g.page.$$eval('.journal p', ps => ps.map(p => p.textContent)), await g.run('S.log.slice(-20).reverse()'), 'same journal: last 20, newest first');
+      await g.tap('.sheet-actions [data-act="close"]');
+      eq(await g.run('[screen, sheetKind]'), ['game', null], 'back in the retreat');
+      eq(await g.run('JSON.stringify(S)'), before, 'nothing changed');
+      await g.tap('[data-act="menu"]');
+      ok(await g.page.isVisible('#sheet [data-act="journal"]'), 'menu still has Your journal');
+      eq(await g.page.getAttribute('.topbar [data-act="journal"]', 'aria-label'), 'Your journal', 'labelled for screen readers');
+    }),
     tst('journey map: one tap walks, 44px targets, hours always and the arrival clock only late', {}, async g => {
       await g.start(3);
       await g.tap('[data-act="journey"]');
@@ -164,7 +178,7 @@ const smoke = {
       await g.tap('[data-act="options"]');
       ok((await g.page.textContent('#sheet')).includes('Music by TORiTiA'), 'Options credit kept');
       await g.tap('#sheet [data-act="music"]'); await g.wait(200);
-      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown'], 'row credits');
+      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown', 'Turns up somewhere on a retreat.'], 'row credits (the unfound song shows its hint)');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'no TORiTiA anywhere in the Dale-Fi, LCD included');
       await g.run('handbookSheet()');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'nor in the handbook');
@@ -185,6 +199,48 @@ const smoke = {
       await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(1);
       await g.rolls([0.1], "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Meditation Hall'); songEvents(); runQueue()");
       eq(await g.run('[sheetKind, S.songs.includes("w1")]'), [null, true], 'found again on a later retreat: back in this run, no second reveal');
+    }),
+    tst('Dale-Fi cards: the Kitchen Garden find reveals The Unprocessed Self, plays, stays for the run and offline', {}, async (g, env) => {
+      await g.start(2);
+      const GARDEN = "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Kitchen Garden'); songEvents(); runQueue()";
+      await g.rolls([0.46], GARDEN);
+      eq(await g.run('[sheetKind, hasSong("w3")]'), [null, false], 'no find above 45%');
+      await g.run("S.loc = PLACES.findIndex(p => p.name === 'Meditation Hall')"); await g.rolls([0.1], "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Yurt Village'); songEvents(); runQueue()");
+      eq(await g.run('hasSong("w3")'), false, 'nowhere else');
+      await g.rolls([0.44], GARDEN);
+      eq(await g.run('sheetKind'), 'card', 'reveal shown');
+      eq(await g.page.textContent('.cardkick'), 'Someone has been using a 1977 funk record to keep the seed packets flat. New on your Dale-Fi.', 'discovery line, verbatim');
+      const card = await g.run("({ t: $('.cardtt').textContent, by: $('.cardby').textContent, meta: $('.cardmeta').textContent, rev: $('.cardrev').textContent, art: $('.cardart').getAttribute('src') })");
+      eq(card, { t: 'The Unprocessed Self', by: 'The Low Maintenance Orchestra', meta: '45 · Sunspill Records · 1977 · Funk',
+        rev: 'A gloriously filthy slice of California funk from a band whose only documented live appearances were at the 1977 and 1978 Folsom County Fair, on the second stage. The bassline is practically geological. Their subsequent disappearance remains one of the great minor injustices of American music.',
+        art: 'assets/img/card-w3.webp' }, 'companion card');
+      ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'production credit not shown in-world');
+      ok((await g.run('S.log.at(-1)')) === 'New song on your Dale-Fi: The Unprocessed Self.', 'journal records the find');
+      await g.tap('#sheet [data-act="cardplay"]'); await g.wait(400);
+      eq(await g.run('[M.cur, musicPlaying(), sheetKind]'), ['w3', true, 'music'], 'plays in the Dale-Fi');
+      ok((await g.run('M.audio.src')).endsWith('assets/audio/w3.m4a'), 'its own file');
+      await g.run('setSound(false)'); await g.wait(200);
+      eq(await g.run(AUDIBLE), 0, 'mute silences it');
+      await g.run('setSound(true); closeSheet(true)');
+      await g.run("for (let i = 0; i < 3; i++) walk(PLACES.findIndex((p, k) => k !== S.loc && canReach(k))); queue = []; closeSheet(true)");
+      eq(await g.run('[S.songs.includes("w3"), collected().includes("w3")]'), [true, true], 'stays for the run and in the collection');
+      await g.rolls([0.1], GARDEN);
+      eq(await g.run('S.songs.filter(id => id === "w3").length'), 1, 'found once per run');
+      const sw = fs.readFileSync(path.join(env.root, 'sw.js'), 'utf8');
+      ok(sw.includes('"assets/audio/w3.m4a"') && sw.includes('"assets/img/card-w3.webp"'), 'in the offline cache list');
+    }),
+    tst('Dale-Fi cards: a real walk to the Meditation Hall reveals the card on the first find ever; a repeat find is a notification', {}, async g => {
+      const WALK = `(() => { const r = Math.random; Math.random = () => (new Error().stack.includes('songEvents') ? 0.1 : r());
+        try { S.loc = 0; walk(PLACES.findIndex(p => p.name === 'Meditation Hall')); } finally { Math.random = r; } })()`;
+      const settle = async () => { await g.wait(600); for (let i = 0; i < 3 && ['offer', 'enc'].includes(await g.run('sheetKind')); i++) { await g.run("if (enc) { enc = null; } closeSheet()"); await g.wait(300); } };
+      await g.start(2); await g.run('ITEMS.forEach(i => { S.inv[i.id] = 0; })');
+      await g.run(WALK); await settle();
+      eq(await g.run('[sheetKind, hasSong("w1")]'), ['card', true], 'first find ever: card opens by itself after the walk');
+      ok((await g.page.textContent('.cardkick')).includes('sound-bath guy'), 'reveal line');
+      await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(2); await g.run('ITEMS.forEach(i => { S.inv[i.id] = 0; })');
+      await g.run(WALK); await settle();
+      eq(await g.run('[sheetKind, hasSong("w1")]'), [null, true], 'already in the collection: no second reveal (by design)');
+      ok((await g.page.textContent('#toasts')).includes('New on your Dale-Fi'), 'a notification instead');
     }),
     tst('Dale-Fi cards: the staff USB card waits until the check-in is over', {}, async g => {
       await g.start(2);
@@ -375,6 +431,186 @@ const encounters = {
   ],
 };
 
+/* ======================= debt: Dale's tab, his notes, the journal after checkout ======================= */
+/* Puts a run on its last day with this money, then checks out through the real buttons. */
+const checkoutWith = async (g, { cash, van = 0, debt }) => {
+  await g.run(`S.day = S.days; S.cash = ${cash}; S.van = ${van}; S.debt = ${debt}; queue = []; closeSheet(true); render()`);
+  await g.tap('[data-act="checkout"]'); await g.tap('[data-act="checkoutgo"]');
+  return g.run("({ screen, reason: S.reason, net: netWorth(), take: $('.over .take').textContent, head: $('.over h1').textContent, art: !!$('.over .tabart'), song: endingSong() })");
+};
+/* The note roll: nothing else happens on the walk (0.99), Dale's note fires (0), its zen cost is the middle of 5 to 12. */
+const NOTE_ROLL = [0.99, 0, 0.5];
+const debt = {
+  name: 'debt', about: "Dale's tab at checkout, his collection notes, and the journal after checkout", where: 'desktop Chromium',
+  tests: [
+    tst('square with Dale: winning takeaways, songs and screen unchanged', {}, async g => {
+      await g.start(0);
+      const s = await checkoutWith(g, { cash: 500000, debt: 0 });
+      eq([s.screen, s.reason, s.net, s.take, s.head, s.art, s.song], ['over', 'time', 500000, 'Opened your own retreat', 'Your retreat is complete.', false, 'win-moment'], 'top takeaway when square');
+    }),
+    tst("the reported run: $898,451 net worth with $959 owed is the Dale Fail", {}, async g => {
+      await g.start(0);
+      const s = await checkoutWith(g, { cash: 899000, van: 410, debt: 959 });
+      eq([s.reason, s.net, s.take, s.head, s.art, s.song], ['time', 898451, 'Dale Fail: Owes Dale forever', "You didn't square up, man.", true, 'dale-tab'], 'Dale Fail');
+      const txt = await g.page.textContent('.over');
+      ok(txt.includes('You had the money. Dale had the tab.'), 'could-afford line');
+      ok(txt.includes("Dale still gave you a ride to the airport. He didn't say a word the entire way."), 'airport line, in the ending');
+      for (const v of ['$899,000', '$410', '-$959', '$898,451']) ok(txt.includes(v), `ledger shows ${v}`);
+      ok(await g.page.isVisible('.over .tabart'), 'Dale is on screen');
+      eq(await g.run('superlative()'), "Dale's favorite liability", 'superlative');
+      await g.run("$('#signname').value = 'Tester'"); await g.tap('[data-act="sign"]');
+      eq(await g.run("store.get('unpw.scores', []).map(e => [e.s, e.t])"), [[898451, 'Dale Fail: Owes Dale forever']], 'guestbook keeps the real net worth');
+      eq(await g.run('grades()[4][1]'), { g: 'F', c: 'Still owes Dale $959.' }, 'report card: Financial Wellness');
+    }),
+    tst('any debt at all is the Dale Fail, at every length; with none, the original takeaways', {}, async g => {
+      const CASES = [ // [label, cash, debt, could afford it]
+        ['wealthy', 5e6, 2000, true], ['modestly profitable', 30000, 2000, true], ['broke', 1500, 1200, true],
+        ['negative net worth', 300, 4000, false], ['owing exactly $1', 2e6, 1, true]];
+      for (let m = 0; m < 4; m++) {
+        for (const [label, cash, debt, afford] of CASES) {
+          await g.run(`closeSheet(true); startGame(MODES[${m}])`);
+          const s = await checkoutWith(g, { cash, debt });
+          eq([s.net, s.take, s.head, s.art, s.song], [cash - debt, 'Dale Fail: Owes Dale forever', "You didn't square up, man.", true, 'dale-tab'], `mode ${m}, ${label}`);
+          eq(await g.page.textContent('.over .lede'), afford ? 'You had the money. Dale had the tab.' : "You couldn't pay. Dale still had the tab.", `mode ${m}, ${label}: lede`);
+        }
+        const mins = await g.run(`MODES[${m}].ranks`);
+        for (let i = 0; i < mins.length; i++) {
+          await g.run(`closeSheet(true); startGame(MODES[${m}])`);
+          const s = await checkoutWith(g, { cash: mins[i], debt: 0 });
+          const want = await g.run(`[RANKS[${i + 1}][1], ${i + 1} >= 4 ? 'win-moment' : ${i + 1} >= WIN_RANK ? 'win-thats' : 'checkout']`);
+          eq([s.take, s.song, s.head, s.art], [...want, 'Your retreat is complete.', false], `mode ${m}, square, takeaway ${i + 1}`);
+        }
+      }
+    }),
+    tst('snapping is still snapping, debt or not', {}, async g => {
+      await g.start(0);
+      await g.run("S.cash = 900000; S.debt = 959; endGame('zen')");
+      eq(await g.run("[rankFor(netWorth(), S.reason), $('.over h1').textContent, !!$('.over .tabart'), endingSong()]"), ['Snapped. Started a podcast', 'You snapped.', false, 'checkout'], 'snap ending');
+    }),
+    tst('paid off once, then borrowed again: still the Dale Fail and an F', {}, async g => {
+      await g.start(0);
+      await g.run("S.stats.paidDay = 1; S.stats.borrowed = 2000");
+      const s = await checkoutWith(g, { cash: 600000, debt: 2000 });
+      eq([s.take, s.song], ['Dale Fail: Owes Dale forever', 'dale-tab'], 'ending');
+      eq(await g.run('grades()[4][1].g'), 'F', 'Financial Wellness');
+    }),
+    tst('checkout and the last morning say what you owe; nothing when square', {}, async g => {
+      await g.start(0);
+      await g.run('S.day = S.days; S.debt = 1234; render()'); await g.tap('[data-act="checkout"]');
+      const due = await g.page.textContent('#sheet .dueline');
+      ok(due.includes('$1,234') && !/winner|win\b|takeaway/.test(due), 'checkout sheet shows the balance, without announcing the ending', due);
+      eq(await g.run("[...document.querySelectorAll('#sheet button')].map(b => b.dataset.act)"), ['close', 'checkoutgo', 'close'], 'no new payment option');
+      await g.run('closeSheet(true); S.debt = 0; render()'); await g.tap('[data-act="checkout"]');
+      eq(await g.run("!!$('#sheet .dueline')"), false, 'no line when square');
+      await g.run("closeSheet(true); S.day = S.days - 1; S.debt = 500; $('#toasts').innerHTML = ''; rest()"); await g.wait(300);
+      ok((await g.page.textContent('#toasts')).includes(`you still owe him $${(await g.run('S.debt')).toLocaleString('en-US')}`), 'last-morning toast names the current balance');
+      await g.run("S.day = S.days - 1; S.debt = 0; $('#toasts').innerHTML = ''; rest()"); await g.wait(300);
+      ok(!(await g.page.textContent('#toasts')).includes('still owe him'), 'no debt line when square');
+    }),
+    tst("Dale's notes: show the real balance, cost zen, go in the journal, and stop once you pay", {}, async g => {
+      await g.start(2);
+      await g.run("S.day = 2; S.debt = 3000; S.zen = 90; $('#toasts').innerHTML = ''");
+      await g.rolls(NOTE_ROLL, 'rollEvents()');
+      const want = `Dale left a note on your yurt. It's just a number: $3,000. Zen -`;
+      ok((await g.run('S.log.at(-1)')).startsWith(want), 'journal records the note', await g.run('S.log.at(-1)'));
+      ok((await g.run('S.zen')) < 90, 'costs zen');
+      await g.wait(600);
+      ok((await g.page.textContent('#toasts')).includes('$3,000'), 'shown as a notification');
+      await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]');
+      ok((await g.page.textContent('.journal')).includes(want), 'visible in the journal');
+      await g.run('closeSheet(true)');
+      const n = await g.run('S.log.length');
+      await g.run("S.debt = 0; $('#toasts').innerHTML = ''"); await g.rolls(NOTE_ROLL, 'rollEvents()'); await g.wait(600);
+      eq(await g.run('S.log.length'), n, 'no note once square');
+      await g.run('S.debt = 2200'); await g.rolls(NOTE_ROLL, 'rollEvents()');
+      eq(await g.run('S.log.length'), n, `none at or under $2,200 (the handbook's rule)`);
+      await g.run('S.debt = 5000; S.day = 1'); await g.rolls(NOTE_ROLL, 'rollEvents()');
+      eq(await g.run('S.log.length'), n, 'none in the first fifth of the retreat');
+    }),
+    tst("Dale checks in every morning you owe him: once a day, varied, balance shown, no zen cost", {}, async g => {
+      await g.start(3);
+      const said = [];
+      for (let d = 0; d < 9; d++) {
+        await g.run("S.debt = 3000; S.zen = 50; S.hour = 22; $('#toasts').innerHTML = ''; rest()"); await g.wait(200);
+        const s = await g.run("({ day: S.day, zen: S.zen, last: S.log.filter(t => t.startsWith('Dale: ')).at(-1) || S.log.at(-1), n: S.log.filter(t => t.startsWith('Dale: ')).length, toast: $('#toasts').textContent, dun: S.dunDay })");
+        ok(s.last.startsWith('Dale: “') && s.last.endsWith(`You owe him $${(await g.run('S.debt')).toLocaleString('en-US')}.`), 'journaled with the real balance', s.last);
+        ok(s.toast.includes(s.last), 'in the morning notification', s.toast);
+        eq(s.zen, 65, 'rest zen only; the check-in costs nothing');
+        eq(s.n, d + 1, 'exactly one per day');
+        said.push(s.last.slice(0, 40));
+      }
+      ok(said.every((t, i) => i === 0 || t !== said[i - 1]), 'never the same line two mornings running', said);
+      ok(new Set(said).size >= 5, 'varied', said);
+      eq(await g.run('daleCheckIn()'), null, 'no second check-in the same day');
+      ok(!said.some(t => t.includes('six grand')), 'the six-grand line waits for a balance near $6,000');
+      await g.run("S.debt = 6000; S.dunSaid = [0,1,2,3,4,6]; S.dunDay = 0");
+      ok((await g.run('daleCheckIn()')).includes('six grand'), 'and shows up when the balance fits');
+    }),
+    tst('no morning check-in when square; the old overnight line stays', {}, async g => {
+      await g.start(2);
+      await g.run("S.debt = 0; S.hour = 22; $('#toasts').innerHTML = ''; rest()"); await g.wait(200);
+      eq(await g.run("S.log.filter(t => t.startsWith('Dale: ')).length"), 0, 'none');
+      ok((await g.page.textContent('#toasts')).includes("Dale's meter ran all night: you owe $0."), 'unchanged morning line');
+    }),
+    tst('older saves without the check-in fields load and get a check-in next morning', {}, async g => {
+      await g.start(2);
+      await g.run("delete S.dunDay; delete S.dunSaid; saveRun(); closeSheet(true); screen = 'welcome'; render(); continueRun()");
+      eq(await g.run('[S.dunDay, S.dunSaid]'), [0, []], 'defaults filled');
+      await g.run("S.debt = 2000; S.hour = 22; rest()"); await g.wait(200);
+      ok(await g.run("S.log.some(t => t.startsWith('Dale: '))"), 'check-in works');
+    }),
+    tst('calm moments on walks name no time of day', {}, async g => {
+      const bad = await g.run("CALM.filter(t => /dawn|dusk|sunrise|sunset|morning|afternoon|evening|night|noon|burns off|\\d\\s?(am|pm)/i.test(t))");
+      eq(bad, [], 'time-specific calm moments');
+    }),
+    tst("the airport line breaks between its sentences at phone widths", {}, async g => {
+      await g.start(0); await g.run("S.cash = 900000; S.debt = 959; endGame('time')");
+      const LINES = `(() => { const t = $('.over .ride').firstChild, r = document.createRange(), out = []; let cur = '', top = null;
+        for (let i = 0; i < t.length; i++) { r.setStart(t, i); r.setEnd(t, i + 1); const y = Math.round(r.getClientRects()[0]?.top ?? top);
+          if (top !== null && y > top + 2) { out.push(cur.trim()); cur = ''; } top = y; cur += t.data[i]; } out.push(cur.trim()); return out; })()`;
+      for (const w of [320, 360, 375, 390, 414, 430]) {
+        await g.page.setViewportSize({ width: w, height: 800 }); await g.wait(80);
+        eq(await g.run(LINES), ['Dale still gave you a ride to the airport.', "He didn't say a word the entire way."], `${w}px`);
+      }
+    }),
+    tst('after checkout: Review your journal shows the finished run, changes nothing, and returns to the results', {}, async g => {
+      await g.start(0);
+      await g.run("for (let i = 0; i < 400; i++) log('Entry ' + i + '.')");
+      ok((await g.run('S.log.length')) > 400, 'nothing dropped from a long run');
+      await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]');
+      eq(await g.page.$$eval('.journal p', ps => ps.length), 20, 'during the retreat: the last 20, as before');
+      await g.run('closeSheet(true)');
+      await checkoutWith(g, { cash: 899000, debt: 959 });
+      await g.run("$('.over').scrollTop = 200");
+      const top = await g.run("$('.over').scrollTop");
+      const before = await g.run('JSON.stringify(S)');
+      await g.tap('[data-act="journal"]');
+      eq(await g.run('sheetKind'), 'journal', 'journal opens');
+      eq(await g.page.$$eval('.journal p', ps => ps.map(p => p.textContent)), await g.run('S.log.slice().reverse()'), 'the whole retreat, newest first');
+      ok(await g.run("$('.journal p:last-child').textContent.startsWith('Day 1, 7am.')"), 'back to the first entry');
+      eq(await g.run("[...document.querySelectorAll('#sheet button')].map(b => b.dataset.act)"), ['close', 'close'], 'nothing to do but close');
+      await g.tap('.sheet-actions [data-act="close"]');
+      eq(await g.run("[screen, sheetKind, !!$('.over .tabart')]"), ['over', null, true], 'back on the results screen');
+      eq(await g.run("$('.over').scrollTop"), top, 'where you left it');
+      eq(await g.run('JSON.stringify(S)'), before, 'run unchanged');
+      await g.tap('[data-act="journal"]'); await g.page.click('#scrim', { position: { x: 5, y: 5 } });
+      eq(await g.run('[screen, sheetKind]'), ['over', null], 'tapping outside also returns');
+      await g.tap('[data-act="report"]'); await g.run('closeSheet()');
+      eq(await g.run("!!$('.over [data-act=\"journal\"]')"), true, 'still there after the report card');
+    }),
+    tst("a new retreat starts with a fresh journal and Dale's standard opening balance", {}, async g => {
+      await g.start(0);
+      await g.run("log('Old run entry.')");
+      await checkoutWith(g, { cash: 899000, debt: 959 });
+      await g.tap('[data-act="begin"]'); await g.tap('[data-mode="1"]'); await g.wait(350);
+      const s = await g.run("({ debt: S.debt, over: S.over, reason: S.reason, old: S.log.some(t => t === 'Old run entry.'), n: S.log.length })");
+      eq([s.debt, s.over, s.reason, s.old], [1100, false, '', false], 'fresh run');
+      await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]');
+      ok(!(await g.page.textContent('.journal')).includes('Old run entry.'), "journal doesn't carry over");
+    }),
+  ],
+};
+
 /* ======================= saves and settings ======================= */
 const saves = {
   name: 'saves', about: 'saved runs, older saves, guestbook and settings survive reloads', where: 'desktop Chromium',
@@ -493,12 +729,22 @@ const audio = {
     }),
     tst('checkout plays the ending song for the takeaway, alone; leaving results brings back the Dale-Fi', {}, async g => {
       await g.start(2); await startMusic(g);
-      for (const [net, want] of [[3e6, 'win-moment'], [1e5, 'win-thats'], [-500, 'checkout']]) {
+      for (const [net, want] of [[3e6, 'win-moment'], [1e5, 'win-thats'], [100, 'checkout'], [-500, 'dale-tab']]) {
         await g.run(`if (S.over) { closeSheet(true); startGame(MODES[2]); } S.cash = ${Math.max(0, net)}; S.debt = ${Math.max(0, -net)}; endGame('time')`); await g.wait(900);
         eq(await g.run(`[E.id, !E.el.paused, ${AUDIBLE}]`), [want, true, 1], `ending song for net worth ${net}`);
       }
       await g.tap('[data-act="welcome"]'); await g.wait(1200);
       eq(await g.run(`[E.on, musicPlaying(), ${AUDIBLE}]`), [false, true, 1], 'ending stopped, Dale-Fi back');
+    }),
+    tst("Dale's ending plays its own short cue once, alone, never looped; muted stays silent", {}, async g => {
+      await g.start(0); await startMusic(g);
+      await g.run("S.cash = 900000; S.debt = 959; endGame('time')"); await g.wait(900);
+      eq(await g.run(`[E.id, !E.el.paused, E.el.loop, musicPlaying(), ${AUDIBLE}]`), ['dale-tab', true, false, false, 1], 'cue alone, not looped');
+      ok((await g.run('E.el.src')).endsWith('assets/audio/dale-tab.m4a'), 'the supplied cue');
+      await g.run('E.el.currentTime = E.el.duration - 0.3'); await g.wait(1500);
+      eq(await g.run(`[E.on, E.el.paused, ${AUDIBLE}]`), [false, true, 1], 'ends once; the Dale-Fi you had playing comes back, as after the other endings');
+      await g.run("closeSheet(true); startGame(MODES[0]); setSound(false); S.cash = 900000; S.debt = 959; endGame('time')"); await g.wait(900);
+      eq(await g.run(AUDIBLE), 0, 'muted: silent');
     }),
     tst('leaving the app mid check-in: her theme picks up where it was, not from the start', {}, async g => {
       await g.start(2); await startMusic(g);
@@ -542,11 +788,14 @@ const layoutTest = device => tst(`screens fit without sideways scrolling, button
     const b = await g.page.locator(sel).boundingBox(); const vh = g.page.viewportSize().height;
     ok(b && b.y + b.height <= vh && b.height >= 40, `${sel} on screen and at least 40px tall`, b);
   }
+  const icons = await g.page.$$eval('.topbar .iconbtn', bs => bs.map(b => { const r = b.getBoundingClientRect(); return [b.dataset.act, Math.round(r.width), Math.round(r.height), Math.round(r.right)]; }));
+  ok(icons.length === 3 && icons.every(([, w, h, right]) => w >= 40 && h >= 40 && right <= g.page.viewportSize().width), 'header: journal, Dale-Fi and menu, 40px and on screen', icons);
+  await g.tap('.topbar [data-act="journal"]'); eq(await g.run('sheetKind'), 'journal', 'header journal opens on tap'); await check('journal from the header'); await g.run('closeSheet(true)');
   await g.tap('[data-act="journey"]'); await check('map'); ok(await g.page.isVisible('.node'), 'map opens on tap'); await g.run('closeSheet(true)');
   await g.tap('[data-item="burner"]'); await check('trade sheet'); await g.run('closeSheet(true)');
   await g.run('S.loc = VAN_IX; render()'); await g.tap('[data-act="van"]'); await check('van sheet'); await g.run('closeSheet(true)');
   await g.run("for (let i = 0; i < 25; i++) log('A fairly long journal entry about trading natural wine at the hot springs ' + i + '.'); render()");
-  await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]'); await check('journal'); await g.run('closeSheet(true)');
+  await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]'); await check('journal'); await g.run('closeSheet(true)');
   await g.run(ENC + "; enc.n = 5; enc.left = 5; enc.vols = ['vol1', 'vol2', 'vol3', 'vol4']; encSheet(); $('#toasts').innerHTML = ''");
   await g.rolls([0.99, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2], 'encRun()', 0.2);
   await check('Saffron after a rough round');
@@ -556,6 +805,17 @@ const layoutTest = device => tst(`screens fit without sideways scrolling, button
   await g.tap('[data-act="encdone"]');
   await g.run("S.day = S.days; render()"); await g.tap('[data-act="checkout"]'); await g.tap('[data-act="checkoutgo"]');
   await check('results');
+  await g.run("S.cash = 900000; S.debt = 959; render()");
+  await check("Dale's ending");
+  const vw = g.page.viewportSize().width, art = await g.page.locator('.over .tabart').boundingBox();
+  ok(art && art.width >= 150 && art.width <= vw - 40 && art.height <= g.page.viewportSize().height * 0.55, "Dale's picture prominent but fits", art);
+  const jb = g.page.locator('.over [data-act="journal"]');
+  await jb.scrollIntoViewIfNeeded(); const b = await jb.boundingBox();
+  ok(b && b.height >= 40, 'Review your journal at least 40px tall', b);
+  await jb.tap(); await check('journal after checkout');
+  const close = g.page.locator('#sheet .sheet-actions [data-act="close"]');
+  await close.scrollIntoViewIfNeeded(); await close.tap();
+  eq(await g.run('[screen, sheetKind]'), ['over', null], 'back to the results by tap');
 });
 const layout = {
   name: 'layout', about: 'phone-sized screens with touch emulation', where: 'Chromium mobile emulation, not a real phone',
@@ -589,4 +849,4 @@ const offline = {
   } }],
 };
 
-export default [staticSuite, smoke, trading, encounters, saves, audio, layout, offline];
+export default [staticSuite, smoke, trading, encounters, debt, saves, audio, layout, offline];
