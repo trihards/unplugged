@@ -375,6 +375,130 @@ const encounters = {
   ],
 };
 
+/* ======================= debt: Dale's tab, his notes, the journal after checkout ======================= */
+/* Puts a run on its last day with this money, then checks out through the real buttons. */
+const checkoutWith = async (g, { cash, van = 0, debt }) => {
+  await g.run(`S.day = S.days; S.cash = ${cash}; S.van = ${van}; S.debt = ${debt}; queue = []; closeSheet(true); render()`);
+  await g.tap('[data-act="checkout"]'); await g.tap('[data-act="checkoutgo"]');
+  return g.run("({ screen, reason: S.reason, net: netWorth(), take: $('.over .take').textContent, head: $('.over h1').textContent, art: !!$('.over .tabart'), song: endingSong() })");
+};
+/* The note roll: nothing else happens on the walk (0.99), Dale's note fires (0), its zen cost is the middle of 5 to 12. */
+const NOTE_ROLL = [0.99, 0, 0.5];
+const debt = {
+  name: 'debt', about: "Dale's tab at checkout, his collection notes, and the journal after checkout", where: 'desktop Chromium',
+  tests: [
+    tst('square with Dale: winning takeaways, songs and screen unchanged', {}, async g => {
+      await g.start(0);
+      const s = await checkoutWith(g, { cash: 500000, debt: 0 });
+      eq([s.screen, s.reason, s.net, s.take, s.head, s.art, s.song], ['over', 'time', 500000, 'Opened your own retreat', 'Your retreat is complete.', false, 'win-moment'], 'top takeaway when square');
+    }),
+    tst("the reported run: $898,451 net worth with $959 owed gets Dale's ending, not a win", {}, async g => {
+      await g.start(0);
+      const s = await checkoutWith(g, { cash: 899000, van: 410, debt: 959 });
+      eq([s.reason, s.net, s.take, s.head, s.art, s.song], ['time', 898451, 'Owes Dale forever', "You didn't square up, man.", true, 'dale-tab'], "Dale's ending");
+      const txt = await g.page.textContent('.over');
+      ok(txt.includes('You had the money. Dale had the tab.'), 'supporting copy');
+      for (const v of ['$899,000', '$410', '-$959', '$898,451']) ok(txt.includes(v), `ledger shows ${v}`);
+      ok(await g.page.isVisible('.over .tabart'), 'Dale is on screen');
+      await g.run("$('#signname').value = 'Tester'"); await g.tap('[data-act="sign"]');
+      eq(await g.run("store.get('unpw.scores', []).map(e => [e.s, e.t])"), [[898451, 'Owes Dale forever']], 'guestbook keeps the score, with the honest takeaway');
+      eq(await g.run('grades()[4][1]'), { g: 'F', c: 'Still owes Dale $959.' }, 'report card: Financial Wellness');
+    }),
+    tst('every length and every winning takeaway needs a zero balance; $1 is enough to lose it', {}, async g => {
+      for (let m = 0; m < 4; m++) {
+        await g.run(`closeSheet(true); startGame(MODES[${m}])`);
+        const mins = await g.run('MODES.find(x => x.id === S.mode).ranks');
+        for (let i = 1; i < mins.length; i++) {
+          const net = mins[i];
+          await g.run(`S.over = false; S.cash = ${net + 1}; S.van = 0; S.debt = 1; S.reason = 'time'`);
+          eq(await g.run('[rankFor(netWorth(), S.reason), endingSong()]'), ['Owes Dale forever', 'dale-tab'], `mode ${m}, takeaway ${i + 1}, owing $1`);
+          await g.run(`S.cash = ${net}; S.debt = 0`);
+          eq(await g.run('rankFor(netWorth(), S.reason)'), await g.run(`RANKS[${i + 1}][1]`), `mode ${m}, takeaway ${i + 1}, square`);
+        }
+      }
+    }),
+    tst('ordinary failures with debt keep their own endings', {}, async g => {
+      await g.start(0);
+      let s = await checkoutWith(g, { cash: 3000, debt: 900 });
+      eq([s.net, s.take, s.head, s.art, s.song], [2100, 'Broke but centered', 'Your retreat is complete.', false, 'checkout'], 'broke but centered, owing Dale');
+      await g.run('closeSheet(true); startGame(MODES[0])');
+      s = await checkoutWith(g, { cash: 100, debt: 2500 });
+      eq([s.net, s.take, s.art, s.song], [-2400, 'Owes Dale forever', false, 'checkout'], 'in the hole');
+      await g.run("closeSheet(true); startGame(MODES[0]); S.cash = 900000; S.debt = 959; endGame('zen')");
+      eq(await g.run("[rankFor(netWorth(), S.reason), $('.over h1').textContent, !!$('.over .tabart'), endingSong()]"), ['Snapped. Started a podcast', 'You snapped.', false, 'checkout'], 'snapping is still snapping');
+    }),
+    tst('paid off once, then borrowed again: still Dale\'s ending and an F', {}, async g => {
+      await g.start(0);
+      await g.run("S.stats.paidDay = 1; S.stats.borrowed = 2000");
+      const s = await checkoutWith(g, { cash: 600000, debt: 2000 });
+      eq([s.take, s.song], ['Owes Dale forever', 'dale-tab'], 'ending');
+      eq(await g.run('grades()[4][1].g'), 'F', 'Financial Wellness');
+    }),
+    tst('checkout and the last morning say what you owe; nothing when square', {}, async g => {
+      await g.start(0);
+      await g.run('S.day = S.days; S.debt = 1234; render()'); await g.tap('[data-act="checkout"]');
+      ok((await g.page.textContent('#sheet .dueline')).includes('$1,234'), 'checkout sheet shows the balance');
+      eq(await g.run("[...document.querySelectorAll('#sheet button')].map(b => b.dataset.act)"), ['close', 'checkoutgo', 'close'], 'no new payment option');
+      await g.run('closeSheet(true); S.debt = 0; render()'); await g.tap('[data-act="checkout"]');
+      eq(await g.run("!!$('#sheet .dueline')"), false, 'no line when square');
+      await g.run("closeSheet(true); S.day = S.days - 1; S.debt = 500; $('#toasts').innerHTML = ''; rest()"); await g.wait(300);
+      ok((await g.page.textContent('#toasts')).includes(`you still owe him $${(await g.run('S.debt')).toLocaleString('en-US')}`), 'last-morning toast names the current balance');
+      await g.run("S.day = S.days - 1; S.debt = 0; $('#toasts').innerHTML = ''; rest()"); await g.wait(300);
+      ok(!(await g.page.textContent('#toasts')).includes('still owe him'), 'no debt line when square');
+    }),
+    tst("Dale's notes: show the real balance, cost zen, go in the journal, and stop once you pay", {}, async g => {
+      await g.start(2);
+      await g.run("S.day = 2; S.debt = 3000; S.zen = 90; $('#toasts').innerHTML = ''");
+      await g.rolls(NOTE_ROLL, 'rollEvents()');
+      const want = `Dale left a note on your yurt. It's just a number: $3,000. Zen -`;
+      ok((await g.run('S.log.at(-1)')).startsWith(want), 'journal records the note', await g.run('S.log.at(-1)'));
+      ok((await g.run('S.zen')) < 90, 'costs zen');
+      await g.wait(600);
+      ok((await g.page.textContent('#toasts')).includes('$3,000'), 'shown as a notification');
+      await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]');
+      ok((await g.page.textContent('.journal')).includes(want), 'visible in the journal');
+      await g.run('closeSheet(true)');
+      const n = await g.run('S.log.length');
+      await g.run("S.debt = 0; $('#toasts').innerHTML = ''"); await g.rolls(NOTE_ROLL, 'rollEvents()'); await g.wait(600);
+      eq(await g.run('S.log.length'), n, 'no note once square');
+      await g.run('S.debt = 2200'); await g.rolls(NOTE_ROLL, 'rollEvents()');
+      eq(await g.run('S.log.length'), n, `none at or under $2,200 (the handbook's rule)`);
+      await g.run('S.debt = 5000; S.day = 1'); await g.rolls(NOTE_ROLL, 'rollEvents()');
+      eq(await g.run('S.log.length'), n, 'none in the first fifth of the retreat');
+    }),
+    tst('after checkout: Review your journal shows the finished run, changes nothing, and returns to the results', {}, async g => {
+      await g.start(0);
+      await g.run("for (let i = 0; i < 30; i++) log('Entry ' + i + '.')");
+      await checkoutWith(g, { cash: 899000, debt: 959 });
+      await g.run("$('.over').scrollTop = 200");
+      const top = await g.run("$('.over').scrollTop");
+      const before = await g.run('JSON.stringify(S)');
+      await g.tap('[data-act="journal"]');
+      eq(await g.run('sheetKind'), 'journal', 'journal opens');
+      eq(await g.page.$$eval('.journal p', ps => ps.map(p => p.textContent)), await g.run('S.log.slice(-20).reverse()'), 'same entries as in the run, newest first');
+      eq(await g.run("[...document.querySelectorAll('#sheet button')].map(b => b.dataset.act)"), ['close', 'close'], 'nothing to do but close');
+      await g.tap('.sheet-actions [data-act="close"]');
+      eq(await g.run("[screen, sheetKind, !!$('.over .tabart')]"), ['over', null, true], 'back on the results screen');
+      eq(await g.run("$('.over').scrollTop"), top, 'where you left it');
+      eq(await g.run('JSON.stringify(S)'), before, 'run unchanged');
+      await g.tap('[data-act="journal"]'); await g.page.click('#scrim', { position: { x: 5, y: 5 } });
+      eq(await g.run('[screen, sheetKind]'), ['over', null], 'tapping outside also returns');
+      await g.tap('[data-act="report"]'); await g.run('closeSheet()');
+      eq(await g.run("!!$('.over [data-act=\"journal\"]')"), true, 'still there after the report card');
+    }),
+    tst("a new retreat starts with a fresh journal and Dale's standard opening balance", {}, async g => {
+      await g.start(0);
+      await g.run("log('Old run entry.')");
+      await checkoutWith(g, { cash: 899000, debt: 959 });
+      await g.tap('[data-act="begin"]'); await g.tap('[data-mode="1"]'); await g.wait(350);
+      const s = await g.run("({ debt: S.debt, over: S.over, reason: S.reason, old: S.log.some(t => t === 'Old run entry.'), n: S.log.length })");
+      eq([s.debt, s.over, s.reason, s.old], [1100, false, '', false], 'fresh run');
+      await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]');
+      ok(!(await g.page.textContent('.journal')).includes('Old run entry.'), "journal doesn't carry over");
+    }),
+  ],
+};
+
 /* ======================= saves and settings ======================= */
 const saves = {
   name: 'saves', about: 'saved runs, older saves, guestbook and settings survive reloads', where: 'desktop Chromium',
@@ -500,6 +624,16 @@ const audio = {
       await g.tap('[data-act="welcome"]'); await g.wait(1200);
       eq(await g.run(`[E.on, musicPlaying(), ${AUDIBLE}]`), [false, true, 1], 'ending stopped, Dale-Fi back');
     }),
+    tst("Dale's ending plays its own short cue once, alone, never looped; muted stays silent", {}, async g => {
+      await g.start(0); await startMusic(g);
+      await g.run("S.cash = 900000; S.debt = 959; endGame('time')"); await g.wait(900);
+      eq(await g.run(`[E.id, !E.el.paused, E.el.loop, musicPlaying(), ${AUDIBLE}]`), ['dale-tab', true, false, false, 1], 'cue alone, not looped');
+      ok((await g.run('E.el.src')).endsWith('assets/audio/dale-tab.m4a'), 'the supplied cue');
+      await g.run('E.el.currentTime = E.el.duration - 0.3'); await g.wait(1500);
+      eq(await g.run(`[E.on, E.el.paused, ${AUDIBLE}]`), [false, true, 1], 'ends once; the Dale-Fi you had playing comes back, as after the other endings');
+      await g.run("closeSheet(true); startGame(MODES[0]); setSound(false); S.cash = 900000; S.debt = 959; endGame('time')"); await g.wait(900);
+      eq(await g.run(AUDIBLE), 0, 'muted: silent');
+    }),
     tst('leaving the app mid check-in: her theme picks up where it was, not from the start', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.run(ENC); await g.wait(700);
@@ -556,6 +690,17 @@ const layoutTest = device => tst(`screens fit without sideways scrolling, button
   await g.tap('[data-act="encdone"]');
   await g.run("S.day = S.days; render()"); await g.tap('[data-act="checkout"]'); await g.tap('[data-act="checkoutgo"]');
   await check('results');
+  await g.run("S.cash = 900000; S.debt = 959; render()");
+  await check("Dale's ending");
+  const vw = g.page.viewportSize().width, art = await g.page.locator('.over .tabart').boundingBox();
+  ok(art && art.width >= 150 && art.width <= vw - 40 && art.height <= g.page.viewportSize().height * 0.55, "Dale's picture prominent but fits", art);
+  const jb = g.page.locator('.over [data-act="journal"]');
+  await jb.scrollIntoViewIfNeeded(); const b = await jb.boundingBox();
+  ok(b && b.height >= 40, 'Review your journal at least 40px tall', b);
+  await jb.tap(); await check('journal after checkout');
+  const close = g.page.locator('#sheet .sheet-actions [data-act="close"]');
+  await close.scrollIntoViewIfNeeded(); await close.tap();
+  eq(await g.run('[screen, sheetKind]'), ['over', null], 'back to the results by tap');
 });
 const layout = {
   name: 'layout', about: 'phone-sized screens with touch emulation', where: 'Chromium mobile emulation, not a real phone',
@@ -589,4 +734,4 @@ const offline = {
   } }],
 };
 
-export default [staticSuite, smoke, trading, encounters, saves, audio, layout, offline];
+export default [staticSuite, smoke, trading, encounters, debt, saves, audio, layout, offline];

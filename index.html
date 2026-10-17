@@ -261,7 +261,8 @@ input[type=range]:disabled { opacity: .35; }
 .chip { border: 0; background: var(--fog); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 14px; min-height: 36px; }
 .ledger { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 8px 0; font-size: 15px; }
 .ledger .v { font-weight: 600; text-align: right; }
-.ledger .dale { color: var(--urchin); }
+.ledger .dale, .dueline .dale { color: var(--urchin); }
+.dueline { font-weight: 600; margin: 4px 0 8px; }
 .note-err { color: var(--urchin); font-weight: 600; min-height: 1.4em; font-size: 14.5px; }
 .note-err.ok { color: var(--sea); }
 
@@ -340,6 +341,8 @@ input[type=range]:disabled { opacity: .35; }
 .over h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1.1; margin: 0 0 8px; }
 .over .lede { color: var(--ink2); margin: 0 0 16px; max-width: 36ch; }
 .over .take { font-family: var(--serif); font-size: 24px; margin: 14px 0 4px; color: var(--sea); }
+.over .tabart { display: block; width: min(60vw, 240px); height: auto; margin: 6px auto 10px; }
+.over.tab .take { color: var(--urchin); }
 .sign { display: flex; gap: 10px; margin: 14px 0 6px; }
 .sign input { flex: 1; min-width: 0; min-height: 52px; border-radius: 16px; border: 0; padding: 0 16px; background: var(--mist); box-shadow: 0 0 0 1.5px var(--line) inset; font-size: 17px; }
 .over h2 { font-family: var(--serif); font-weight: 600; font-size: 20px; margin: 22px 0 4px; }
@@ -552,7 +555,7 @@ input[type=range]:disabled { opacity: .35; }
 <body>
 <div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
 <div id="backdrop" aria-hidden="true"></div>
-<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp"};</script>
+<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "daleTab": "assets/img/dale-tab.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp"};</script>
 <div id="app"></div>
 <div id="toasts" aria-live="polite"></div>
 <div id="veil" aria-hidden="true"></div>
@@ -821,7 +824,7 @@ function rest() {
     veil.classList.remove('on');
     toast(`Day ${S.day}. ${g ? `You slept well. Zen +${g}. ` : ''}Dale's meter ran all night: you owe ${fmt(S.debt)}.`, g ? 'good' : 'bad', 5000);
     news.forEach(n => whisper(n));
-    if (S.day === S.days) toast('Last day. Checkout is at quiet hours tonight, and the front desk searches every cushion. Let go of everything.', 'hot', 7000);
+    if (S.day === S.days) toast(`Last day. Checkout is at quiet hours tonight, and the front desk searches every cushion. Let go of everything.${S.debt > 0 ? ` And square up with Dale: you still owe him ${fmt(S.debt)}.` : ''}`, 'hot', 7000);
     runQueue();
   }, reduce ? 0 : 1100);
 }
@@ -1250,8 +1253,14 @@ function vanGo() {
 
 /* ================= end ================= */
 const netWorth = () => S.cash + S.van - S.debt;
+/* Takeaways from WIN_RANK up are wins (they get a winning song). Nobody wins while they still owe Dale:
+   a checkout that would otherwise win, with any debt left, is Dale's ending and takes the bottom takeaway.
+   Net worth and the guestbook score are unchanged. */
+const WIN_RANK = 2;
+const unsquared = () => S.reason !== 'zen' && S.debt > 0 && rankIndex() >= WIN_RANK;
 function rankFor(n, reason) {
   if (reason === 'zen') return 'Snapped. Started a podcast';
+  if (unsquared()) return RANKS[0][1];
   const md = MODES.find(m => m.id === S.mode) || MODES[2];
   let t = RANKS[0][1];
   md.ranks.forEach((min, i) => { if (n >= min) t = RANKS[i + 1][1]; });
@@ -1344,8 +1353,18 @@ const CARDS = {
    date is YYYY-MM-DD; body is a list of paragraphs, verbatim from the approved text; sign is the sign-off lines. */
 /* The game's version, shown beside What's New. Bump it only when a release ships, together with its note above.
    1.0 was the launch on 2026-10-09; 1.1 the 2026-10-15 release; 1.2 the 2026-10-16 map; 1.3 the 2026-10-17 Dale-Fi companion cards. */
-const GAME_VERSION = '1.3';
+const GAME_VERSION = '1.4';
 const NOTES = [
+  {
+    date: '2026-10-17',
+    title: 'On Outstanding Balances',
+    body: [
+      'Dear Guests,',
+      'Financial attachments may persist beyond the completion of your retreat. Guests are encouraged to resolve all outstanding interpersonal balances before departure.',
+      'Your personal journey remains available for reflection after checkout.',
+    ],
+    sign: ['With care,', 'Guide Saffron'],
+  },
   {
     date: '2026-10-17',
     title: 'On Listening Closely',
@@ -1605,6 +1624,7 @@ const EVENT_SONGS = {
   'win-moment': { title: 'The Winning Moment', artist: 'TORiTiA' },
   'win-thats': { title: "That's Winning", artist: 'TORiTiA' },
   checkout: { title: 'the checkout (sadder)', artist: 'TORiTiA' },
+  'dale-tab': { title: 'disappointed dale', artist: 'TORiTiA' },
 };
 const E = { el: null, gain: null, an: null, id: null, on: false, retry: false, stopTimer: null };
 function eventSong(id) {
@@ -1650,10 +1670,12 @@ function eventStop() {
   musicUI();
 }
 /* Checkout and results music. PROVISIONAL mapping, pending approval: the top two takeaways get
-   The Winning Moment, the middle two That's Winning, and snapping, debt or going broke get the sad checkout. */
+   The Winning Moment, the middle two That's Winning, and snapping, debt or going broke get the sad checkout.
+   Winning money with Dale still owed gets Dale's own short cue instead. */
 function endingSong() {
+  if (unsquared()) return 'dale-tab';
   const i = rankIndex();
-  return i >= 4 ? 'win-moment' : i >= 2 ? 'win-thats' : 'checkout';
+  return i >= 4 ? 'win-moment' : i >= WIN_RANK ? 'win-thats' : 'checkout';
 }
 
 const musicPlaying = () => !!(M.audio && !M.audio.paused);
@@ -1811,7 +1833,7 @@ function musicSheet() {
 function skyFor(h) { let s = SKIES[0]; for (const k of SKIES) if (h >= k[0]) s = k; return s; }
 function render() {
   const app = $('#app');
-  const listTop = $('.list')?.scrollTop || 0;
+  const listTop = $('.list')?.scrollTop || 0, overTop = $('.over')?.scrollTop || 0;
   document.getElementById('loader')?.remove();
   document.documentElement.style.setProperty('--img-backdrop', screen === 'welcome' ? 'var(--img-welcome)' : 'var(--img-header)');
   if (screen !== 'game') document.documentElement.style.setProperty('--bd-tint', 'transparent');
@@ -1823,7 +1845,7 @@ function render() {
     document.documentElement.style.setProperty('--sky-top', skyFor(S.hour)[1]);
     document.documentElement.style.setProperty('--bd-tint', skyFor(S.hour)[2]);
     const l = $('.list'); if (l) l.scrollTop = listTop;
-  } else { app.innerHTML = overHTML(); document.documentElement.style.setProperty('--sky-top', 'var(--fog)'); }
+  } else { app.innerHTML = overHTML(); document.documentElement.style.setProperty('--sky-top', 'var(--fog)'); const o = $('.over'); if (o) o.scrollTop = overTop; }
   saveRun();
 }
 
@@ -1914,13 +1936,15 @@ function gameHTML() {
 
 function overHTML() {
   const n = netWorth();
-  const zen = S.reason === 'zen';
-  const head = zen ? 'You snapped.' : 'Your retreat is complete.';
+  const zen = S.reason === 'zen', tab = unsquared();
+  const head = zen ? 'You snapped.' : tab ? "You didn't square up, man." : 'Your retreat is complete.';
   const lede = zen
     ? `On day ${S.day} you broke Noble Silence, screamed at a volunteer, and left to start a podcast about it.`
+    : tab ? 'You had the money. Dale had the tab.'
     : used() > 0 ? 'The front desk confiscated what was left in your cushion. Nonattachment.' : 'You leave with an empty cushion and a full heart.';
-  return `<div class="over">
+  return `<div class="over${tab ? ' tab' : ''}">
     <h1>${head}</h1>
+    ${tab ? `<img class="tabart" src="${IMG.daleTab}" width="480" height="556" alt="Dale, disappointed, holding a clipboard marked TAB with OUTSTANDING BALANCE circled in red">` : ''}
     <p class="lede">${lede}</p>
     <div class="ledger">
       <span>On you</span><span class="v num">${fmt(S.cash)}</span>
@@ -1930,6 +1954,7 @@ function overHTML() {
     </div>
     <p class="take">${rankFor(n, S.reason)}</p>
     <button type="button" class="btn primary reportbtn" data-act="report">${ICONS.sprout}Get your report card</button>
+    <button type="button" class="btn soft reportbtn" data-act="journal">Review your journal</button>
     ${S.saved ? '' : `<div class="sign">
       <input id="signname" maxlength="14" autocomplete="off" placeholder="Your name" aria-label="Your name for the guestbook">
       <button type="button" class="btn primary" data-act="sign">Sign the guestbook</button></div>`}
@@ -1982,7 +2007,7 @@ function grades() {
   const peace = S.reason === 'zen' ? G('F', 'Screamed during Noble Silence.')
     : z >= 85 ? G('A', 'Barely rattled.') : z >= 65 ? G('B', `Zen dipped to ${z}. Breathed through it.`)
     : z >= 45 ? G('C', `Zen dipped to ${z}.`) : z >= 25 ? G('D', `Zen bottomed out at ${z}.`) : G('F', `Zen hit ${z}. Held together with tape.`);
-  const money = S.debt > 0 && st.paidDay == null ? G('F', `Still owes Dale ${fmt(S.debt)}.`)
+  const money = S.debt > 0 ? G('F', `Still owes Dale ${fmt(S.debt)}.`)
     : st.paidDay === 1 ? G('A+', `Square with Dale on day one.${st.borrowed ? ' Then borrowed more.' : ''}`)
     : st.paidDay === 2 ? G('A', `Square with Dale by day two.${st.borrowed ? ' Then borrowed more.' : ''}`)
     : st.paidDay ? G('B', `Took until day ${st.paidDay} to pay Dale.`) : G('C', 'Square with Dale, somehow.');
@@ -1995,6 +2020,7 @@ function grades() {
 function superlative() {
   const st = ST(), ri0 = rankIndex();
   if (S.reason === 'zen') return 'Withdrew early to start a podcast';
+  if (unsquared()) return "Dale's favorite liability";
   if (ri0 === 5) return 'Should probably be running this place';
   if (st.tech >= 150) return 'Least unplugged guest in retreat history';
   if (st.confUnits >= 40) return "Guide Saffron's favorite donor";
@@ -2249,6 +2275,7 @@ function journeySheet() {
 function checkoutSheet() {
   openSheet(`<div class="grab"></div><h3 id="sheetTitle">Check out?</h3>
     <p class="muted">Your score is cash on you plus the glovebox, minus what you owe Dale. Anything still in your cushion gets confiscated at the gate.</p>
+    ${S.debt > 0 ? `<p class="dueline">You still owe Dale <span class="num dale">${fmt(S.debt)}</span>. Nobody leaves a winner with an open tab.</p>` : ''}
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="checkoutgo">Check out</button>
     <button type="button" class="btn quiet" data-act="close">Keep going</button></div>`, 'checkout');
 }
@@ -2264,7 +2291,7 @@ function modeSheet() {
 }
 /* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
    Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
-const HB_MARKS = { version: '1.3', updated: ['The Dale-Fi'], added: [] };
+const HB_MARKS = { version: '1.4', updated: ['The goal', 'Reading the screen', 'Retreat lengths and scoring'], added: [] };
 function handbookSheet() {
   const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
   const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
@@ -2276,12 +2303,13 @@ function handbookSheet() {
     sec('The goal', `
       <p>You're a guest at a silent digital detox in Big Sur. The brochure bans phones, wifi, sugar and snacks. You sell them anyway.</p>
       <p>You start at Yurt Village at 7am on day one with ${fmt(START_CASH)} on you, an empty meditation cushion that holds ${START_CAP} things, full zen, and a ${fmt(START_DEBT)} debt to Dale the shuttle driver.</p>
-      <p>When the retreat ends, your score is the cash on you plus whatever is in Dale's glovebox, minus what you still owe him. Anything still in your cushion at checkout gets confiscated, so let go of everything before you leave.</p>`, true),
+      <p>When the retreat ends, your score is the cash on you plus whatever is in Dale's glovebox, minus what you still owe him. Anything still in your cushion at checkout gets confiscated, so let go of everything before you leave.</p>
+      <p>Square up with Dale before you check out. If you still owe him anything, you don't get a winning takeaway, however much you made.</p>`, true),
     sec('Reading the screen', `
       <p>The sky shows the time of day. The sun crosses it between 7am and quiet hours. Under it are where you are, the day and hour, and a line about what's going on.</p>
       <p>The ring is your zen. <b>On you</b> is the cash you're carrying, with your glovebox balance underneath once you have one. <b>Cushion</b> is how much you're holding out of how much you can hold, plus your decoys if you've hired any. <b>Owed to Dale</b> is your debt and how fast it grows.</p>
       <p>The list shows what's for sale where you are. A price in an orange pill is in demand, above its usual range. A price in a green pill is abundant, below it. Goods you're holding that nobody here is trading show a dash instead of a price.</p>
-      <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened.</p>`),
+      <p>Notifications drop in at the top; tap one to dismiss it. Your journal, in the menu, keeps the last 20 things that happened. After checkout, <b>Review your journal</b> on the results screen opens it one more time.</p>`),
     sec('Time and walking', `
       <p>Each day runs from 7am until quiet hours at 10pm. Tap <b>Journey</b> to open the map. Every spot shows how long the walk takes, and when you'd arrive if that's 8pm or later. Walks take one to three hours, and you can't start one that would end after 10pm.</p>
       <p>Yurt Village and the Meditation Hall are central. The Hot Springs are down at the cliffs. The Parking Lot is up the hill: an hour from the Kitchen Garden, three from the Hot Springs or the Labyrinth.</p>
@@ -2334,6 +2362,7 @@ function handbookSheet() {
       <table class="hbt"><thead><tr><th>Retreat</th><th class="num">Days</th><th class="num">Dale per hour</th></tr></thead><tbody>${lengths}</tbody></table>
       <p>Your takeaway at checkout depends on your net worth and how long you stayed. You need at least this much:</p>
       <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
+      <p>Side hustle sage and up also need you square with Dale. Check out owing him anything and your takeaway is Owes Dale forever, whatever your net worth.</p>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
@@ -2364,7 +2393,7 @@ function howSheet() {
     <p>Walks take one to three hours. Quiet hours start at 10pm; rest to begin the next day with a little more zen.</p>
     <p>You owe Dale the shuttle driver ${fmt(START_DEBT)}, and his meter runs every hour, overnight too. Pay him, borrow more, or stash cash in his glovebox up in the parking lot. Cash on you can go missing.</p>
     <p>Carrying goods draws Guide Saffron. Slip away, send in a decoy, or donate your way out. Run out of zen and you snap.</p>
-    <p>On the last day, let go of everything and check out. Your score is cash plus glovebox minus what you owe. The game saves as you play.</p>
+    <p>On the last day, let go of everything and check out. Your score is cash plus glovebox minus what you owe. Leave still owing Dale and you don't win, however much you made. The game saves as you play.</p>
     <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Got it</button>
     <button type="button" class="btn quiet" data-act="handbook">Read the full handbook</button></div>`, 'how');
 }

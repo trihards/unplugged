@@ -17,16 +17,17 @@ As of 2026-10-17. Live version: **1.3** (`main` at `83203fe`, deployed to GitHub
 
 | Item | Branch | Status | Blocked on | Next action |
 | --- | --- | --- | --- | --- |
+| Release 1.4: Dale's Outstanding Balance (no winning ending while owing Dale; Dale's ending with art and cue; balance reminders at checkout; Review your journal after checkout) | `claude/optimistic-dijkstra-9bdhx3` | Built and tested; awaiting owner review. | Owner approval of the proposed copy listed in the branch report; iPhone checks for the new cue. | Owner reviews; merge and release. |
 | Stage 01: market scarcity (handoff 01) | `stage-01-market-scarcity` | Provisionally approved. Built, reviewed, 3 commits, behind `main`. | Final text of Saffron's "On the Nature of Abundance"; the decision whether Stage 02 ships with it. | Once decided: bring `main` in, docs accuracy check, release. |
 | Stage 02: zen as composure (handoff 02) | `stage-02-zen-composure` (contains Stage 01) | Proposed. Built and reviewed; numbers not approved. | Owner decisions listed in `decisions.md` under Stage 02. | Owner decides; then integrate with or after Stage 01. |
 
-Both branches predate What's New, the version label, the map, the handbook marks and the companion cards. They conflict with `main` in `index.html` and `sw.js`; integration is a careful merge, not a fast-forward. The next release is **1.4**, not the 1.3 the branches' commit messages assume.
+Both branches predate What's New, the version label, the map, the handbook marks and the companion cards. They conflict with `main` in `index.html` and `sw.js`; integration is a careful merge, not a fast-forward. The Dale's Outstanding Balance release takes **1.4**; the market release becomes **1.5**.
 
 ## Approved and queued
 
 | Item | Status | Blocked on | Next action |
 | --- | --- | --- | --- |
-| Market release (Stage 01, with or without Stage 02) | Approved as its own release, after the cards. | Stage 01/02 decisions and the note text. | Integrate, set `GAME_VERSION` 1.4, `HB_MARKS`, cache `VERSION`, release. |
+| Market release (Stage 01, with or without Stage 02) | Approved as its own release, after the cards. | Stage 01/02 decisions and the note text. | Integrate, set `GAME_VERSION` 1.5, `HB_MARKS`, cache `VERSION`, release. |
 | Stage 03: four-day Daily Challenge (handoff 03) | Approved direction; no code. Sequenced after Stages 01 and 02. | The decision checkpoint in `decisions.md`. | Present the checkpoint recommendations to the owner before writing code. |
 
 ## Known issues
