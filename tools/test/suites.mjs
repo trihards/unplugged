@@ -197,7 +197,7 @@ const smoke = {
       eq(await g.run('sheetKind'), 'card', 'reveal shown');
       eq(await g.page.textContent('.cardkick'), 'Someone has been using a 1977 funk record to keep the seed packets flat. New on your Dale-Fi.', 'discovery line, verbatim');
       const card = await g.run("({ t: $('.cardtt').textContent, by: $('.cardby').textContent, meta: $('.cardmeta').textContent, rev: $('.cardrev').textContent, art: $('.cardart').getAttribute('src') })");
-      eq(card, { t: 'The Unprocessed Self', by: 'The Low Maintenance Orchestra', meta: 'Sunspill Records 45 · 1977 · Funk',
+      eq(card, { t: 'The Unprocessed Self', by: 'The Low Maintenance Orchestra', meta: '45 · Sunspill Records · 1977 · Funk',
         rev: 'A gloriously filthy slice of California funk from a band whose only documented live appearances were at the 1977 and 1978 Folsom County Fair, on the second stage. The bassline is practically geological. Their subsequent disappearance remains one of the great minor injustices of American music.',
         art: 'assets/img/card-w3.webp' }, 'companion card');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'production credit not shown in-world');
