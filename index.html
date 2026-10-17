@@ -555,7 +555,7 @@ input[type=range]:disabled { opacity: .35; }
 <body>
 <div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
 <div id="backdrop" aria-hidden="true"></div>
-<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "daleTab": "assets/img/dale-tab.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp"};</script>
+<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "daleTab": "assets/img/dale-tab.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp", "card_w3": "assets/img/card-w3.webp"};</script>
 <div id="app"></div>
 <div id="toasts" aria-live="polite"></div>
 <div id="veil" aria-hidden="true"></div>
@@ -1332,6 +1332,7 @@ const TRACKS = [
   { id: 'w0', title: 'Wellness Lounge Groove', artist: 'TORiTiA', hint: "Guide Saffron's volunteers carry the good stuff. Get away from them." },
   { id: 'w1', title: 'meditate this way', artist: 'TORiTiA', hint: 'Somebody in the meditation hall has good taste.' },
   { id: 'w2', title: 'Late Night Record Shop', artist: 'TORiTiA', hint: 'Dale keeps a burned CD in his van.' },
+  { id: 'w3', title: 'The Unprocessed Self', artist: 'TORiTiA', hint: 'Turns up somewhere on a retreat.' },
 ];
 const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
 /* Companion cards: the in-world liner notes for each recording, shown from the Dale-Fi and when you first find one.
@@ -1345,6 +1346,8 @@ const CARDS = {
     review: 'An exuberant collision of dance-floor funk and New Age optimism, with glittering keys and a bassline that refuses to sit still. The Higher Frequencies’ brief spiritual reinvention produced some of their most assured playing.' },
   w2: { art: 'card_w2', title: 'Late Night Record Shop', artist: 'Unknown', meta: 'CD-R · Date Unknown · Jazzy Hip-Hop / Downtempo',
     review: 'Dusty breaks, warm keys, and understated vibraphone give this mysterious recording an effortless after-hours charm. Various copies have been attributed to Jake’s Bait Shop, Milton and the Undertones, and Drunken Unk. None has been authenticated. All three have their advocates.' },
+  w3: { art: 'card_w3', title: 'The Unprocessed Self', artist: 'The Low Maintenance Orchestra', meta: 'Sunspill Records 45 · 1977 · Funk',
+    review: 'A gloriously filthy slice of California funk from a band whose only documented live appearances were at the 1977 and 1978 Folsom County Fair, on the second stage. The bassline is practically geological. Their subsequent disappearance remains one of the great minor injustices of American music.' },
 };
 
 /* What's New, written by Guide Saffron: the permanent release history under Options. Newest first.
@@ -1361,7 +1364,8 @@ const NOTES = [
       'Dear Guests,',
       'Financial attachments may persist beyond the completion of your retreat. Guests are encouraged to resolve all outstanding interpersonal balances before departure.',
       'We are also pleased to share that your journal will now remain available after checkout, in its entirety. Every step, every exchange, every moment you may have preferred to forget has been gently preserved for your reflection.',
-      'Please remember that departure is a privilege, not a formality. We trust you will leave nothing unresolved.',
+      'Guests tending the Kitchen Garden may notice that it has begun to yield more than kale. We ask that you receive whatever you find there as you would any harvest: gratefully, and without asking where it came from.',
+      'We encourage you to depart with the same openness with which you arrived. Unresolved obligations have a way of accompanying us.',
     ],
     sign: ['With care,', 'Guide Saffron'],
   },
@@ -1456,6 +1460,8 @@ function songEvents() {
   const P = PLACES[S.loc];
   if (!hasSong('w1') && P.name === 'Meditation Hall' && Math.random() < 0.45) {
     unlockSong('w1', 'The sound-bath guy left his laptop open on the gong. You sideload a song.');
+  } else if (!hasSong('w3') && P.name === 'Kitchen Garden' && Math.random() < 0.45) {
+    unlockSong('w3', 'Someone has been using a 1977 funk record to keep the seed packets flat.');
   } else if (P.van && !hasSong('w2') && !S.cdHint && !queue.length) {
     S.cdHint = true;
     setTimeout(() => toast("Something good is playing in Dale's van. He'll sell you the CD.", 'song', 5500), 500);
@@ -1944,7 +1950,7 @@ function overHTML() {
     : used() > 0 ? 'The front desk confiscated what was left in your cushion. Nonattachment.' : 'You leave with an empty cushion and a full heart.';
   return `<div class="over${tab ? ' tab' : ''}">
     <h1>${head}</h1>
-    ${tab ? `<img class="tabart" src="${IMG.daleTab}" width="480" height="556" alt="Dale, disappointed, holding a clipboard marked TAB with OUTSTANDING BALANCE circled in red">` : ''}
+    ${tab ? `<img class="tabart" src="${IMG.daleTab}" width="480" height="630" alt="Dale, disappointed, holding a clipboard marked TAB with OUTSTANDING BALANCE circled in red">` : ''}
     <p class="lede">${lede}</p>
     ${tab ? `<p class="lede">Dale still gave you a ride to the airport. He didn't say a word the entire way.</p>` : ''}
     <div class="ledger">
@@ -2292,14 +2298,14 @@ function modeSheet() {
 }
 /* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
    Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
-const HB_MARKS = { version: '1.4', updated: ['The goal', 'Reading the screen', 'Retreat lengths and scoring'], added: [] };
+const HB_MARKS = { version: '1.4', updated: ['The goal', 'Reading the screen', 'Retreat lengths and scoring', 'The Dale-Fi'], added: [] };
 function handbookSheet() {
   const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
   const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
   const goods = ITEMS.map(it => `<tr><td>${it.name}</td><td class="num">${fmt(it.min)} to ${fmt(it.max)}</td></tr>`).join('');
   const lengths = MODES.map(m => `<tr><td>${m.name}</td><td class="num">${m.days}</td><td class="num">${pct(m.rate)}</td></tr>`).join('');
   const kk = n => n >= 1e6 ? `$${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${+(n / 1e3).toFixed(0)}k` : `$${n}`;
-  const ranks = RANKS.map(([, name], i) => `<tr><td>${name}</td>${i === 0 ? `<td class="num" colspan="${MODES.length}">below $0 at any length</td>` : MODES.map(m => `<td class="num">${kk(m.ranks[i - 1])}</td>`).join('')}</tr>`).join('');
+  const ranks = RANKS.map(([, name], i) => `<tr><td>${i === 0 ? 'Dale Fail: Owes Dale forever' : name}</td>${i === 0 ? `<td class="num" colspan="${MODES.length}">any debt at checkout, at any length</td>` : MODES.map(m => `<td class="num">${kk(m.ranks[i - 1])}</td>`).join('')}</tr>`).join('');
   const body = [
     sec('The goal', `
       <p>You're a guest at a silent digital detox in Big Sur. The brochure bans phones, wifi, sugar and snacks. You sell them anyway.</p>
@@ -2361,9 +2367,9 @@ function handbookSheet() {
     sec('Retreat lengths and scoring', `
       <p>Shorter retreats charge more per hour, so your debt grows by about the same amount whatever length you pick. The pace of trouble scales too.</p>
       <table class="hbt"><thead><tr><th>Retreat</th><th class="num">Days</th><th class="num">Dale per hour</th></tr></thead><tbody>${lengths}</tbody></table>
-      <p>Your takeaway at checkout depends on your net worth and how long you stayed. You need at least this much:</p>
+      <p>Your takeaway at checkout depends on what you owe Dale, your net worth and how long you stayed. You need at least this much:</p>
       <div class="hbscroll"><table class="hbt ranks"><thead><tr><th>Takeaway</th><th class="num">Weekend</th><th class="num">5 days</th><th class="num">Week</th><th class="num">30 days</th></tr></thead><tbody>${ranks}</tbody></table></div>
-      <p>Every takeaway assumes you're square with Dale. Owe him anything at checkout, even a dollar, and none of them apply.</p>
+      <p>The rest only apply if you're square with Dale. Owe him anything at checkout, even a dollar, and it's the first row, whatever your net worth.</p>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for each one you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>

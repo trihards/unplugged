@@ -164,7 +164,7 @@ const smoke = {
       await g.tap('[data-act="options"]');
       ok((await g.page.textContent('#sheet')).includes('Music by TORiTiA'), 'Options credit kept');
       await g.tap('#sheet [data-act="music"]'); await g.wait(200);
-      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown'], 'row credits');
+      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown', 'Turns up somewhere on a retreat.'], 'row credits (the unfound song shows its hint)');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'no TORiTiA anywhere in the Dale-Fi, LCD included');
       await g.run('handbookSheet()');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'nor in the handbook');
@@ -185,6 +185,35 @@ const smoke = {
       await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(1);
       await g.rolls([0.1], "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Meditation Hall'); songEvents(); runQueue()");
       eq(await g.run('[sheetKind, S.songs.includes("w1")]'), [null, true], 'found again on a later retreat: back in this run, no second reveal');
+    }),
+    tst('Dale-Fi cards: the Kitchen Garden find reveals The Unprocessed Self, plays, stays for the run and offline', {}, async (g, env) => {
+      await g.start(2);
+      const GARDEN = "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Kitchen Garden'); songEvents(); runQueue()";
+      await g.rolls([0.46], GARDEN);
+      eq(await g.run('[sheetKind, hasSong("w3")]'), [null, false], 'no find above 45%');
+      await g.run("S.loc = PLACES.findIndex(p => p.name === 'Meditation Hall')"); await g.rolls([0.1], "queue = []; S.loc = PLACES.findIndex(p => p.name === 'Yurt Village'); songEvents(); runQueue()");
+      eq(await g.run('hasSong("w3")'), false, 'nowhere else');
+      await g.rolls([0.44], GARDEN);
+      eq(await g.run('sheetKind'), 'card', 'reveal shown');
+      eq(await g.page.textContent('.cardkick'), 'Someone has been using a 1977 funk record to keep the seed packets flat. New on your Dale-Fi.', 'discovery line, verbatim');
+      const card = await g.run("({ t: $('.cardtt').textContent, by: $('.cardby').textContent, meta: $('.cardmeta').textContent, rev: $('.cardrev').textContent, art: $('.cardart').getAttribute('src') })");
+      eq(card, { t: 'The Unprocessed Self', by: 'The Low Maintenance Orchestra', meta: 'Sunspill Records 45 · 1977 · Funk',
+        rev: 'A gloriously filthy slice of California funk from a band whose only documented live appearances were at the 1977 and 1978 Folsom County Fair, on the second stage. The bassline is practically geological. Their subsequent disappearance remains one of the great minor injustices of American music.',
+        art: 'assets/img/card-w3.webp' }, 'companion card');
+      ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'production credit not shown in-world');
+      ok((await g.run('S.log.at(-1)')) === 'New song on your Dale-Fi: The Unprocessed Self.', 'journal records the find');
+      await g.tap('#sheet [data-act="cardplay"]'); await g.wait(400);
+      eq(await g.run('[M.cur, musicPlaying(), sheetKind]'), ['w3', true, 'music'], 'plays in the Dale-Fi');
+      ok((await g.run('M.audio.src')).endsWith('assets/audio/w3.m4a'), 'its own file');
+      await g.run('setSound(false)'); await g.wait(200);
+      eq(await g.run(AUDIBLE), 0, 'mute silences it');
+      await g.run('setSound(true); closeSheet(true)');
+      await g.run("for (let i = 0; i < 3; i++) walk(PLACES.findIndex((p, k) => k !== S.loc && canReach(k))); queue = []; closeSheet(true)");
+      eq(await g.run('[S.songs.includes("w3"), collected().includes("w3")]'), [true, true], 'stays for the run and in the collection');
+      await g.rolls([0.1], GARDEN);
+      eq(await g.run('S.songs.filter(id => id === "w3").length'), 1, 'found once per run');
+      const sw = fs.readFileSync(path.join(env.root, 'sw.js'), 'utf8');
+      ok(sw.includes('"assets/audio/w3.m4a"') && sw.includes('"assets/img/card-w3.webp"'), 'in the offline cache list');
     }),
     tst('Dale-Fi cards: the staff USB card waits until the check-in is over', {}, async g => {
       await g.start(2);
