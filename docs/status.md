@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-17. Live version: **1.3** (`main` at `83203fe`, deployed to GitHub Pages).
+As of 2026-10-17. Live version: **1.4** (deployed to GitHub Pages from `main`).
 
 ## Shipped
 
@@ -12,12 +12,12 @@ As of 2026-10-17. Live version: **1.3** (`main` at `83203fe`, deployed to GitHub
 | 1.2 | 2026-10-16 | Illustrated journey map (handoff 04, layout "C") | On the Importance of Knowing Where You Are |
 | — | 2026-10-16 | Handbook accuracy fixes and section marks (docs only) | none |
 | 1.3 | 2026-10-17 | Dale-Fi companion cards; in-world artist credits; all notes sign "With care". Personally tested and approved by the owner. | On Listening Closely |
+| 1.4 | 2026-10-17 | Dale's Outstanding Balance: any debt at checkout is the Dale Fail (art and cue); complete post-game journal and a header journal icon; Dale's morning check-ins; time-neutral calm moments; new Dale-Fi song The Unprocessed Self. Owner playtest on macOS Safari and physical iPhone checks passed; background playback deferred (`parking-lot.md`). | On Outstanding Balances |
 
 ## In progress
 
 | Item | Branch | Status | Blocked on | Next action |
 | --- | --- | --- | --- | --- |
-| Release 1.4: Dale's Outstanding Balance (Dale Fail on any debt at checkout; complete post-game journal; header journal icon; Dale's morning check-ins; transparent Dale art; new Dale-Fi song The Unprocessed Self, found in the Kitchen Garden) | `claude/optimistic-dijkstra-9bdhx3` | Complete. Owner playtest (Safari on macOS) and physical iPhone checks passed, except background playback, which is deferred (paused on purpose; see `parking-lot.md`). Saffron's note approved. Temporary `/preview/` on `main` still up. | Owner's go-ahead to merge. | Merge and release; remove `/preview/`. |
 | Stage 01: market scarcity (handoff 01) | `stage-01-market-scarcity` | Provisionally approved. Built, reviewed, 3 commits, behind `main`. | Final text of Saffron's "On the Nature of Abundance"; the decision whether Stage 02 ships with it. | Once decided: bring `main` in, docs accuracy check, release. |
 | Stage 02: zen as composure (handoff 02) | `stage-02-zen-composure` (contains Stage 01) | Proposed. Built and reviewed; numbers not approved. | Owner decisions listed in `decisions.md` under Stage 02. | Owner decides; then integrate with or after Stage 01. |
 
@@ -50,6 +50,7 @@ Both branches predate What's New, the version label, the map, the handbook marks
 | `stage-01-market-scarcity`, `stage-02-zen-composure` | Active, unmerged (see above). |
 | `map-preview` | Superseded by `release-map` (merged as 1.2). Kept, not deleted. |
 | `docs-project-state` | This documentation. |
+| `claude/optimistic-dijkstra-9bdhx3` | Release 1.4. Fully merged into `main`. |
 | `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards` | Fully merged into `main`. Safe to delete when the owner chooses. |
 
 ## Tools
