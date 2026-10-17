@@ -123,6 +123,20 @@ const smoke = {
       eq([await g.run('screen'), await g.run('sheetKind')], ['game', null], 'back in the run');
       eq(await g.run('JSON.stringify(S)'), before, 'run state unchanged');
     }),
+    tst('header journal icon: one tap opens the journal, closing returns to the retreat; the menu entry stays', {}, async g => {
+      await g.start(2);
+      await g.run("for (let i = 0; i < 30; i++) log('Entry ' + i + '.'); render()");
+      const before = await g.run('JSON.stringify(S)');
+      await g.tap('.topbar [data-act="journal"]');
+      eq(await g.run('sheetKind'), 'journal', 'one tap');
+      eq(await g.page.$$eval('.journal p', ps => ps.map(p => p.textContent)), await g.run('S.log.slice(-20).reverse()'), 'same journal: last 20, newest first');
+      await g.tap('.sheet-actions [data-act="close"]');
+      eq(await g.run('[screen, sheetKind]'), ['game', null], 'back in the retreat');
+      eq(await g.run('JSON.stringify(S)'), before, 'nothing changed');
+      await g.tap('[data-act="menu"]');
+      ok(await g.page.isVisible('#sheet [data-act="journal"]'), 'menu still has Your journal');
+      eq(await g.page.getAttribute('.topbar [data-act="journal"]', 'aria-label'), 'Your journal', 'labelled for screen readers');
+    }),
     tst('journey map: one tap walks, 44px targets, hours always and the arrival clock only late', {}, async g => {
       await g.start(3);
       await g.tap('[data-act="journey"]');
@@ -214,6 +228,19 @@ const smoke = {
       eq(await g.run('S.songs.filter(id => id === "w3").length'), 1, 'found once per run');
       const sw = fs.readFileSync(path.join(env.root, 'sw.js'), 'utf8');
       ok(sw.includes('"assets/audio/w3.m4a"') && sw.includes('"assets/img/card-w3.webp"'), 'in the offline cache list');
+    }),
+    tst('Dale-Fi cards: a real walk to the Meditation Hall reveals the card on the first find ever; a repeat find is a notification', {}, async g => {
+      const WALK = `(() => { const r = Math.random; Math.random = () => (new Error().stack.includes('songEvents') ? 0.1 : r());
+        try { S.loc = 0; walk(PLACES.findIndex(p => p.name === 'Meditation Hall')); } finally { Math.random = r; } })()`;
+      const settle = async () => { await g.wait(600); for (let i = 0; i < 3 && ['offer', 'enc'].includes(await g.run('sheetKind')); i++) { await g.run("if (enc) { enc = null; } closeSheet()"); await g.wait(300); } };
+      await g.start(2); await g.run('ITEMS.forEach(i => { S.inv[i.id] = 0; })');
+      await g.run(WALK); await settle();
+      eq(await g.run('[sheetKind, hasSong("w1")]'), ['card', true], 'first find ever: card opens by itself after the walk');
+      ok((await g.page.textContent('.cardkick')).includes('sound-bath guy'), 'reveal line');
+      await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(2); await g.run('ITEMS.forEach(i => { S.inv[i.id] = 0; })');
+      await g.run(WALK); await settle();
+      eq(await g.run('[sheetKind, hasSong("w1")]'), [null, true], 'already in the collection: no second reveal (by design)');
+      ok((await g.page.textContent('#toasts')).includes('New on your Dale-Fi'), 'a notification instead');
     }),
     tst('Dale-Fi cards: the staff USB card waits until the check-in is over', {}, async g => {
       await g.start(2);
@@ -489,7 +516,7 @@ const debt = {
       ok((await g.run('S.zen')) < 90, 'costs zen');
       await g.wait(600);
       ok((await g.page.textContent('#toasts')).includes('$3,000'), 'shown as a notification');
-      await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]');
+      await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]');
       ok((await g.page.textContent('.journal')).includes(want), 'visible in the journal');
       await g.run('closeSheet(true)');
       const n = await g.run('S.log.length');
@@ -500,11 +527,57 @@ const debt = {
       await g.run('S.debt = 5000; S.day = 1'); await g.rolls(NOTE_ROLL, 'rollEvents()');
       eq(await g.run('S.log.length'), n, 'none in the first fifth of the retreat');
     }),
+    tst("Dale checks in every morning you owe him: once a day, varied, balance shown, no zen cost", {}, async g => {
+      await g.start(3);
+      const said = [];
+      for (let d = 0; d < 9; d++) {
+        await g.run("S.debt = 3000; S.zen = 50; S.hour = 22; $('#toasts').innerHTML = ''; rest()"); await g.wait(200);
+        const s = await g.run("({ day: S.day, zen: S.zen, last: S.log.filter(t => t.startsWith('Dale: ')).at(-1) || S.log.at(-1), n: S.log.filter(t => t.startsWith('Dale: ')).length, toast: $('#toasts').textContent, dun: S.dunDay })");
+        ok(s.last.startsWith('Dale: “') && s.last.endsWith(`You owe him $${(await g.run('S.debt')).toLocaleString('en-US')}.`), 'journaled with the real balance', s.last);
+        ok(s.toast.includes(s.last), 'in the morning notification', s.toast);
+        eq(s.zen, 65, 'rest zen only; the check-in costs nothing');
+        eq(s.n, d + 1, 'exactly one per day');
+        said.push(s.last.slice(0, 40));
+      }
+      ok(said.every((t, i) => i === 0 || t !== said[i - 1]), 'never the same line two mornings running', said);
+      ok(new Set(said).size >= 5, 'varied', said);
+      eq(await g.run('daleCheckIn()'), null, 'no second check-in the same day');
+      ok(!said.some(t => t.includes('six grand')), 'the six-grand line waits for a balance near $6,000');
+      await g.run("S.debt = 6000; S.dunSaid = [0,1,2,3,4,6]; S.dunDay = 0");
+      ok((await g.run('daleCheckIn()')).includes('six grand'), 'and shows up when the balance fits');
+    }),
+    tst('no morning check-in when square; the old overnight line stays', {}, async g => {
+      await g.start(2);
+      await g.run("S.debt = 0; S.hour = 22; $('#toasts').innerHTML = ''; rest()"); await g.wait(200);
+      eq(await g.run("S.log.filter(t => t.startsWith('Dale: ')).length"), 0, 'none');
+      ok((await g.page.textContent('#toasts')).includes("Dale's meter ran all night: you owe $0."), 'unchanged morning line');
+    }),
+    tst('older saves without the check-in fields load and get a check-in next morning', {}, async g => {
+      await g.start(2);
+      await g.run("delete S.dunDay; delete S.dunSaid; saveRun(); closeSheet(true); screen = 'welcome'; render(); continueRun()");
+      eq(await g.run('[S.dunDay, S.dunSaid]'), [0, []], 'defaults filled');
+      await g.run("S.debt = 2000; S.hour = 22; rest()"); await g.wait(200);
+      ok(await g.run("S.log.some(t => t.startsWith('Dale: '))"), 'check-in works');
+    }),
+    tst('calm moments on walks name no time of day', {}, async g => {
+      const bad = await g.run("CALM.filter(t => /dawn|dusk|sunrise|sunset|morning|afternoon|evening|night|noon|burns off|\\d\\s?(am|pm)/i.test(t))");
+      eq(bad, [], 'time-specific calm moments');
+    }),
+    tst("the airport line breaks between its sentences at phone widths", {}, async g => {
+      await g.start(0); await g.run("S.cash = 900000; S.debt = 959; endGame('time')");
+      const LINES = `(() => { const t = $('.over .ride').firstChild, r = document.createRange(), out = []; let cur = '', top = null;
+        for (let i = 0; i < t.length; i++) { r.setStart(t, i); r.setEnd(t, i + 1); const y = Math.round(r.getClientRects()[0]?.top ?? top);
+          if (top !== null && y > top + 2) { out.push(cur.trim()); cur = ''; } top = y; cur += t.data[i]; } out.push(cur.trim()); return out; })()`;
+      for (const w of [320, 360, 375, 390, 414, 430]) {
+        await g.page.setViewportSize({ width: w, height: 800 }); await g.wait(80);
+        eq(await g.run(LINES), ['Dale still gave you a ride to the airport.', "He didn't say a word the entire way."], `${w}px`);
+      }
+    }),
     tst('after checkout: Review your journal shows the finished run, changes nothing, and returns to the results', {}, async g => {
       await g.start(0);
       await g.run("for (let i = 0; i < 400; i++) log('Entry ' + i + '.')");
       ok((await g.run('S.log.length')) > 400, 'nothing dropped from a long run');
-      await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]');
+      await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]');
       eq(await g.page.$$eval('.journal p', ps => ps.length), 20, 'during the retreat: the last 20, as before');
       await g.run('closeSheet(true)');
       await checkoutWith(g, { cash: 899000, debt: 959 });
@@ -532,7 +605,7 @@ const debt = {
       await g.tap('[data-act="begin"]'); await g.tap('[data-mode="1"]'); await g.wait(350);
       const s = await g.run("({ debt: S.debt, over: S.over, reason: S.reason, old: S.log.some(t => t === 'Old run entry.'), n: S.log.length })");
       eq([s.debt, s.over, s.reason, s.old], [1100, false, '', false], 'fresh run');
-      await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]');
+      await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]');
       ok(!(await g.page.textContent('.journal')).includes('Old run entry.'), "journal doesn't carry over");
     }),
   ],
@@ -715,11 +788,14 @@ const layoutTest = device => tst(`screens fit without sideways scrolling, button
     const b = await g.page.locator(sel).boundingBox(); const vh = g.page.viewportSize().height;
     ok(b && b.y + b.height <= vh && b.height >= 40, `${sel} on screen and at least 40px tall`, b);
   }
+  const icons = await g.page.$$eval('.topbar .iconbtn', bs => bs.map(b => { const r = b.getBoundingClientRect(); return [b.dataset.act, Math.round(r.width), Math.round(r.height), Math.round(r.right)]; }));
+  ok(icons.length === 3 && icons.every(([, w, h, right]) => w >= 40 && h >= 40 && right <= g.page.viewportSize().width), 'header: journal, Dale-Fi and menu, 40px and on screen', icons);
+  await g.tap('.topbar [data-act="journal"]'); eq(await g.run('sheetKind'), 'journal', 'header journal opens on tap'); await check('journal from the header'); await g.run('closeSheet(true)');
   await g.tap('[data-act="journey"]'); await check('map'); ok(await g.page.isVisible('.node'), 'map opens on tap'); await g.run('closeSheet(true)');
   await g.tap('[data-item="burner"]'); await check('trade sheet'); await g.run('closeSheet(true)');
   await g.run('S.loc = VAN_IX; render()'); await g.tap('[data-act="van"]'); await check('van sheet'); await g.run('closeSheet(true)');
   await g.run("for (let i = 0; i < 25; i++) log('A fairly long journal entry about trading natural wine at the hot springs ' + i + '.'); render()");
-  await g.tap('[data-act="menu"]'); await g.tap('[data-act="journal"]'); await check('journal'); await g.run('closeSheet(true)');
+  await g.tap('[data-act="menu"]'); await g.tap('#sheet [data-act="journal"]'); await check('journal'); await g.run('closeSheet(true)');
   await g.run(ENC + "; enc.n = 5; enc.left = 5; enc.vols = ['vol1', 'vol2', 'vol3', 'vol4']; encSheet(); $('#toasts').innerHTML = ''");
   await g.rolls([0.99, 0.5, 0.5, 0.2, 0.2, 0.2, 0.2], 'encRun()', 0.2);
   await check('Saffron after a rough round');
