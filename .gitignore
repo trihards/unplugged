@@ -1,0 +1,4 @@
+# Claude Code subagent worktrees (local checkouts of other branches)
+.claude/worktrees/
+# balance simulator raw output
+out-*.json

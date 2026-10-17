@@ -27,7 +27,7 @@ Node 18 or later, plus Playwright with Chromium. Cloud sessions already have bot
 | Suite | Runs in | Covers |
 | --- | --- | --- |
 | `static` | no browser | scripts parse; every image and song exists; `sw.js` lists every asset and only real files; cache `VERSION` changed if cached files changed (skipped when the base branch isn't available) |
-| `smoke` | desktop Chromium | boot; every retreat length starts correctly; walking spends hours and compounds Dale's debt; quiet hours and resting; checkout scoring |
+| `smoke` | desktop Chromium | boot; every retreat length starts correctly; walking spends hours and compounds Dale's debt; quiet hours and resting; checkout scoring; What's New and the version label (Options and in-game menu); handbook section marks; journey map taps, target size and labels; Dale-Fi companion cards, credits, every song-acquisition path, upgrades and collection persistence |
 | `trading` | desktop Chromium | buy limits (cash and space), selling and cost basis, goods not traded here, price ranges, Dale's van (pay, borrow cap, stash), cushion upgrade |
 | `encounters` | desktop Chromium | Saffron can't be dismissed; failed and successful escapes; hand over; donate; empty cushion; snapping at zero zen; decoys (pulled people stay gone, fanny pack, endurance if present); decoy offer prices and cap |
 | `saves` | desktop Chromium | reload and continue; Save and leave; older saves missing fields; corrupt save; new run replaces save; guestbook top ten; sound and volume settings |
