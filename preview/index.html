@@ -209,7 +209,12 @@ button:disabled { cursor: default; }
 .beta-mark .mark { padding: 3px 4px 0 0; }
 .beta-mark .logo-mark { width: 86px; }
 .beta-ver { margin-top: 1px; font: 700 9.5px/1 Figtree, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 1px 2px rgba(255, 249, 239, .55); }
-.beta { position: relative; flex: 0 0 auto; width: 38px; height: 35px; margin-right: -2px; pointer-events: none; }
+.beta { flex: 0 0 auto; width: 40px; height: 44px; margin: 0 -4px 0 0; padding: 0; border: 0; background: none; border-radius: 12px; display: grid; place-items: center; }
+.beta .bowl { position: relative; width: 38px; height: 35px; pointer-events: none; }
+.inspect .saf img { width: 56px; height: 56px; }
+.inspect ol { margin: 4px 0 6px; padding-left: 1.3em; font-size: 15.5px; line-height: 1.5; }
+.inspect li { margin: 0 0 12px; padding-left: 2px; }
+.inspect li b { display: block; }
 .beta .tank { position: absolute; inset: 0; width: 100%; height: 100%; }
 .beta .water { position: absolute; left: 11%; right: 11%; top: 22%; bottom: 20%; border-radius: 50% / 46%; overflow: hidden; }
 .beta .fish { position: absolute; left: 6%; top: -8%; width: 88%; aspect-ratio: 1; animation-delay: var(--sd, 0ms) !important; }
@@ -2648,6 +2653,7 @@ function act(a, el) {
     case 'handbook': return handbookSheet();
     case 'scores': return scoresSheet();
     case 'news': return newsSheet();
+    case 'inspect': return inspectSheet();
     case 'journal': return journalSheet();
     case 'menu': return menuSheet();
     case 'journey': return journeySheet();
@@ -2749,9 +2755,9 @@ let betaEl = null, betaT = null, betaAt = 0;
 function betaMount() {
   const slot = $('.beta-slot'); if (!slot) return;
   if (!betaEl) {
-    betaEl = document.createElement('span');
-    betaEl.className = 'beta'; betaEl.setAttribute('aria-hidden', 'true');
-    betaEl.innerHTML = `<img class="tank" src="assets/preview/beta-tank.webp" alt=""><span class="water"><span class="fish">${['idle', 'dip', 'turn', 'return'].map((f, i) => `<img class="f${i}" src="assets/preview/beta-${f}.webp" alt="">`).join('')}</span></span>`;
+    betaEl = document.createElement('button');
+    betaEl.type = 'button'; betaEl.className = 'beta'; betaEl.dataset.act = 'inspect'; betaEl.setAttribute('aria-label', "Beta's Inspection Notes");
+    betaEl.innerHTML = `<span class="bowl"><img class="tank" src="assets/preview/beta-tank.webp" alt=""><span class="water"><span class="fish">${['idle', 'dip', 'turn', 'return'].map((f, i) => `<img class="f${i}" src="assets/preview/beta-${f}.webp" alt="">`).join('')}</span></span></span>`;
     betaEl.addEventListener('animationend', e => { if (e.animationName === 'beta-path') betaEl.classList.remove('swim'); });
     betaNext();
   }
@@ -2765,6 +2771,29 @@ function betaSwim() {
     betaAt = performance.now(); betaEl.classList.add('swim');
   }
   betaNext();
+}
+/* Beta's Inspection Notes: what to check by hand in this preview, opened by tapping her bowl. One list per release:
+   replace it (and its version) for each new preview. A list for another version is never shown. */
+const INSPECT = {
+  version: '1.5',
+  intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
+  items: [
+    ['Sold out, on rows and sheets', 'Buy every one of something at a spot. Its row and its trade sheet should say SOLD OUT, on Receive and on Let go. If you are only short of cash, the sheet should say that instead.'],
+    ['Selling restocks that spot', 'Let a few go where you bought it out. That many should be for sale there again. Other spots stay as they were.'],
+    ['Saves and reloads', 'Mid-retreat, close the app or reload, then Continue. Same day, hour, cash, cushion and stock at each spot.'],
+    ['Radical Acceptance', 'Keep visiting The Labyrinth. On the fourth or fifth visit of a retreat the song turns up with its card. It plays, and stays in the Dale-Fi.'],
+    ['The journal', 'After a few days, open it: offers you turned down, gossip with prices, what Saffron took, getaways and song finds, with where each happened. Walks with nothing in them leave no entry. After checkout it ends with how the retreat ended and whether Dale was paid.'],
+    ['Preview stays separate', 'Saves, guestbook scores and songs found here never show up in the live game, and the live game’s never show up here.'],
+  ],
+};
+function inspectSheet() {
+  if (!PREVIEW) return;
+  const now = INSPECT.version === GAME_VERSION;
+  openSheet(`<div class="grab"></div><div class="notes inspect">
+    <div class="saf"><img src="assets/preview/beta-idle.webp" alt=""><h3 id="sheetTitle">Beta’s Inspection Notes</h3></div>
+    <p class="muted">Version ${GAME_VERSION}. ${now ? INSPECT.intro : 'Beta has no notes for this version yet.'}</p>
+    ${now ? `<ol>${INSPECT.items.map(([t, d]) => `<li><b>${t}</b>${d}</li>`).join('')}</ol>` : ''}</div>
+    <div class="sheet-actions"><button type="button" class="btn primary" data-act="close">Close</button></div>`, 'inspect');
 }
 if (PREVIEW) document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(betaT); else if (betaEl) betaNext(); });
 window.addEventListener('offline', () => toast("Signal lost. You're fully unplugged now. The game keeps working.", 'good', 5000));
