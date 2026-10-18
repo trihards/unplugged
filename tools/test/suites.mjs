@@ -46,6 +46,11 @@ const staticSuite = {
       const uncached = assets.filter(a => !listed.includes(a));
       ok(!uncached.length, 'assets missing from sw.js (they would not work offline)', uncached.join(', '));
     } },
+    { name: "Beta's Inspection Notes are for the current version (each preview gets its own checklist)", run: async ({ root }) => {
+      const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+      const v = /const GAME_VERSION = '([^']+)'/.exec(html)[1], iv = /const INSPECT = \{\s*version: '([^']+)'/.exec(html)?.[1];
+      eq(iv, v, 'INSPECT.version matches GAME_VERSION: write the new release’s checklist when the version changes');
+    } },
     { name: 'cache version changes when cached files change (vs. the base branch)', run: async ({ root }) => {
       const base = process.env.TEST_BASE || 'origin/main';
       const git = cmd => execSync(`git -C "${root}" ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
@@ -116,6 +121,7 @@ const smoke = {
     }),
     tst('the live game shows no PREVIEW badge and keeps its usual storage keys', {}, async g => {
       await g.start(2);
+      await g.run('inspectSheet()'); eq(await g.run('sheetKind'), null, "Beta's notes can't open");
       eq(await g.run("[PREVIEW, !!$('#preview'), !!$('.beta, .beta-ver, .beta-slot'), [...document.images].some(i => i.src.includes('/preview/'))]"), [false, false, false, false], 'no badge, no Beta');
       ok(await g.run("localStorage.getItem('unpw.save') !== null && !Object.keys(localStorage).some(k => k.startsWith('unpw-preview.'))"), 'saves under unpw.*');
     }),
@@ -156,6 +162,17 @@ const smoke = {
           eq([boxes[2][4], boxes[2][5]], [40, 40], 'icon tap targets unchanged');
           eq(await page.evaluate(() => document.querySelector('.topbar').getBoundingClientRect().height), 44, 'header height unchanged');
           const run = s => page.evaluate(s => window.__U.run(s), s);
+          const bowl = await page.evaluate(() => { const r = document.querySelector('button.beta').getBoundingClientRect(); return [r.width, r.height]; });
+          ok(bowl[0] >= 40 && bowl[1] >= 44, "Beta's bowl is a full-size tap target", bowl);
+          await page.click('button.beta');
+          eq([await run('sheetKind'), await page.textContent('#sheetTitle')], ['inspect', 'Beta’s Inspection Notes'], 'tapping her bowl opens her notes');
+          ok((await page.textContent('#sheet')).includes('Version ' + version), 'for this version');
+          eq(await page.$$eval('.inspect li', l => l.length), await run('INSPECT.items.length'), 'every checklist item shown');
+          const sheetFits = await page.evaluate(() => document.querySelector('#sheet').scrollWidth <= innerWidth);
+          ok(sheetFits, `no sideways scroll (${label})`);
+          await badge("Beta's notes");
+          await page.click('#sheet .sheet-actions [data-act="close"]');
+          eq(await run('sheetKind'), null, 'Close closes it');
           ok(await run('betaT !== null'), 'her next swim is scheduled');
           await run('betaSwim(); render()');
           if (device === 'tiny') eq(await run("betaEl.classList.contains('swim')"), false, 'reduced motion: she stays still');
