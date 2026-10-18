@@ -46,7 +46,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 - The note's sign-off is "With care, Guide Saffron" (the approved convention) instead of the brief's "With gratitude and appropriate restraint, Guide Saffron", and its subtitle line "An update from Guide Saffron — Version 1.5" is left out because the sheet already shows the heading and version. This is our reading of "the cross-project branding error"; confirm it was the right one. The note's date is set to 2026-10-18; change it to the release day.
 - Trade-sheet strings: "N for sale", "sold out" on the row and the sheet, "Sold out" on the button.
-- The handbook's supply paragraph.
+- The handbook's supply paragraph, and "The Dale-Fi" now saying the player hints at "most of the ones you haven't found" (Radical Acceptance has no hint).
 - Journal entry wording, all factual: the time-and-place prefix ("2pm, The Labyrinth. …") on the first entry at each stop; "A guest offered you a bigger cushion for $X." and "A guest from Marin offered to be your decoy for $X."; gossip followed by "(Good, $price)"; "Guide Saffron confiscated … Zen -N."; "Slipped away from Guide Saffron (N% chance)."; "Checked out. Square with Dale. / You still owed Dale $X. … Net worth $X. <takeaway>." The snap entry reuses the end screen's lede.
 - Radical Acceptance has no Dale-Fi hint (the brief rules out breadcrumbs), so its unfound row shows the existing line "Turns up somewhere on a retreat."
 - Only a crash moves stock now, so only a crash uses up a spot's once-a-day gossip effect; a spike earlier the same day no longer blocks it.

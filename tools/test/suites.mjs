@@ -398,7 +398,9 @@ const trading = {
     tst('market supply: differs by spot, no refill by walking away and back the same day; refills overnight', {}, async g => {
       await g.start(3);
       const lot = await g.run('VAN_IX'), hall = await g.run("PLACES.findIndex(p => p.name === 'Meditation Hall')");
-      eq(await g.run(`S.mk.every(m => ITEMS.every(it => Number.isInteger(m.s[it.id]) && m.s[it.id] >= 1 && m.s[it.id] === m.b[it.id]))`), true, 'every spot starts stocked, whole numbers');
+      // a crash in the opening gossip legitimately adds stock at the start spot, so only check stock is at least the usual amount
+      eq(await g.run(`S.mk.every(m => ITEMS.every(it => Number.isInteger(m.s[it.id]) && m.s[it.id] >= 1 && m.s[it.id] >= m.b[it.id]))`), true, 'every spot starts stocked, whole numbers');
+      eq(await g.run(`S.mk.filter((m, i) => i !== S.loc).every(m => ITEMS.every(it => m.s[it.id] === m.b[it.id]))`), true, 'everywhere else, exactly the usual amount');
       const avg = await g.run(`(() => { let a = 0, b = 0; for (let i = 0; i < 400; i++) { const mk = newMarkets(); a += mk[${lot}].b.burner; b += mk[${hall}].b.burner; } return [a / 400, b / 400]; })()`);
       ok(avg[0] > avg[1] * 1.3, 'the cheap spot for burners (the van) carries more than the pricey one', avg);
       const here = await g.run('S.loc');
@@ -408,7 +410,7 @@ const trading = {
       eq(await g.run('[S.loc, S.day]'), [here, 1], 'back where we started, same day');
       // a wine crash in the gossip on the way back legitimately brings stock, so only check when there wasn't one
       if (!(await g.run('S.log.some(t => t.includes(BYID.wine.down))'))) eq(await g.run(`S.mk[${here}].s.wine`), 0, 'same day: still sold out');
-      await g.run('S.day += 1'); await g.run(`market(${here})`);
+      await g.run(`S.mk[${here}].s.wine = 0; S.day += 1`); await g.run(`market(${here})`);
       eq(await g.run(`S.mk[${here}].s.wine`), 20, 'next morning: half the usual amount back');
       await g.run('S.day += 3'); await g.run(`market(${here})`);
       eq(await g.run(`S.mk[${here}].s.wine`), 40, 'never past the usual amount');
