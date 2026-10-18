@@ -8,7 +8,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **Approved.** All of Guide Saffron's notes sign off "With care, Guide Saffron". She believes her authority is entirely benevolent and never sounds self-aware about it.
 - **Approved.** `GAME_VERSION` (shown beside What's New) changes only when a release ships, together with its note. 1.0 was the launch, then 1.1, 1.2, 1.3, 1.4 as in `status.md`.
 - **Approved.** Every release that changes player-facing mechanics includes a handbook and "How it works" accuracy check against the final approved tuning. `HB_MARKS` marks only the sections the latest feature release changed and is replaced each release. (Also in `CLAUDE.md`.)
-- **Approved.** Market balancing ships as its own release, separate from other improvements.
+- **Approved, then superseded.** Market balancing ships as its own release, separate from other improvements. The owner's 1.5 handoff bundles limited stock with Radical Acceptance, the journal and the guestbook reset (see Release 1.5).
 - **Approved.** Balance numbers are calibrated with human play-testing, not only bot simulation.
 - **Approved.** iPhone testing of an unreleased build: with the owner's go-ahead, a byte-identical copy of the branch goes into `/preview/` on `main` (the live game at the root is untouched) and is removed at release. The preview shares saved data with the live game on the same device, so a half-finished preview run shows up as Continue in the live game.
 
@@ -29,7 +29,31 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **The Unprocessed Self** (The Low Maintenance Orchestra, Sunspill Records, 1977, funk; production credit TORiTiA): Dale-Fi song `w3`, a 45% find per Kitchen Garden visit (the Meditation Hall's odds). Card subtitle "45 · Sunspill Records · 1977 · Funk" (45 is the format). Hint "Some things grow better with a little funk." Discovery line and review are the approved copy. The sleeve's "A quieter kind of funk" against the review's "gloriously filthy" is intentional.
 - Calm moments on walks are time-neutral ("A deer walks right up to you.", "The fog lifts off the Pacific and you forget your inbox exists.").
 
+## Release 1.5 (handoff `handoffs/2026-10-18/01_RELEASE_1_5.md`)
+
+**Approved** by the owner on 2026-10-18; **built** on `release-1.5`, awaiting the creator's review and playtest. Not merged or deployed. Where this differs from Stage 01 and Stage 02 below, this is newer.
+
+- **Release shape:** 1.5 is limited stock, Radical Acceptance, the journal, a fresh guestbook and Saffron's note. It supersedes the earlier rule that market balancing ships on its own.
+- **Limited stock, from Stage 01:** stock per spot and good (the Stage 01 ranges, more where a spot runs cheap), drawn down by buying, half the usual amount back each morning up to the usual amount, no refill from walking away and back, a crash in the gossip brings stock at most once per spot per day. The quantity shows on the buy sheet; sold out shows on the row and the button. Gameplay and cosmetic randomness stay split.
+- **Rejected for 1.5:** market saturation, diminishing returns on big sales, buyer memory, and every zen trading bonus or walking cost (Stage 02). Every unit sells at the price on the board, spikes included.
+- **Rank thresholds:** the Stage 01 values, checked against a stock-only simulation (1,000 runs per length and bot, 2026-10-18) and kept. Recalibrate from playtesting.
+- **Radical Acceptance** (VANTAGE, 12″ single, Horizon Beat Records HB-008, 1985, Synth-Pop): Dale-Fi song `w4`, card meta "12″ · Horizon Beat Records · 1985 · Synth-Pop" and the approved review. Found in the Labyrinth on the fourth or fifth visit of a retreat (chosen at random when the retreat starts, cosmetic stream), with the approved discovery line. No progress counter, hint or breadcrumb. Production credit TORiTiA. Audio from the owner's master, converted to AAC and lowered 1 dB to match the other songs.
+- **Journal:** records what happened and where, not routine walks. The arrival line still shows on screen. Offers shown are recorded whether taken or not; gossip with the good and its price; each round with Saffron with the goods and zen it cost; getaways; songs with how they were found; the snap or checkout, including whether Dale was paid. Same look, last 20 during a retreat, everything after checkout.
+- **Guestbook:** cleared once per browser on the first load of 1.5. Nothing else in storage is touched.
+- **What's New:** "On the Nature of Abundance", body verbatim.
+
+**Proposed** (built, Claude Code's wording or interpretation, needs the owner's approval):
+
+- The note's sign-off is "With care, Guide Saffron" (the approved convention) instead of the brief's "With gratitude and appropriate restraint, Guide Saffron", and its subtitle line "An update from Guide Saffron — Version 1.5" is left out because the sheet already shows the heading and version. This is our reading of "the cross-project branding error"; confirm it was the right one. The note's date is set to 2026-10-18; change it to the release day.
+- Trade-sheet strings: "N for sale", "sold out" on the row and the sheet, "Sold out" on the button.
+- The handbook's supply paragraph.
+- Journal entry wording, all factual: the time-and-place prefix ("2pm, The Labyrinth. …") on the first entry at each stop; "A guest offered you a bigger cushion for $X." and "A guest from Marin offered to be your decoy for $X."; gossip followed by "(Good, $price)"; "Guide Saffron confiscated … Zen -N."; "Slipped away from Guide Saffron (N% chance)."; "Checked out. Square with Dale. / You still owed Dale $X. … Net worth $X. <takeaway>." The snap entry reuses the end screen's lede.
+- Radical Acceptance has no Dale-Fi hint (the brief rules out breadcrumbs), so its unfound row shows the existing line "Turns up somewhere on a retreat."
+- Only a crash moves stock now, so only a crash uses up a spot's once-a-day gossip effect; a spike earlier the same day no longer blocks it.
+
 ## Stage 01: market scarcity (handoff 01)
+
+**Superseded by Release 1.5** for what ships: limited stock only, no saturation. The record below is the branch as built.
 
 **Provisionally approved** (to be recalibrated from play-testing): the branch `stage-01-market-scarcity` as built.
 
@@ -46,6 +70,8 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 **Open question:** final text of Saffron's note "On the Nature of Abundance". The owner has a draft and will supply the final text at release.
 
 ## Stage 02: zen as composure (handoff 02)
+
+**Deferred** by the owner for 1.5: no zen changes ship in 1.5, and zen trading bonuses and walking fatigue are rejected for it. The record below stays for when zen balancing is taken up again.
 
 **Proposed.** Built on `stage-02-zen-composure` and reviewed; none of these is approved:
 

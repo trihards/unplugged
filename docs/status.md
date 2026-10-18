@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-17. Live version: **1.4** (deployed to GitHub Pages from `main`).
+As of 2026-10-18. Live version: **1.4** (deployed to GitHub Pages from `main`).
 
 ## Shipped
 
@@ -18,24 +18,25 @@ As of 2026-10-17. Live version: **1.4** (deployed to GitHub Pages from `main`).
 
 | Item | Branch | Status | Blocked on | Next action |
 | --- | --- | --- | --- | --- |
-| Stage 01: market scarcity (handoff 01) | `stage-01-market-scarcity` | Provisionally approved. Built, reviewed, 3 commits, behind `main`. | Final text of Saffron's "On the Nature of Abundance"; the decision whether Stage 02 ships with it. | Once decided: bring `main` in, docs accuracy check, release. |
-| Stage 02: zen as composure (handoff 02) | `stage-02-zen-composure` (contains Stage 01) | Proposed. Built and reviewed; numbers not approved. | Owner decisions listed in `decisions.md` under Stage 02. | Owner decides; then integrate with or after Stage 01. |
+| Release 1.5: limited stock, Radical Acceptance, journal, fresh guestbook (handoff `2026-10-18/01_RELEASE_1_5.md`) | `release-1.5` (from `main`) | Built. Full regression suite passes (89 tests, desktop Chromium and mobile emulation); stock-only simulation run. Not merged, not deployed. | The creator's review and playtest; the Proposed items under Release 1.5 in `decisions.md` (note sign-off, journal wording, sold-out strings, handbook paragraph). | Creator reviews and playtests (a `/preview/` copy on `main` if wanted). Then: set the note's date, merge, deploy. Physical-iPhone checks below. |
 
-Both branches predate What's New, the version label, the map, the handbook marks and the companion cards. They conflict with `main` in `index.html` and `sw.js`; integration is a careful merge, not a fast-forward. The market release is **1.5**.
+`release-1.5` ports only the stock half of `stage-01-market-scarcity` onto `main` (by hand, not a merge), with the Stage 01 rank thresholds. Saturation and all of Stage 02 are left out. `stage-01-market-scarcity` and `stage-02-zen-composure` stay as they are for reference; zen balancing is deferred.
 
-They also predate 1.4. When integrating, keep: the Dale Fail override in `rankFor`, `endingSong` and `superlative` (any debt at checkout, ahead of the re-matched rank thresholds); the `debt` test suite; the uncapped journal (`log()`); the save fields `dunDay` and `dunSaid` with their `continueRun()` defaults; and Dale's morning check-in (`daleCheckIn()` in `rest()`). Stage 02's zen changes should account for Dale's notes (zen cost) and his free morning check-ins.
+Still to check on a physical iPhone before release (README checklist): Radical Acceptance plays and its card fits at iPhone SE size; the new song and art are available offline after the update (cache `unplugged-1.5-a`); muted audio stays muted; the guestbook reset leaves the saved retreat and the Dale-Fi collection in place.
 
 ## Approved and queued
 
 | Item | Status | Blocked on | Next action |
 | --- | --- | --- | --- |
-| Market release (Stage 01, with or without Stage 02) | Approved as its own release, after the cards. | Stage 01/02 decisions and the note text. | Integrate, set `GAME_VERSION` 1.5, `HB_MARKS`, cache `VERSION`, release. |
-| Stage 03: four-day Daily Challenge (handoff 03) | Approved direction; no code. Sequenced after Stages 01 and 02. | The decision checkpoint in `decisions.md`. | Present the checkpoint recommendations to the owner before writing code. |
+| Stage 03: four-day Daily Challenge (handoff 03) | Approved direction; no code. Sequenced after the market (1.5); Stage 02 is deferred. | The decision checkpoint in `decisions.md`. | Present the checkpoint recommendations to the owner before writing code. |
 
 ## Known issues
 
 | Issue | Status | Next action |
 | --- | --- | --- |
+| The morning notification says "Dale's meter ran all night: you owe $0." (styled as bad news at full zen) once you're square with Dale. Found in the 1.5 discovery and reproduced in Chromium; `rest()`. | Live since 1.4 at least. Not in the 1.5 brief, so not fixed. | Owner decides whether to fix and with what wording. |
+| Gossip "Dale made a Costco run. Burners are piling up in the van." can fire at any spot, and with limited stock its crash now adds burners *there*, not at the van. Flagged in 1.5 as the handoff asked, not rewritten. | Copy question. | Owner decides (reword, or accept as gossip). |
+| Other text-vs-state mismatches from the 1.5 discovery: the Parking Lot arrival says Dale is asleep while the van sheet has him doing his crossword; the quiet-hours notice says "Rest" on the last day, when the button is Check out; time-specific gossip ("The 4am sits started", "Full moon sound bath tonight", "It's 94 degrees in the labyrinth") fires at any hour. | Known; parked as the player-facing text audit (`parking-lot.md`). | Owner decides. |
 | Two live code comments still say "pending approval": decoy endurance (`DECOY_SHARES`) and the checkout-music mapping (`endingSong`). Both shipped in 1.1. | Ambiguous: approval may have happened at release, or may still be outstanding. | Owner confirms; then update the comments. Not changed by guesswork. |
 | No systematic iPhone or offline regression pass is recorded for 1.2 or 1.3. The owner has personally tested and approved the 1.3 companion cards; that is an approval of the feature, not a regression test. Still unchecked: the map image offline after an update, What's New and the version label, cards at iPhone SE size, map label crowding at 320 px late in the day. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | In-game menu at 320 px scrolls slightly; its bottom Close button sits partly below the fold. The X at the top is always visible. | Minor, cosmetic. | Owner decides whether it matters. |
@@ -52,10 +53,10 @@ They also predate 1.4. When integrating, keep: the Dale Fail override in `rankFo
 | Branch | State |
 | --- | --- |
 | `main` | Live. |
-| `stage-01-market-scarcity`, `stage-02-zen-composure` | Active, unmerged (see above). |
+| `release-1.5` | Release 1.5, awaiting review and playtest (see above). |
+| `stage-01-market-scarcity`, `stage-02-zen-composure` | Unmerged. Stage 01's stock half is ported into `release-1.5`; the rest is not shipping. Kept for reference. |
 | `map-preview` | Superseded by `release-map` (merged as 1.2). Kept, not deleted. |
-| `docs-project-state` | This documentation. |
-| `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
+| `docs-project-state`, `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
 
 ## Tools
 
