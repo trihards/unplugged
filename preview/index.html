@@ -202,6 +202,31 @@ button:disabled { cursor: default; }
 .row .pr.hot { background: var(--poppy-soft); color: var(--poppy-ink); padding: 3px 10px; }
 .row .pr.calm { background: var(--sea-soft); color: var(--sea); padding: 3px 10px; }
 .soldout { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); border: 1.5px solid currentColor; border-radius: 999px; padding: 1px 7px; line-height: 1.3; white-space: nowrap; vertical-align: 1px; }
+/* Preview only: Beta, Guide Saffron's betta, in her bowl beside the wordmark, with BETA · version under it. She keeps
+   still, and every 20 to 40 seconds swims one short turn. The PREVIEW tab below stands in wherever that header is
+   missing or covered: other screens, sheets, notifications. */
+.beta-mark { display: flex; flex-direction: column; align-items: flex-start; }
+.beta-mark .mark { padding: 3px 4px 0 0; }
+.beta-mark .logo-mark { width: 86px; }
+.beta-ver { margin-top: 1px; font: 700 9.5px/1 Figtree, system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 1px 2px rgba(255, 249, 239, .55); }
+.beta { position: relative; flex: 0 0 auto; width: 38px; height: 35px; margin-right: -2px; pointer-events: none; }
+.beta .tank { position: absolute; inset: 0; width: 100%; height: 100%; }
+.beta .water { position: absolute; left: 11%; right: 11%; top: 22%; bottom: 20%; border-radius: 50% / 46%; overflow: hidden; }
+.beta .fish { position: absolute; left: 6%; top: -8%; width: 88%; aspect-ratio: 1; animation-delay: var(--sd, 0ms) !important; }
+.beta .fish img { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; animation-delay: var(--sd, 0ms) !important; }
+.beta .fish .f0 { opacity: 1; }
+.beta.swim .fish { animation: beta-path 1.6s ease-in-out both; }
+.beta.swim .f0 { animation: beta-f0 1.6s linear both; }
+.beta.swim .f1 { animation: beta-f1 1.6s linear both; }
+.beta.swim .f2 { animation: beta-f2 1.6s linear both; }
+.beta.swim .f3 { animation: beta-f3 1.6s linear both; }
+@keyframes beta-path { 0% { transform: none; } 30% { transform: translate(-6%, 7%); } 55% { transform: translate(-14%, 5%); } 80% { transform: translate(-5%, -4%); } 100% { transform: none; } }
+@keyframes beta-f0 { 0%, 14% { opacity: 1; } 18%, 84% { opacity: 0; } 88%, 100% { opacity: 1; } }
+@keyframes beta-f1 { 0%, 14% { opacity: 0; } 18%, 34% { opacity: 1; } 38%, 100% { opacity: 0; } }
+@keyframes beta-f2 { 0%, 34% { opacity: 0; } 38%, 60% { opacity: 1; } 64%, 100% { opacity: 0; } }
+@keyframes beta-f3 { 0%, 60% { opacity: 0; } 64%, 84% { opacity: 1; } 88%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .beta.swim .fish, .beta.swim .fish img { animation: none; } }
+body:has(.beta-ver):has(#scrim[hidden]):has(#dos[hidden]):has(#toasts:empty) #preview { display: none; }
 /* Sits in the gap under the bottom buttons, above the home indicator, so it covers no control. */
 #preview { position: fixed; z-index: 55; bottom: env(safe-area-inset-bottom, 0px); left: 50%; transform: translateX(-50%); pointer-events: none;
   font: 700 10px/1 Figtree, system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; color: #FFF9EF; background: rgba(34, 56, 43, .88); padding: 3px 9px 2px; border-radius: 7px 7px 0 0; }
@@ -1970,6 +1995,7 @@ function render() {
     document.documentElement.style.setProperty('--bd-tint', skyFor(S.hour)[2]);
     const l = $('.list'); if (l) l.scrollTop = listTop;
   } else { app.innerHTML = overHTML(); document.documentElement.style.setProperty('--sky-top', 'var(--fog)'); const o = $('.over'); if (o) o.scrollTop = overTop; }
+  if (PREVIEW) betaMount();
   saveRun();
 }
 
@@ -2029,7 +2055,7 @@ function gameHTML() {
   return `
   <header class="hero" style="--tint:${sk[2]};--h-ink:${sk[3]}">
     <div class="topbar">
-      <button type="button" class="mark" data-egg="1" aria-label="unplugged"><span class="logo-mark"></span></button>
+      ${PREVIEW ? `<span class="beta-slot"></span><span class="beta-mark">` : ''}<button type="button" class="mark" data-egg="1" aria-label="unplugged"><span class="logo-mark"></span></button>${PREVIEW ? `<span class="beta-ver">Beta · ${GAME_VERSION}</span></span>` : ''}
       <span class="spacer"></span>
       <button type="button" class="iconbtn" data-act="journal" aria-label="Your journal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M12 6.6C9.8 5 6.9 4.5 3.5 5v13.2c3.4-.5 6.3 0 8.5 1.6 2.2-1.6 5.1-2.1 8.5-1.6V5c-3.4-.5-6.3 0-8.5 1.6z"/><path d="M12 6.6v13.2"/></svg></button>
       ${eqHTML()}
@@ -2717,6 +2743,30 @@ function previewBadge() {
   document.body.append(b);
 }
 previewBadge();
+/* Beta lives in one element that every render puts back into the header, so a render mid-swim carries on from
+   where she was instead of starting over. */
+let betaEl = null, betaT = null, betaAt = 0;
+function betaMount() {
+  const slot = $('.beta-slot'); if (!slot) return;
+  if (!betaEl) {
+    betaEl = document.createElement('span');
+    betaEl.className = 'beta'; betaEl.setAttribute('aria-hidden', 'true');
+    betaEl.innerHTML = `<img class="tank" src="assets/preview/beta-tank.webp" alt=""><span class="water"><span class="fish">${['idle', 'dip', 'turn', 'return'].map((f, i) => `<img class="f${i}" src="assets/preview/beta-${f}.webp" alt="">`).join('')}</span></span>`;
+    betaEl.addEventListener('animationend', e => { if (e.animationName === 'beta-path') betaEl.classList.remove('swim'); });
+    betaNext();
+  }
+  if (betaEl.classList.contains('swim')) betaEl.style.setProperty('--sd', `${betaAt - performance.now()}ms`);
+  slot.replaceWith(betaEl);
+}
+function betaNext() { clearTimeout(betaT); betaT = setTimeout(betaSwim, 20000 + fx() * 20000); }
+function betaSwim() {
+  if (!document.hidden && betaEl.isConnected && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    betaEl.classList.remove('swim'); betaEl.style.removeProperty('--sd'); void betaEl.offsetWidth;
+    betaAt = performance.now(); betaEl.classList.add('swim');
+  }
+  betaNext();
+}
+if (PREVIEW) document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(betaT); else if (betaEl) betaNext(); });
 window.addEventListener('offline', () => toast("Signal lost. You're fully unplugged now. The game keeps working.", 'good', 5000));
 render();
 })();
