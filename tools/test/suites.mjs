@@ -39,7 +39,8 @@ const staticSuite = {
     { name: 'offline cache lists every asset, and every listed file exists', run: async ({ root }) => {
       const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
       const listed = ['CORE', 'AUDIO'].flatMap(k => JSON.parse(new RegExp(`const ${k} = (\\[[^\\]]*\\]);`).exec(sw)[1]));
-      const missing = listed.filter(p => p !== './' && !fs.existsSync(path.join(root, p)));
+      const previewOnly = JSON.parse(/const PREVIEW_ONLY = (\[[^\]]*\]);/.exec(sw)[1]);
+      const missing = listed.concat(previewOnly).filter(p => p !== './' && !fs.existsSync(path.join(root, p)));
       ok(!missing.length, 'sw.js lists files that do not exist', missing.join(', '));
       const assets = ['img', 'audio'].flatMap(d => fs.readdirSync(path.join(root, 'assets', d)).filter(f => /\.(webp|m4a)$/.test(f)).map(f => `assets/${d}/${f}`));
       const uncached = assets.filter(a => !listed.includes(a));
@@ -115,27 +116,29 @@ const smoke = {
     }),
     tst('the live game shows no PREVIEW badge and keeps its usual storage keys', {}, async g => {
       await g.start(2);
-      eq(await g.run("[PREVIEW, !!$('#preview')]"), [false, false], 'no badge');
+      eq(await g.run("[PREVIEW, !!$('#preview'), !!$('.beta, .beta-ver, .beta-slot'), [...document.images].some(i => i.src.includes('/preview/'))]"), [false, false, false, false], 'no badge, no Beta');
       ok(await g.run("localStorage.getItem('unpw.save') !== null && !Object.keys(localStorage).some(k => k.startsWith('unpw-preview.'))"), 'saves under unpw.*');
     }),
-    { name: 'the /preview/ build shows PREVIEW · version on every screen and keeps its own saves', run: async env => {
+    { name: 'the /preview/ build: Beta and BETA · version in the header, the PREVIEW tab wherever the header is covered, its own saves', run: async env => {
       const { browser, url, root } = env;
       for (const device of ['tiny', 'phone']) {
         const { label, ...vp } = (await import('./lib.mjs')).VIEWPORTS[device];
-        const ctx = await browser.newContext({ ...vp, reducedMotion: 'reduce', serviceWorkers: 'block' });
+        const ctx = await browser.newContext({ ...vp, reducedMotion: device === 'tiny' ? 'reduce' : 'no-preference', serviceWorkers: 'block' });
         const page = await ctx.newPage(); const errors = [];
+        const version = /const GAME_VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(root, 'index.html'), 'utf8'))[1];
         page.on('pageerror', e => errors.push(String(e)));
         await page.addInitScript(() => { localStorage.setItem('unpw.scores', '[{"i":"Live","s":1,"t":"x","at":1,"m":"week"}]'); localStorage.setItem('unpw.collected', '["s0","w1"]'); });
         await page.route('**/preview/**', route => {
-          const rel = new URL(route.request().url()).pathname.replace(/^.*\/preview\//, '') || 'index.html';
+          const rel = new URL(route.request().url()).pathname.replace(/^.*?\/preview\//, '') || 'index.html';
           const f = path.join(root, rel);
+          if (rel === 'index.html') return route.fulfill({ contentType: 'text/html', body: fs.readFileSync(f, 'utf8').replace("'use strict';", "'use strict'; window.__U = { run: s => eval(s) };") });
           return fs.existsSync(f) && fs.statSync(f).isFile() ? route.fulfill({ path: f }) : route.fulfill({ status: 404, body: '' });
         });
         try {
           await page.goto(url + 'preview/');
           const badge = async where => {
             const b = await page.$('#preview'); ok(b, `badge on ${where}`);
-            eq(await b.textContent(), 'Preview · ' + /const GAME_VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(root, 'index.html'), 'utf8'))[1], `badge reads the release version (${where})`);
+            eq(await b.textContent(), 'Preview · ' + version, `badge reads the release version (${where})`);
             const box = await b.boundingBox(); const w = await page.evaluate(() => innerWidth);
             ok(box && box.y >= 0 && box.x >= 0 && box.x + box.width <= w && await b.isVisible(), `badge on screen (${where}, ${label})`);
             eq(await b.evaluate(e => getComputedStyle(e).pointerEvents), 'none', 'never takes a tap');
@@ -143,10 +146,31 @@ const smoke = {
           await page.click('[data-act="options"]'); await badge('options');
           await page.click('#sheet [data-act="close"]').catch(() => {});
           await page.click('[data-act="begin"]'); await page.click('[data-mode="2"]'); await page.waitForTimeout(400);
-          await badge('the retreat');
+          await badge('the retreat, while its notifications cover the header');
+          await page.evaluate(() => { document.querySelector('#toasts').innerHTML = ''; }); await page.waitForTimeout(100);
+          eq(await page.textContent('.beta-ver'), 'Beta · ' + version, `header label reads the release version (${label})`);
+          ok(await page.isVisible('.beta img.tank') && await page.evaluate(() => [...document.querySelectorAll('.beta img')].every(i => i.complete && i.naturalWidth > 0)), 'Beta and her tank load');
+          ok(!(await page.isVisible('#preview')), 'with the header in view, no duplicate tab');
+          const boxes = await page.evaluate(() => ['.beta', '.beta-mark', '[data-act="journal"]'].map(s => document.querySelector(s).getBoundingClientRect()).map(r => [r.left, r.right, r.top, r.bottom, r.width, r.height]));
+          ok(boxes[0][1] <= boxes[1][0] && boxes[1][1] <= boxes[2][0], `tank, wordmark and icons don't overlap (${label})`, boxes);
+          eq([boxes[2][4], boxes[2][5]], [40, 40], 'icon tap targets unchanged');
+          eq(await page.evaluate(() => document.querySelector('.topbar').getBoundingClientRect().height), 44, 'header height unchanged');
+          const run = s => page.evaluate(s => window.__U.run(s), s);
+          ok(await run('betaT !== null'), 'her next swim is scheduled');
+          await run('betaSwim(); render()');
+          if (device === 'tiny') eq(await run("betaEl.classList.contains('swim')"), false, 'reduced motion: she stays still');
+          else {
+            eq(await run("betaEl.classList.contains('swim') && betaEl.isConnected"), true, 'she swims, and a render mid-swim keeps her in the header');
+            await page.waitForTimeout(1900);
+            eq(await run("[betaEl.classList.contains('swim'), getComputedStyle(betaEl.querySelector('.f0')).opacity]"), [false, '1'], 'then back to rest');
+          }
           await page.click('[data-act="journey"]'); await badge('the map');
           await page.click('#sheet [data-act="close"]');
           await page.click('[data-act="menu"]'); await badge('the menu');
+          await page.click('#sheet [data-act="journal"]'); await badge('the journal');
+          await page.click('#sheet [data-act="close"]');
+          await page.click('.row:not(.na)'); await badge('a trade sheet');
+          await page.click('#sheet [data-act="close"]');
           const keys = await page.evaluate(() => Object.keys(localStorage).sort());
           ok(keys.includes('unpw-preview.save') && keys.includes('unpw-preview.gbEra'), 'the preview saves under its own keys', keys);
           eq(await page.evaluate(() => [localStorage.getItem('unpw.scores'), localStorage.getItem('unpw.collected'), localStorage.getItem('unpw.save'), localStorage.getItem('unpw.gbEra')]),
