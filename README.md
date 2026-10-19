@@ -30,7 +30,7 @@ The cache is versioned by the `VERSION` line at the top of `sw.js`. If you edit 
 - `tools/test/`: regression tests; `tools/sim/`: the balance simulator
 - `docs/`: project status, decisions, deferred ideas and handoff briefs
 
-Saves, settings and the guestbook live in the browser's local storage, so each browser starts fresh.
+Saves, settings and the guestbook live in the browser's local storage, so each browser starts fresh. Release 1.5 cleared every guestbook once, because limited stock changed what a score is worth; nothing else was cleared.
 
 ## Credits
 

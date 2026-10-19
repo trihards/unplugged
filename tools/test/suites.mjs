@@ -39,11 +39,17 @@ const staticSuite = {
     { name: 'offline cache lists every asset, and every listed file exists', run: async ({ root }) => {
       const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
       const listed = ['CORE', 'AUDIO'].flatMap(k => JSON.parse(new RegExp(`const ${k} = (\\[[^\\]]*\\]);`).exec(sw)[1]));
-      const missing = listed.filter(p => p !== './' && !fs.existsSync(path.join(root, p)));
+      const previewOnly = JSON.parse(/const PREVIEW_ONLY = (\[[^\]]*\]);/.exec(sw)[1]);
+      const missing = listed.concat(previewOnly).filter(p => p !== './' && !fs.existsSync(path.join(root, p)));
       ok(!missing.length, 'sw.js lists files that do not exist', missing.join(', '));
       const assets = ['img', 'audio'].flatMap(d => fs.readdirSync(path.join(root, 'assets', d)).filter(f => /\.(webp|m4a)$/.test(f)).map(f => `assets/${d}/${f}`));
       const uncached = assets.filter(a => !listed.includes(a));
       ok(!uncached.length, 'assets missing from sw.js (they would not work offline)', uncached.join(', '));
+    } },
+    { name: "Beta's Inspection Notes are for the current version (each preview gets its own checklist)", run: async ({ root }) => {
+      const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+      const v = /const GAME_VERSION = '([^']+)'/.exec(html)[1], iv = /const INSPECT = \{\s*version: '([^']+)'/.exec(html)?.[1];
+      eq(iv, v, 'INSPECT.version matches GAME_VERSION: write the new release’s checklist when the version changes');
     } },
     { name: 'cache version changes when cached files change (vs. the base branch)', run: async ({ root }) => {
       const base = process.env.TEST_BASE || 'origin/main';
@@ -108,9 +114,88 @@ const smoke = {
       ok(dates.length >= 1 && dates.every((d, i) => i === 0 || d <= dates[i - 1]), 'dated, newest first', dates);
       const all = await g.page.textContent('.notes');
       ok(all.includes('On the Importance of Knowing Where You Are') && all.includes('On Dependence and Resolution'), 'every release kept');
+      eq(await g.page.textContent('.note h4'), 'On the Nature of Abundance', 'the 1.5 note is first');
+      ok(all.includes('Those who achieved exceptional financial success are invited to experience the freedom of having no evidence of it.'), '1.5 note text');
       await g.tap('[data-act="close"]');
       eq(await g.run('sheetKind'), null, 'closes');
     }),
+    tst('the live game shows no PREVIEW badge and keeps its usual storage keys', {}, async g => {
+      await g.start(2);
+      await g.run('inspectSheet()'); eq(await g.run('sheetKind'), null, "Beta's notes can't open");
+      eq(await g.run("[PREVIEW, !!$('#preview'), !!$('.beta, .beta-ver, .beta-slot'), [...document.images].some(i => i.src.includes('/preview/'))]"), [false, false, false, false], 'no badge, no Beta');
+      ok(await g.run("localStorage.getItem('unpw.save') !== null && !Object.keys(localStorage).some(k => k.startsWith('unpw-preview.'))"), 'saves under unpw.*');
+    }),
+    { name: 'the /preview/ build: Beta and BETA · version in the header, the PREVIEW tab wherever the header is covered, its own saves', run: async env => {
+      const { browser, url, root } = env;
+      for (const device of ['tiny', 'phone']) {
+        const { label, ...vp } = (await import('./lib.mjs')).VIEWPORTS[device];
+        const ctx = await browser.newContext({ ...vp, reducedMotion: device === 'tiny' ? 'reduce' : 'no-preference', serviceWorkers: 'block' });
+        const page = await ctx.newPage(); const errors = [];
+        const version = /const GAME_VERSION = '([^']+)'/.exec(fs.readFileSync(path.join(root, 'index.html'), 'utf8'))[1];
+        page.on('pageerror', e => errors.push(String(e)));
+        await page.addInitScript(() => { localStorage.setItem('unpw.scores', '[{"i":"Live","s":1,"t":"x","at":1,"m":"week"}]'); localStorage.setItem('unpw.collected', '["s0","w1"]'); });
+        await page.route('**/preview/**', route => {
+          const rel = new URL(route.request().url()).pathname.replace(/^.*?\/preview\//, '') || 'index.html';
+          const f = path.join(root, rel);
+          if (rel === 'index.html') return route.fulfill({ contentType: 'text/html', body: fs.readFileSync(f, 'utf8').replace("'use strict';", "'use strict'; window.__U = { run: s => eval(s) };") });
+          return fs.existsSync(f) && fs.statSync(f).isFile() ? route.fulfill({ path: f }) : route.fulfill({ status: 404, body: '' });
+        });
+        try {
+          await page.goto(url + 'preview/');
+          const badge = async where => {
+            const b = await page.$('#preview'); ok(b, `badge on ${where}`);
+            eq(await b.textContent(), 'Preview · ' + version, `badge reads the release version (${where})`);
+            const box = await b.boundingBox(); const w = await page.evaluate(() => innerWidth);
+            ok(box && box.y >= 0 && box.x >= 0 && box.x + box.width <= w && await b.isVisible(), `badge on screen (${where}, ${label})`);
+            eq(await b.evaluate(e => getComputedStyle(e).pointerEvents), 'none', 'never takes a tap');
+          };
+          await page.click('[data-act="options"]'); await badge('options');
+          await page.click('#sheet [data-act="close"]').catch(() => {});
+          await page.click('[data-act="begin"]'); await page.click('[data-mode="2"]'); await page.waitForTimeout(400);
+          await badge('the retreat, while its notifications cover the header');
+          await page.evaluate(() => { document.querySelector('#toasts').innerHTML = ''; }); await page.waitForTimeout(100);
+          eq(await page.textContent('.beta-ver'), 'Beta · ' + version, `header label reads the release version (${label})`);
+          ok(await page.isVisible('.beta img.tank') && await page.evaluate(() => [...document.querySelectorAll('.beta img')].every(i => i.complete && i.naturalWidth > 0)), 'Beta and her tank load');
+          ok(!(await page.isVisible('#preview')), 'with the header in view, no duplicate tab');
+          const boxes = await page.evaluate(() => ['.beta', '.beta-mark', '[data-act="journal"]'].map(s => document.querySelector(s).getBoundingClientRect()).map(r => [r.left, r.right, r.top, r.bottom, r.width, r.height]));
+          ok(boxes[0][1] <= boxes[1][0] && boxes[1][1] <= boxes[2][0], `tank, wordmark and icons don't overlap (${label})`, boxes);
+          eq([boxes[2][4], boxes[2][5]], [40, 40], 'icon tap targets unchanged');
+          eq(await page.evaluate(() => document.querySelector('.topbar').getBoundingClientRect().height), 44, 'header height unchanged');
+          const run = s => page.evaluate(s => window.__U.run(s), s);
+          const bowl = await page.evaluate(() => { const r = document.querySelector('button.beta').getBoundingClientRect(); return [r.width, r.height]; });
+          ok(bowl[0] >= 40 && bowl[1] >= 44, "Beta's bowl is a full-size tap target", bowl);
+          await page.click('button.beta');
+          eq([await run('sheetKind'), await page.textContent('#sheetTitle')], ['inspect', 'Beta’s Inspection Notes'], 'tapping her bowl opens her notes');
+          ok((await page.textContent('#sheet')).includes('Version ' + version), 'for this version');
+          eq(await page.$$eval('.inspect li', l => l.length), await run('INSPECT.items.length'), 'every checklist item shown');
+          const sheetFits = await page.evaluate(() => document.querySelector('#sheet').scrollWidth <= innerWidth);
+          ok(sheetFits, `no sideways scroll (${label})`);
+          await badge("Beta's notes");
+          await page.click('#sheet .sheet-actions [data-act="close"]');
+          eq(await run('sheetKind'), null, 'Close closes it');
+          ok(await run('betaT !== null'), 'her next swim is scheduled');
+          await run('betaSwim(); render()');
+          if (device === 'tiny') eq(await run("betaEl.classList.contains('swim')"), false, 'reduced motion: she stays still');
+          else {
+            eq(await run("betaEl.classList.contains('swim') && betaEl.isConnected"), true, 'she swims, and a render mid-swim keeps her in the header');
+            await page.waitForTimeout(1900);
+            eq(await run("[betaEl.classList.contains('swim'), getComputedStyle(betaEl.querySelector('.f0')).opacity]"), [false, '1'], 'then back to rest');
+          }
+          await page.click('[data-act="journey"]'); await badge('the map');
+          await page.click('#sheet [data-act="close"]');
+          await page.click('[data-act="menu"]'); await badge('the menu');
+          await page.click('#sheet [data-act="journal"]'); await badge('the journal');
+          await page.click('#sheet [data-act="close"]');
+          await page.click('.row:not(.na)'); await badge('a trade sheet');
+          await page.click('#sheet [data-act="close"]');
+          const keys = await page.evaluate(() => Object.keys(localStorage).sort());
+          ok(keys.includes('unpw-preview.save') && keys.includes('unpw-preview.gbEra'), 'the preview saves under its own keys', keys);
+          eq(await page.evaluate(() => [localStorage.getItem('unpw.scores'), localStorage.getItem('unpw.collected'), localStorage.getItem('unpw.save'), localStorage.getItem('unpw.gbEra')]),
+            ['[{"i":"Live","s":1,"t":"x","at":1,"m":"week"}]', '["s0","w1"]', null, null], "the live game's guestbook, collection and save are untouched");
+          ok(!errors.length, 'no page errors', errors.join(' | '));
+        } finally { await ctx.close(); }
+      }
+    } },
     tst('in-game menu › What\'s New opens the same sheet and leaves the run untouched', {}, async g => {
       await g.start(2);
       await g.run("S.cash = 1234; S.zen = 77; render()");
@@ -178,7 +263,7 @@ const smoke = {
       await g.tap('[data-act="options"]');
       ok((await g.page.textContent('#sheet')).includes('Music by TORiTiA'), 'Options credit kept');
       await g.tap('#sheet [data-act="music"]'); await g.wait(200);
-      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown', 'Turns up somewhere on a retreat.'], 'row credits (the unfound song shows its hint)');
+      eq(await g.page.$$eval('.trk .ta', t => t.map(x => x.textContent)), ['Uncredited', 'Uncredited', 'The Higher Frequencies', 'Unknown', 'Turns up somewhere on a retreat.', 'Turns up somewhere on a retreat.'], 'row credits (unfound songs show the welcome-screen line)');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'no TORiTiA anywhere in the Dale-Fi, LCD included');
       await g.run('handbookSheet()');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'nor in the handbook');
@@ -215,7 +300,7 @@ const smoke = {
         rev: 'A gloriously filthy slice of California funk from a band whose only documented live appearances were at the 1977 and 1978 Folsom County Fair, on the second stage. The bassline is practically geological. Their subsequent disappearance remains one of the great minor injustices of American music.',
         art: 'assets/img/card-w3.webp' }, 'companion card');
       ok(!(await g.page.textContent('#sheet')).includes('TORiTiA'), 'production credit not shown in-world');
-      ok((await g.run('S.log.at(-1)')) === 'New song on your Dale-Fi: The Unprocessed Self.', 'journal records the find');
+      ok((await g.run('S.log.at(-1)')).endsWith('Someone has been using a 1977 funk record to keep the seed packets flat. New on your Dale-Fi: The Unprocessed Self.'), 'journal records the find and how', await g.run('S.log.at(-1)'));
       await g.tap('#sheet [data-act="cardplay"]'); await g.wait(400);
       eq(await g.run('[M.cur, musicPlaying(), sheetKind]'), ['w3', true, 'music'], 'plays in the Dale-Fi');
       ok((await g.run('M.audio.src')).endsWith('assets/audio/w3.m4a'), 'its own file');
@@ -228,6 +313,46 @@ const smoke = {
       eq(await g.run('S.songs.filter(id => id === "w3").length'), 1, 'found once per run');
       const sw = fs.readFileSync(path.join(env.root, 'sw.js'), 'utf8');
       ok(sw.includes('"assets/audio/w3.m4a"') && sw.includes('"assets/img/card-w3.webp"'), 'in the offline cache list');
+    }),
+    tst('Radical Acceptance: found on the fourth or fifth Labyrinth visit of a retreat, once, with its card, and offline', {}, async (g, env) => {
+      await g.start(2);
+      eq(await g.run('[4, 5].includes(S.lab)'), true, 'the visit is chosen when the retreat starts');
+      const LAB = await g.run("PLACES.findIndex(p => p.name === 'The Labyrinth')"), OUT = await g.run("PLACES.findIndex(p => p.name === 'Yurt Village')");
+      // empty pockets: no Saffron, no offers, no theft
+      // every good on offer, no gossip, no walk event: the walk's only event is the song
+      const quiet = [...Array(9).fill(0.1), ...Array(9).fill(0.5), 0.9, 0.9];
+      const visit = `S.cash = 0; S.hour = 8; S.loc = ${OUT}; queue = []; closeSheet(true); walk(${LAB})`;
+      await g.run('S.lab = 5; ST().visits[' + LAB + '] = 2');
+      await g.rolls(quiet, visit, 0.9); await g.wait(200);
+      eq(await g.run('[ST().visits[' + LAB + '], hasSong("w4"), sheetKind]'), [3, false, null], 'third visit: nothing');
+      ok(!(await g.run("$('#sheet') && $('#sheet').textContent.includes('Labyrinth')")), 'no breadcrumb');
+      await g.rolls(quiet, visit, 0.9); await g.wait(200);
+      eq(await g.run('[ST().visits[' + LAB + '], hasSong("w4")]'), [4, false], 'fourth visit: not this retreat');
+      await g.rolls(quiet, visit, 0.9); await g.wait(300);
+      eq(await g.run('[ST().visits[' + LAB + '], hasSong("w4"), sheetKind]'), [5, true, 'card'], 'fifth visit: found, card revealed');
+      eq(await g.page.textContent('.cardkick'), 'For no particular reason, you walk the labyrinth counterclockwise this time. Halfway through, you notice something tucked beneath a stone. New on your Dale-Fi.', 'discovery line, verbatim');
+      const card = await g.run("({ t: $('.cardtt').textContent, by: $('.cardby').textContent, meta: $('.cardmeta').textContent, rev: $('.cardrev').textContent, art: $('.cardart').getAttribute('src') })");
+      eq(card, { t: 'Radical Acceptance', by: 'VANTAGE', meta: '12″ · Horizon Beat Records · 1985 · Synth-Pop',
+        rev: 'A gleaming instrumental built on insistent drum machines, sweeping synthesizers, and an almost heroic sense of emotional urgency. VANTAGE approaches self-acceptance with the intensity of someone attempting to prevent a nuclear launch.',
+        art: 'assets/img/card-w4.webp' }, 'companion card');
+      eq(await g.run('S.log.at(-1)'), `9am, The Labyrinth. For no particular reason, you walk the labyrinth counterclockwise this time. Halfway through, you notice something tucked beneath a stone. New on your Dale-Fi: Radical Acceptance.`, 'journal: where, how and what');
+      eq(await g.run('collected().includes("w4")'), true, 'in the collection');
+      await g.tap('#sheet [data-act="cardplay"]'); await g.wait(400);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w4', true], 'plays in the Dale-Fi');
+      ok((await g.run('M.audio.src')).endsWith('assets/audio/w4.m4a'), 'its own file');
+      await g.rolls(quiet, visit, 0.9); await g.wait(200);
+      eq(await g.run('[S.songs.filter(id => id === "w4").length, sheetKind]'), [1, null], 'sixth visit: no second find');
+      await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(2);
+      await g.run('S.lab = 4; ST().visits[' + LAB + '] = 3');
+      await g.rolls(quiet, visit, 0.9); await g.wait(300);
+      eq(await g.run('[hasSong("w4"), sheetKind]'), [true, null], 'a later retreat (fourth visit this time): back in the run, a notification, no second card');
+      const sw = fs.readFileSync(path.join(env.root, 'sw.js'), 'utf8');
+      ok(sw.includes('"assets/audio/w4.m4a"') && sw.includes('"assets/img/card-w4.webp"'), 'in the offline cache list');
+    }),
+    tst('Radical Acceptance: the Dale-Fi gives no hint of where it is', {}, async g => {
+      await g.start(2); await g.tap('[data-act="music"]'); await g.wait(200);
+      const rows = await g.page.$$eval('.trk.locked .ta', t => t.map(x => x.textContent));
+      ok(rows.includes('Turns up somewhere on a retreat.') && !rows.some(r => /labyrinth|stone|visit/i.test(r)), 'generic line only', rows);
     }),
     tst('Dale-Fi cards: a real walk to the Meditation Hall reveals the card on the first find ever; a repeat find is a notification', {}, async g => {
       const WALK = `(() => { const r = Math.random; Math.random = () => (new Error().stack.includes('songEvents') ? 0.1 : r());
@@ -335,6 +460,129 @@ const trading = {
       eq(await g.run('[S.cash, S.van]'), [3900, 3000], 'glovebox moves');
       eq(await g.run('netWorth()'), 1900, 'net worth = cash + glovebox - debt');
     }),
+    tst('market supply: buying draws down stock and the sheet tracks it', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { charger: 300 }; market().s.charger = 7; S.cash = 100000; render()");
+      eq(await g.run("canBuy('charger')"), 7, 'buy max is the stock left');
+      await g.tap('[data-item="charger"]');
+      ok((await g.page.textContent('#sheet')).includes('7 for sale'), 'sheet shows stock left');
+      await g.run("trade.q = 3; doTrade()");
+      eq(await g.run("[S.inv.charger, market().s.charger, canBuy('charger')]"), [3, 4, 4], 'bought 3 of 7, 4 left');
+      await g.run("trade = { id: 'charger', mode: 'buy', q: 5 }; doTrade()");
+      eq(await g.run('S.inv.charger'), 3, 'buying past the stock is refused');
+      await g.run("market().s.charger = 0; render()");
+      ok((await g.page.textContent('[data-item="charger"]')).includes('3 held'), 'held count still shown');
+      await g.run("S.inv.charger = 0; S.paid.charger = 0; render()");
+      ok(/sold out/i.test(await g.page.textContent('[data-item="charger"]')), 'row says sold out');
+      await g.tap('[data-item="charger"]');
+      eq(await g.page.textContent('#tgo'), 'Sold out', 'button says sold out');
+      ok(await g.page.isDisabled('#tgo'), 'and is disabled');
+    }),
+    tst('circulation: buy out a spot, let some go there, and they are for sale again; saved with the run', {}, async g => {
+      await g.start(2);
+      const here = await g.run('S.loc');
+      await g.run("S.prices = { burner: 2000 }; market().s.burner = 10; S.cash = 100000; S.cap = 400; ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; }); render()");
+      await g.tap('[data-item="burner"]'); await g.tap('[data-tset="max"]'); await g.tap('#tgo');
+      eq(await g.run('[S.inv.burner, market().s.burner]'), [10, 0], 'bought all 10');
+      ok(/sold out/i.test(await g.page.textContent('[data-item="burner"]')), 'row: held and sold out together');
+      await g.tap('[data-item="burner"]');
+      eq(await g.run('trade.mode'), 'sell', 'the sheet opens on Let go');
+      ok(/sold out/i.test(await g.page.textContent('.item-head')), 'sold out still shows on Let go');
+      ok(await g.page.isDisabled('[data-tmode="buy"]'), 'Receive is off');
+      eq(await g.page.getAttribute('[data-tmode="buy"]', 'aria-label'), 'Receive: sold out', 'and says why');
+      await g.run("trade.q = 6; doTrade()");
+      eq(await g.run('[S.inv.burner, market().s.burner]'), [4, 6], 'let go of 6: 6 for sale here again');
+      ok(!/sold out/i.test(await g.page.textContent('[data-item="burner"]')), 'sold out clears from the row');
+      await g.tap('[data-item="burner"]'); await g.tap('[data-tmode="buy"]');
+      ok((await g.page.textContent('#sheet')).includes('6 for sale'), 'the sheet shows them for sale');
+      eq(await g.run("canBuy('burner')"), 6, 'and you can receive them back');
+      await g.run('closeSheet(true)');
+      const away = await g.run(`PLACES.findIndex((_, i) => i !== ${here} && HOURS[${here}][i] === 1)`);
+      await g.run(`S.hour = 8; walk(${away}); queue = []; closeSheet(true)`);
+      eq(await g.run(`S.mk[${away}].s.burner === S.mk[${away}].b.burner && S.mk[${here}].s.burner >= 6`), true, 'location-specific: nothing moved to the other spot');
+      await g.run(`walk(${here}); queue = []; closeSheet(true)`);
+      ok(await g.run('market().s.burner') >= 6, 'revisit the same day: still there');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U); await g.tap('[data-act="continue"]');
+      ok(await g.run(`S.mk[${here}].s.burner`) >= 6, 'kept through a reload');
+      await g.run(`S.mk[${here}].s.burner = 300; S.mk[${here}].g = 0`);
+      await g.rolls([...Array(20).fill(0.1), 0.6], 'genPrices()', 0.1);
+      eq(await g.run('market().s.burner'), 300, 'a crash never takes away stock that selling put there');
+      await g.run(`S.mk[${here}].s.burner = 300; S.day += 1; market()`);
+      eq(await g.run('market().s.burner'), 300, 'mornings never trim it either');
+    }),
+    tst('sold out is told apart from not enough cash and a full cushion', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { wine: 50 }; market().s.wine = 5; S.cash = 10; S.inv.wine = 2; S.paid.wine = 60; render()");
+      await g.tap('[data-item="wine"]');
+      eq(await g.run('trade.mode'), 'sell', 'opens on Let go');
+      const t = await g.page.textContent('#sheet');
+      ok(t.includes('5 for sale') && t.includes('Not enough cash for one.') && !/sold out/i.test(await g.page.textContent('.item-head')), 'in stock, but no cash: says so, not sold out', t);
+      await g.run("closeSheet(true); S.cash = 1000; S.cap = 2; render()"); await g.tap('[data-item="wine"]');
+      ok((await g.page.textContent('#sheet')).includes('Your cushion is full.'), 'full cushion: says so');
+    }),
+    tst('market supply: differs by spot, no refill by walking away and back the same day; refills overnight', {}, async g => {
+      await g.start(3);
+      const lot = await g.run('VAN_IX'), hall = await g.run("PLACES.findIndex(p => p.name === 'Meditation Hall')");
+      // a crash in the opening gossip legitimately adds stock at the start spot, so only check stock is at least the usual amount
+      eq(await g.run(`S.mk.every(m => ITEMS.every(it => Number.isInteger(m.s[it.id]) && m.s[it.id] >= 1 && m.s[it.id] >= m.b[it.id]))`), true, 'every spot starts stocked, whole numbers');
+      eq(await g.run(`S.mk.filter((m, i) => i !== S.loc).every(m => ITEMS.every(it => m.s[it.id] === m.b[it.id]))`), true, 'everywhere else, exactly the usual amount');
+      const avg = await g.run(`(() => { let a = 0, b = 0; for (let i = 0; i < 400; i++) { const mk = newMarkets(); a += mk[${lot}].b.burner; b += mk[${hall}].b.burner; } return [a / 400, b / 400]; })()`);
+      ok(avg[0] > avg[1] * 1.3, 'the cheap spot for burners (the van) carries more than the pricey one', avg);
+      const here = await g.run('S.loc');
+      await g.run(`S.mk[${here}].s.wine = 0; S.mk[${here}].b.wine = 40; S.hour = 8; queue = []`);
+      const away = await g.run(`PLACES.findIndex((_, i) => i !== ${here} && HOURS[${here}][i] === 1)`);
+      await g.run(`walk(${away}); queue = []; closeSheet(true); walk(${here}); queue = []; closeSheet(true)`);
+      eq(await g.run('[S.loc, S.day]'), [here, 1], 'back where we started, same day');
+      // a wine crash in the gossip on the way back legitimately brings stock, so only check when there wasn't one
+      if (!(await g.run('S.log.some(t => t.includes(BYID.wine.down))'))) eq(await g.run(`S.mk[${here}].s.wine`), 0, 'same day: still sold out');
+      await g.run(`S.mk[${here}].s.wine = 0; S.day += 1`); await g.run(`market(${here})`);
+      eq(await g.run(`S.mk[${here}].s.wine`), 20, 'next morning: half the usual amount back');
+      await g.run('S.day += 3'); await g.run(`market(${here})`);
+      eq(await g.run(`S.mk[${here}].s.wine`), 40, 'never past the usual amount');
+    }),
+    tst('selling has no limit: a big batch fetches the full board price, spikes included', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { charger: 400 }; S.inv.charger = 300; S.paid.charger = 30000; S.cash = 0; S.cap = 400; render()");
+      await g.tap('[data-item="charger"]'); await g.tap('[data-tset="max"]');
+      eq(await g.page.textContent('#tgo'), 'Let go of 300 for $120,000', 'button shows the full price for all of them');
+      await g.tap('#tgo');
+      eq(await g.run('[S.cash, S.inv.charger]'), [120000, 0], 'paid in full');
+      await g.run("S.prices = { charger: 1300 }; S.inv.charger = 200; S.paid.charger = 20000; trade = { id: 'charger', mode: 'sell', q: 200 }; doTrade()");
+      eq(await g.run('S.cash'), 120000 + 260000, 'the same spot again, at a spike: full price again');
+      ok(!(await g.page.textContent('#sheet') || '').includes('filling up'), 'no saturation warning anywhere');
+    }),
+    tst('gossip: a crash brings stock once per spot per day; a spike moves no stock', {}, async g => {
+      await g.start(3);
+      // all goods on offer, gossip fires, it picks burners (first in the list), and the 21st roll makes it a crash (0.6) or a spike (0.2)
+      const crash = [...Array(20).fill(0.1), 0.6], spike = [...Array(20).fill(0.1), 0.2];
+      await g.run("const m = market(); m.b.burner = 4; m.s.burner = 0; m.g = 0");
+      await g.rolls(spike, 'genPrices()', 0.1);
+      eq(await g.run('[market().s.burner, market().g, S.prices.burner > BYID.burner.max]'), [0, 0, true], 'a spike: price up, no stock');
+      await g.rolls(crash, 'genPrices()', 0.1);
+      const first = await g.run('market().s.burner');
+      ok(first >= 6 && first <= 8, 'a crash later that day still brings extra stock', first);
+      await g.run('market().s.burner = 0');
+      await g.rolls(crash, 'genPrices()', 0.1);
+      eq(await g.run('market().s.burner'), 0, 'a second crash at the same spot the same day brings nothing');
+      await g.run('S.day += 1; market().s.burner = 0');
+      await g.rolls(crash, 'genPrices()', 0.1);
+      ok(await g.run('market().s.burner') > 0, 'next day it works again');
+      await g.run('const m = market(); m.s.burner = 9; m.g = 0');
+      await g.rolls(crash, 'genPrices()', 0.1);
+      eq(await g.run('market().s.burner'), 10, 'never more than two and a half times the usual amount');
+    }),
+    tst('market supply survives a reload, and older saves get a market', {}, async g => {
+      await g.start(2);
+      await g.run("S.prices = { wine: 40 }; market().s.wine = 5; render()");
+      const loc = await g.run('S.loc');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      await g.tap('[data-act="continue"]');
+      eq(await g.run(`S.mk[${loc}].s.wine`), 5, 'stock kept');
+      await g.run("const r = JSON.parse(localStorage.getItem('unpw.save')); delete r.mk; localStorage.setItem('unpw.save', JSON.stringify(r))");
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      await g.tap('[data-act="continue"]');
+      eq(await g.run('Array.isArray(S.mk) && S.mk.length === PLACES.length && S.mk.every(m => ITEMS.every(it => m.s[it.id] >= 1))'), true, 'old save loads with fresh markets');
+    }),
     tst('cushion upgrade offer adds 40 spaces for its price', {}, async g => {
       await g.start(2);
       await g.run('S.cash = 5000; queue = []');
@@ -366,6 +614,14 @@ const encounters = {
       const s = await g.run('({ burner: S.inv.burner, wine: S.inv.wine, zen: S.zen, done: enc.done })');
       ok(s.burner < 20 && s.wine === 30, 'burners (most valuable) confiscated, wine untouched', s);
       ok(s.zen < 100 && !s.done, 'zen lost, still with her', s);
+    }),
+    tst('journal: a round with her records the goods and the zen; a getaway is recorded too', {}, async g => {
+      await g.start(2); await g.run(ENC);
+      await g.rolls([0.99], 'encRun()');
+      const s = await g.run('({ last: S.log.at(-1), lost: 20 - S.inv.burner, zen: 100 - S.zen })');
+      ok(s.last.endsWith(`Guide Saffron confiscated ${s.lost} burner phones, about $${(s.lost * 2000).toLocaleString('en-US')}. Zen -${s.zen}.`), 'one entry: what she took and the zen it cost', s);
+      await g.rolls([0.01, 0.5, 0.99], 'encRun()');
+      ok((await g.run('S.log.at(-1)')).startsWith('Slipped away from Guide Saffron ('), 'the getaway is recorded', await g.run('S.log.at(-1)'));
     }),
     tst('successful escape ends it with nothing taken', {}, async g => {
       await g.start(2); await g.run(ENC);
@@ -512,7 +768,7 @@ const debt = {
       await g.run("S.day = 2; S.debt = 3000; S.zen = 90; $('#toasts').innerHTML = ''");
       await g.rolls(NOTE_ROLL, 'rollEvents()');
       const want = `Dale left a note on your yurt. It's just a number: $3,000. Zen -`;
-      ok((await g.run('S.log.at(-1)')).startsWith(want), 'journal records the note', await g.run('S.log.at(-1)'));
+      ok((await g.run('S.log.at(-1)')).includes(want), 'journal records the note', await g.run('S.log.at(-1)'));
       ok((await g.run('S.zen')) < 90, 'costs zen');
       await g.wait(600);
       ok((await g.page.textContent('#toasts')).includes('$3,000'), 'shown as a notification');
@@ -598,6 +854,64 @@ const debt = {
       await g.tap('[data-act="report"]'); await g.run('closeSheet()');
       eq(await g.run("!!$('.over [data-act=\"journal\"]')"), true, 'still there after the report card');
     }),
+    tst('journal: arrivals alone leave no entry; the first thing that happens says when and where', {}, async g => {
+      await g.start(2);
+      const springs = await g.run("PLACES.findIndex(p => p.name === 'Hot Springs')");
+      const n = await g.run('S.log.length');
+      // every good on offer, no gossip, no walk event, no song
+      await g.rolls([...Array(9).fill(0.1), ...Array(9).fill(0.5), 0.9, 0.9], `S.cash = 1000; S.hour = 8; walk(${springs}); queue = []; closeSheet(true)`, 0.9);
+      eq(await g.run('S.log.length'), n, 'a quiet walk writes nothing');
+      eq(await g.run('S.flavor'), await g.run(`PLACES[${springs}].via`), 'the arrival line still shows on screen');
+      await g.run("S.prices.choc = 5; trade = { id: 'choc', mode: 'buy', q: 2 }; doTrade(); trade = { id: 'choc', mode: 'buy', q: 1 }; doTrade()");
+      eq(await g.run('S.log.slice(-2)'), ['10am, Hot Springs. Received 2 chocolate bars for $10.', 'Received 1 chocolate bars for $5.'], 'time and place once, then just what happened');
+    }),
+    tst('journal: gossip records the good, the place and the price', {}, async g => {
+      await g.start(2);
+      const springs = await g.run("PLACES.findIndex(p => p.name === 'Hot Springs')");
+      // every good on offer, gossip hits burners as a spike, no walk event
+      await g.rolls([...Array(9).fill(0.1), ...Array(9).fill(0.5), 0.1, 0.0, 0.2, 0.5, 0.9], `S.cash = 0; S.hour = 8; walk(${springs}); queue = []; closeSheet(true)`, 0.9);
+      const p = await g.run('S.prices.burner');
+      eq(await g.run('S.log.at(-1)'), `10am, Hot Springs. ${await g.run('BYID.burner.up')} (Burner phones, $${p.toLocaleString('en-US')})`, 'what, where, and the price it hit');
+    }),
+    tst('journal: offers you were shown are recorded, taken or not', {}, async g => {
+      await g.start(2);
+      const k = await g.run('S.k');
+      await g.run('S.cash = 100000; queue = []; closeSheet(true)');
+      await g.rolls([0.15 * k], 'rollEvents(); runQueue()');
+      const price = +(await g.page.textContent('[data-act="offeryes"]')).replace(/\D/g, '');
+      ok((await g.run('S.log.at(-1)')).endsWith(`A guest offered you a bigger cushion for $${price.toLocaleString('en-US')}.`), 'the offer, with its price', await g.run('S.log.at(-1)'));
+      const n = await g.run('S.log.length');
+      await g.tap('#sheet [data-act="close"]');
+      eq(await g.run('[S.cap, S.log.length]'), [100, n], 'turned down: the offer entry stands alone');
+      await g.rolls([0.2 * k], 'rollEvents(); runQueue()');
+      const dp = +(await g.page.textContent('[data-act="offeryes"]')).replace(/\D/g, '');
+      await g.tap('[data-act="offeryes"]');
+      const two = await g.run('S.log.slice(-2)');
+      ok(two[0].endsWith(`A guest from Marin offered to be your decoy for $${dp.toLocaleString('en-US')}.`) && two[1].startsWith(`Hired a decoy for $${dp.toLocaleString('en-US')}.`), 'taken: the offer, then the hire', two);
+      await g.run('S.cash = 0; queue = []');
+      const m = await g.run('S.log.length');
+      await g.rolls([0.15 * k], 'rollEvents(); runQueue()');
+      eq(await g.run('[sheetKind, S.log.length]'), [null, m], "an offer you can't afford never appears, and isn't recorded");
+    }),
+    tst('journal: songs say where and how; the CD is one entry', {}, async g => {
+      await g.start(2);
+      await g.run("S.loc = VAN_IX; S.cash = 1000; buyCD()");
+      eq(await g.run("S.log.filter(t => t.includes('CD')).length"), 1, 'one entry');
+      ok((await g.run('S.log.at(-1)')).endsWith(`Parking Lot. Dale hands over a burned CD for $150. New on your Dale-Fi: Late Night Record Shop.`), 'place, how, what', await g.run('S.log.at(-1)'));
+    }),
+    tst('journal: the ending is recorded, and Review your journal opens on it', {}, async g => {
+      await g.start(2);
+      await g.run("S.cash = 70000; S.van = 0; S.debt = 0; ITEMS.forEach(i => { S.inv[i.id] = 0; }); endGame('time')");
+      eq(await g.run('S.log.at(-1)'), `Checked out. Square with Dale. Net worth $70,000. ${await g.run("rankFor(70000, 'time')")}.`, 'square (same hour and place as the morning entry, so no prefix)');
+      await g.tap('[data-act="journal"]');
+      eq(await g.page.textContent('.journal p:first-child'), await g.run('S.log.at(-1)'), 'newest first: the ending');
+      await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(2);
+      await g.run("S.cash = 900000; S.debt = 50; S.inv.wine = 3; endGame('time')");
+      ok((await g.run('S.log.at(-1)')).endsWith('Checked out. You still owed Dale $50. The front desk confiscated what was left in your cushion. Net worth $899,950. Dale Fail: Owes Dale forever.'), 'the Dale Fail, even when rich', await g.run('S.log.at(-1)'));
+      await g.run("closeSheet(true); screen = 'welcome'; render()"); await g.start(2);
+      await g.run("S.day = 3; S.cash = 500; endGame('zen')");
+      ok((await g.run('S.log.at(-1)')).endsWith('On day 3 you broke Noble Silence, screamed at a volunteer, and left to start a podcast about it. Net worth -$600. Snapped. Started a podcast.'), 'a snap', await g.run('S.log.at(-1)'));
+    }),
     tst("a new retreat starts with a fresh journal and Dale's standard opening balance", {}, async g => {
       await g.start(0);
       await g.run("log('Old run entry.')");
@@ -639,6 +953,7 @@ const saves = {
       await g.tap('[data-act="continue"]');
       ok(await g.run('Number.isFinite(used()) && used() === 4'), 'cushion count intact');
       eq(await g.run('[Array.isArray(S.songs), !!S.stats, S.log[0]]'), [true, true, 'An old entry.'], 'missing fields filled, journal kept');
+      eq(await g.run('[S.mk.length === PLACES.length, [4, 5].includes(S.lab), S.jc]'), [true, true, ''], '1.5 fields get defaults');
       await g.run('walk(1); queue = []; closeSheet(true)');
       eq(await g.run('S.loc'), 1, 'can keep playing');
     }),
@@ -660,6 +975,22 @@ const saves = {
       }
       const list = await g.run("store.get('unpw.scores', []).filter(e => e.m === 'weekend').map(e => e.s)");
       eq(list, [12000, 11000, 10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000], 'top ten, best first');
+    }),
+    tst('1.5 starts the guestbook over once, and nothing else', { storage: {
+      'unpw.scores': JSON.stringify([{ i: 'Old', s: 3000000, t: 'Side hustle sage', at: 1, m: 'intensive' }]),
+      'unpw.collected': '["s0","w1"]', 'unpw.sound': 'false', 'unpw.vol': '0.4', 'unpw.mode': '"five"', 'unpw.cur': '"w1"', 'someone.else': 'keep me',
+      'unpw.save': JSON.stringify({ mode: 'week', modeName: 'The full week', days: 7, rate: 0.0175, k: 0.85, day: 2, hour: 9, cash: 600, van: 0, debt: 1500, cap: 100, decoys: 0, zen: 90, loc: 0,
+        prices: { wine: 60 }, inv: { burner: 0, charger: 0, wifi: 0, petagotchi: 0, wine: 4, doritos: 0, coke: 0, choc: 0, espresso: 0 },
+        paid: { burner: 0, charger: 0, wifi: 0, petagotchi: 0, wine: 200, doritos: 0, coke: 0, choc: 0, espresso: 0 }, log: ['An old entry.'], over: false, reason: '', saved: false, flavor: 'x' }) } }, async g => {
+      eq(await g.run("localStorage.getItem('unpw.scores')"), null, 'old guestbook released');
+      eq(await g.run("['unpw.collected', 'unpw.sound', 'unpw.vol', 'unpw.mode', 'unpw.cur', 'someone.else'].map(k => localStorage.getItem(k))"), ['["s0","w1"]', 'false', '0.4', '"five"', '"w1"', 'keep me'], 'collection, settings and everything else untouched');
+      ok(await g.run('!!savedRun()'), 'the saved retreat is still there');
+      await g.tap('[data-act="continue"]');
+      eq(await g.run('[S.day, S.log[0]]'), [2, 'An old entry.'], 'and continues');
+      await g.run(`S.cash = 4321; S.debt = 0; endGame('time')`);
+      await g.page.fill('#signname', 'New'); await g.tap('[data-act="sign"]');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      eq(await g.run("store.get('unpw.scores', []).map(e => e.i)"), ['New'], 'a new score survives the next load: the reset happens once');
     }),
     tst('sound and volume settings persist', {}, async g => {
       await g.run('setSound(false); musicNudge(-0.2)');
