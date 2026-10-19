@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-18. Live version: **1.4** (deployed to GitHub Pages from `main`).
+As of 2026-10-19. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: the same 1.5 build at `/preview/`, with Beta.
 
 ## Shipped
 
@@ -12,17 +12,12 @@ As of 2026-10-18. Live version: **1.4** (deployed to GitHub Pages from `main`).
 | 1.2 | 2026-10-16 | Illustrated journey map (handoff 04, layout "C") | On the Importance of Knowing Where You Are |
 | — | 2026-10-16 | Handbook accuracy fixes and section marks (docs only) | none |
 | 1.3 | 2026-10-17 | Dale-Fi companion cards; in-world artist credits; all notes sign "With care". Personally tested and approved by the owner. | On Listening Closely |
+| 1.5 | 2026-10-19 | Limited stock per spot (selling restocks that spot; sold out shown on rows and sheets), re-matched rank thresholds; Dale-Fi song Radical Acceptance (VANTAGE) in the Labyrinth; a journal of what happened and where, including offers, gossip prices, Saffron, songs and the ending; guestbook cleared once; the permanent `/preview/` with Beta and her Inspection Notes, its own saves and cache. Owner playtested the preview and said ship. | On the Nature of Abundance |
 | 1.4 | 2026-10-17 | Dale's Outstanding Balance: any debt at checkout is the Dale Fail (art and cue); complete post-game journal and a header journal icon; Dale's morning check-ins; time-neutral calm moments; new Dale-Fi song The Unprocessed Self. Owner playtest on macOS Safari and physical iPhone checks passed; background playback deferred (`parking-lot.md`). | On Outstanding Balances |
 
 ## In progress
 
-| Item | Branch | Status | Blocked on | Next action |
-| --- | --- | --- | --- | --- |
-| Release 1.5: limited stock, Radical Acceptance, journal, fresh guestbook (handoff `2026-10-18/01_RELEASE_1_5.md`) | `release-1.5` (from `main`) | Built. In playtest at the permanent `/preview/` on `main` (byte-identical copy of the branch, with its badge, saves and cache kept apart from the live game). Full regression suite passes (89 tests, desktop Chromium and mobile emulation); stock-only simulation run. Not merged, not deployed. | The creator's review and playtest; the Proposed items under Release 1.5 in `decisions.md` (note sign-off, journal wording, sold-out strings, handbook paragraph). | Creator reviews and playtests (a `/preview/` copy on `main` if wanted). Then: set the note's date, merge, deploy. Physical-iPhone checks below. |
-
-`release-1.5` ports only the stock half of `stage-01-market-scarcity` onto `main` (by hand, not a merge), with the Stage 01 rank thresholds. Saturation and all of Stage 02 are left out. `stage-01-market-scarcity` and `stage-02-zen-composure` stay as they are for reference; zen balancing is deferred.
-
-Still to check on a physical iPhone before release (README checklist): Radical Acceptance plays and its card fits at iPhone SE size; the new song and art are available offline after the update (cache `unplugged-1.5-a`); muted audio stays muted; the guestbook reset leaves the saved retreat and the Dale-Fi collection in place.
+Nothing. The next release starts from `main`; its preview replaces `/preview/` in place (see `decisions.md`, Process).
 
 ## Approved and queued
 
@@ -34,6 +29,7 @@ Still to check on a physical iPhone before release (README checklist): Radical A
 
 | Issue | Status | Next action |
 | --- | --- | --- |
+| No systematic physical-iPhone pass is recorded for 1.5 beyond the owner's preview playtest. Unchecked on a device: Radical Acceptance plays (volume buttons work) and its card fits at iPhone SE size; the live game's offline cache updates to `unplugged-1.5` and the new song and art work in Airplane Mode; mute stays muted after reopening; the guestbook reset leaves a saved retreat and the Dale-Fi collection in place; Beta and the PREVIEW tab clear the notch and home indicator. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | The morning notification says "Dale's meter ran all night: you owe $0." (styled as bad news at full zen) once you're square with Dale. Found in the 1.5 discovery and reproduced in Chromium; `rest()`. | Live since 1.4 at least. Not in the 1.5 brief, so not fixed. | Owner decides whether to fix and with what wording. |
 | Gossip "Dale made a Costco run. Burners are piling up in the van." can fire at any spot, and with limited stock its crash now adds burners *there*, not at the van. Flagged in 1.5 as the handoff asked, not rewritten. | Copy question. | Owner decides (reword, or accept as gossip). |
 | Other text-vs-state mismatches from the 1.5 discovery: the Parking Lot arrival says Dale is asleep while the van sheet has him doing his crossword; the quiet-hours notice says "Rest" on the last day, when the button is Check out; time-specific gossip ("The 4am sits started", "Full moon sound bath tonight", "It's 94 degrees in the labyrinth") fires at any hour. | Known; parked as the player-facing text audit (`parking-lot.md`). | Owner decides. |
@@ -53,10 +49,9 @@ Still to check on a physical iPhone before release (README checklist): Radical A
 | Branch | State |
 | --- | --- |
 | `main` | Live. |
-| `release-1.5` | Release 1.5, awaiting review and playtest (see above). |
-| `stage-01-market-scarcity`, `stage-02-zen-composure` | Unmerged. Stage 01's stock half is ported into `release-1.5`; the rest is not shipping. Kept for reference. |
+| `stage-01-market-scarcity`, `stage-02-zen-composure` | Unmerged, kept for reference. Stage 01's stock half shipped in 1.5 (ported by hand); saturation was rejected and Stage 02 (zen) is deferred. |
 | `map-preview` | Superseded by `release-map` (merged as 1.2). Kept, not deleted. |
-| `docs-project-state`, `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
+| `release-1.5`, `docs-project-state`, `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
 
 ## Tools
 

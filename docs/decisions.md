@@ -32,7 +32,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 ## Release 1.5 (handoff `handoffs/2026-10-18/01_RELEASE_1_5.md`)
 
-**Approved** by the owner on 2026-10-18; **built** on `release-1.5`, awaiting the creator's review and playtest. Not merged or deployed. Where this differs from Stage 01 and Stage 02 below, this is newer.
+**Shipped** 2026-10-19, after the owner playtested the preview and said ship. Where this differs from Stage 01 and Stage 02 below, this is newer.
 
 - **Release shape:** 1.5 is limited stock, Radical Acceptance, the journal, a fresh guestbook and Saffron's note. It supersedes the earlier rule that market balancing ships on its own.
 - **Limited stock, from Stage 01:** stock per spot and good (the Stage 01 ranges, more where a spot runs cheap), drawn down by buying, half the usual amount back each morning up to the usual amount, no refill from walking away and back, a crash in the gossip brings stock at most once per spot per day. The quantity shows on the buy sheet; sold out shows on the row and the button. Gameplay and cosmetic randomness stay split.
@@ -45,9 +45,9 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **Guestbook:** cleared once per browser on the first load of 1.5. Nothing else in storage is touched.
 - **What's New:** "On the Nature of Abundance", body verbatim.
 
-**Proposed** (built, Claude Code's wording or interpretation, needs the owner's approval):
+**Shipped as built** with the owner's go-ahead to ship; these were Claude Code's wording or interpretation and were not confirmed one by one, so any of them can still be revisited:
 
-- The note's sign-off is "With care, Guide Saffron" (the approved convention) instead of the brief's "With gratitude and appropriate restraint, Guide Saffron", and its subtitle line "An update from Guide Saffron — Version 1.5" is left out because the sheet already shows the heading and version. This is our reading of "the cross-project branding error"; confirm it was the right one. The note's date is set to 2026-10-18; change it to the release day.
+- The note's sign-off is "With care, Guide Saffron" (the approved convention) instead of the brief's "With gratitude and appropriate restraint, Guide Saffron", and its subtitle line "An update from Guide Saffron — Version 1.5" is left out because the sheet already shows the heading and version. This is our reading of "the cross-project branding error"; confirm it was the right one. The note is dated 2026-10-19, the release day.
 - Trade-sheet strings: "N for sale", "sold out" on the row and the sheet, "Sold out" on the button.
 - The handbook's supply paragraph, and "The Dale-Fi" now saying the player hints at "most of the ones you haven't found" (Radical Acceptance has no hint).
 - Journal entry wording, all factual: the time-and-place prefix ("2pm, The Labyrinth. …") on the first entry at each stop; "A guest offered you a bigger cushion for $X." and "A guest from Marin offered to be your decoy for $X."; gossip followed by "(Good, $price)"; "Guide Saffron confiscated … Zen -N."; "Slipped away from Guide Saffron (N% chance)."; "Checked out. Square with Dale. / You still owed Dale $X. … Net worth $X. <takeaway>." The snap entry reuses the end screen's lede.
