@@ -19,7 +19,7 @@ As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). 
 
 | Item | Status | Next action |
 | --- | --- | --- |
-| 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`) and at `/preview/`: the van offer, the Winamp-style player, AUTO switches (autoplay, Next and Previous), repeat, the pixelated cover; ownership per retreat; handbook, Beta's 1.6 checklist, Saffron's draft note, cache `unplugged-1.6-b`. Full regression suite passes in Chromium. | Owner's iPhone playtest; creative review of the drafts; decide the remaining proposed items (`decisions.md`, Release 1.6). Not to be merged without approval. |
+| 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`) and at `/preview/`: the van offer, the Winamp-style player, AUTO switches (autoplay, Next and Previous), repeat, the pixelated cover; ownership per retreat; handbook, Beta's 1.6 checklist, Saffron's draft note, cache `unplugged-1.6-c`. Full regression suite passes in Chromium. | Owner's iPhone playtest; creative review of the drafts; decide the remaining proposed items (`decisions.md`, Release 1.6). Not to be merged without approval. |
 
 ## Approved and queued
 
