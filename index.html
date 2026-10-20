@@ -1676,7 +1676,9 @@ const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) { /* not supported */ }
 const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
 const inRun = () => screen === 'game' && S && !S.over;
-const avail = () => (inRun() ? S.songs : collected()).concat(dzOwned() ? BUNDLE : []).filter(id => TBYID[id]);
+/* The songs you can play now, in playlist order (not the order they were found), so autoplay, Next and Previous move
+   through the list as it's shown, from wherever you picked a song. */
+const avail = () => { const have = new Set((inRun() ? S.songs : collected()).concat(dzOwned() ? BUNDLE : [])); return TRACKS.map(t => t.id).filter(id => have.has(id)); };
 const hasSong = id => S && S.songs && S.songs.includes(id);
 
 /* A song turns up. The first time you ever find it, its companion card is revealed: right away if you asked for it
@@ -2911,7 +2913,7 @@ function act(a, el) {
     case 'music': return musicSheet();
     case 'buycd': { const from = sheetKind; buyCD(); if (sheetKind === 'card') return; return from === 'van' ? vanSheet() : musicSheet(); }
     case 'card': return cardSheet(el.dataset.id);
-    case 'cardplay': musicPick(el.dataset.id); return musicSheet();
+    case 'cardplay': if (el.dataset.id !== M.cur || !musicPlaying()) musicPick(el.dataset.id); return musicSheet(); // picks it like the playlist, but never pauses it
     case 'mplay': return musicToggle();
     case 'mprev': return musicStep(-1);
     case 'mnext': return musicStep(1);
@@ -3022,6 +3024,7 @@ const INSPECT = {
     ['Gary’s tape', 'With the Dinglezoons, What’s on Your Shoe and Clam’s End are in the playlist, each with the cassette card. They play, repeat and take AUTO, Next and Previous like any song. On the plain Dale-Fi they show as not found, with their hints. They stay after checkout until a new retreat starts, which begins without them.'],
     ['The upgraded player', 'Open the Dale-Fi: a dark Dinglezoons with green lettering, a pixelated cover, a small analyzer and your songs. Play, pause, previous, next, seeking and volume all work, at 320 and 375 wide too, with nothing cramped or cut off. Your songs and their order are unchanged.'],
     ['Repeat', 'Turn on repeat and let a song finish: it starts again. Pick another song: that one repeats. Turn repeat off: the next song follows.'],
+    ['Listen on a new song', 'With a song playing, find a new one and tap Listen on its card: it plays at once, and when it ends the song below it in the playlist follows (wrapping around), as if you had picked it in the list. Next and Previous go from there.'],
     ['AUTO off', 'Switch AUTO off on a song. Let the one before it finish, or press Next or Previous across it: the player passes over it. Tap it and it plays. The last song still lit can’t be switched off.'],
     ['You’re Square', 'Pay Dale off in full: no song starts, and whatever was playing carries on. Close the van and You’re Square’s reel-to-reel card appears; the song plays from the Dale-Fi like any other and stays in your collection after the retreat.'],
     ['Music and Sounds', 'In the menu and in Options, try all four: Music on or off, Sounds on or off. Music covers songs, Guide Saffron’s theme and the checkout songs; Sounds covers the chimes. Reload: both stay as you set them.'],

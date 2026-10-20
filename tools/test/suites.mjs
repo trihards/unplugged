@@ -1023,6 +1023,24 @@ const audio = {
       await g.run("unlockSong('w2', 'test'); musicPick('w2')"); await g.wait(300);
       eq(await g.run("[musicPlaying(), M.cur, localStorage.getItem('unpw.cur')]"), [true, 'w2', '"w2"'], 'picked track playing and saved');
     }),
+    tst('Listen on a newly found song\'s card picks it like the playlist does: what follows, Next and Previous go by the playlist', {}, async g => {
+      await g.start(2); await g.run("S.songs.push('w3')"); await startMusic(g);
+      await g.run("unlockSong('w1', 'Test find.', true)"); await g.wait(300);
+      eq(await g.run('sheetKind'), 'card', 'the new song\'s card is up');
+      await g.tap('#sheet [data-act="cardplay"]'); await g.wait(400);
+      eq(await g.run('[M.cur, musicPlaying(), sheetKind]'), ['w1', true, 'music'], 'Listen plays it now and shows the player');
+      eq(await g.page.textContent('#lcdNo'), '02/03', 'and it is the current place in the playlist');
+      await g.run('M.audio.currentTime = M.audio.duration - 0.3'); await g.wait(1300);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w3', true], 'when it ends, the song after it in the playlist plays (found order no longer matters)');
+      await g.tap('[data-act="mprev"]'); await g.wait(300);
+      eq(await g.run('M.cur'), 'w1', 'Previous goes back to it');
+      await g.tap('[data-act="mnext"]'); await g.wait(300); await g.tap('[data-act="mnext"]'); await g.wait(300);
+      eq(await g.run('M.cur'), 's0', 'Next goes on from there and wraps around');
+      await g.run("cardSheet('w1')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(300);
+      const viaCard = await g.run('[M.cur, avail().indexOf(M.cur)]');
+      await g.tap('#sheet [data-track="s0"]'); await g.wait(200); await g.tap('#sheet [data-track="w1"]'); await g.wait(300);
+      eq(await g.run('[M.cur, avail().indexOf(M.cur)]'), viaCard, 'the same as picking it in the playlist');
+    }),
     tst('mute silences everything; unmute brings the song back', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.tap('[data-act="menu"]'); await g.tap('[data-act="musictog"]'); await g.wait(200);
@@ -1361,6 +1379,26 @@ const dinglezoons = {
       ok((await g.page.textContent('#sheet .tracks')).includes('Dale appreciates a settled tab.'), 'its hint');
       await g.run("closeSheet(true); eventSong('square')"); await g.wait(300);
       eq(await g.run('E.on'), false, 'no event song by that name any more');
+    }),
+    tst('Listen on a card with the Dinglezoons: AUTO and repeat apply from the picked song; a song with AUTO off still plays', {}, async g => {
+      await g.start(2); await g.run(OWN + "; S.songs.push('w3', 'w4'); DZ.skip = ['w3']"); await dzPlay(g);
+      await g.run("unlockSong('w1', 'Test find.', true)"); await g.wait(300);
+      await g.tap('#sheet [data-act="cardplay"]'); await g.wait(400);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'Listen plays it');
+      await finish(g);
+      eq(await g.run('M.cur'), 'w4', 'autoplay continues after it, passing over w3 (AUTO off)');
+      await g.tap('[data-act="mprev"]'); await g.wait(300);
+      eq(await g.run('M.cur'), 'w1', 'Previous goes back to it, passing over w3');
+      await g.run('M.audio.currentTime = 20'); await g.run("cardSheet('w1')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(300);
+      const same = await g.run('({ cur: M.cur, playing: musicPlaying(), t: M.audio.currentTime })');
+      ok(same.cur === 'w1' && same.playing && same.t >= 20, 'Listen on the song already playing keeps it playing, where it was', same);
+      await g.run("dzAuto('w1'); musicPick('w4'); cardSheet('w1')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(300);
+      eq(await g.run('[M.cur, musicPlaying(), DZ.skip.includes("w1")]'), ['w1', true, true], 'a song with AUTO off still plays from Listen');
+      await g.tap('[data-act="mnext"]'); await g.wait(300);
+      eq(await g.run('M.cur'), 'w4', 'Next from it goes to the next lit song');
+      await g.run("dzRepeat(); cardSheet('w1')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(300); await finish(g);
+      const r = await g.run('({ cur: M.cur, playing: musicPlaying(), t: M.audio.currentTime })');
+      ok(r.cur === 'w1' && r.playing && r.t < 5, 'with repeat on, the song picked by Listen repeats', r);
     }),
     tst('repeat beats AUTO off on the song you chose', {}, async g => {
       await g.start(2); await g.run(OWN + '; ' + SONGS(['w1'])); await dzPlay(g, 'w1');

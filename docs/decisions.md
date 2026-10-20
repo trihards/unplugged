@@ -49,6 +49,8 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **Music and Sounds** replace "Mute all sound", as two switches in the menu and in Options. Music: Dale-Fi and Dinglezoons songs, Guide Saffron's theme, the checkout songs and Dale's checkout cue. Sounds: the chimes. Both are kept (`unpw.music`, `unpw.sfx`); a player who had muted everything before starts with both off.
 - **Dale's line:** "Top of the line, man. Comes with two tracks from Gary’s ’98 tape. Don’t ask me how he recorded ’em."
 
+**Approved by the owner after iPhone testing** (2026-10-20): **playback follows the playlist.** Autoplay, Next and Previous now move through the songs in the order the playlist shows them, from whichever song you picked, wrapping around. Before, they followed the order the songs were found (the pre-1.6 behavior), so a song just found and played from its card's Listen was followed by the first song instead of the one below it. Listen and tapping a song in the list were already the same code and still are; the one difference is that Listen on the song already playing keeps it playing, where tapping it in the list pauses it. AUTO, repeat, interruptions and Saffron's theme are unchanged.
+
 **Interpretations in the final round** (confirm or change):
 
 - **Gary's audio** arrived separately as MP3s (2026-10-20) and was converted to AAC like the other songs: `shoe.m4a` lowered 0.6 dB and `clam.m4a` raised 0.8 dB, so both sit at about −15.2 LUFS, where the other Dale-Fi songs are (−14.5 to −15.5). Nothing else about them was changed.
