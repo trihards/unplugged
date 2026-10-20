@@ -861,7 +861,7 @@ function startGame(m) {
   S = {
     mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
     day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, decoyShares: 0, zen: 100,
-    loc: 0, prices: {}, inv: {}, paid: {}, log: [], jc: '', lab: labVisit(), dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
+    loc: 0, prices: {}, inv: {}, paid: {}, log: [], jc: '', lab: labVisit(), dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], dz: false, newSong: false, cdHint: false, stats: newStats(),
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
   ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; });
@@ -1507,6 +1507,7 @@ function continueRun() {
   if (!(S.dunDay >= 0)) S.dunDay = 0;
   if (!Array.isArray(S.dunSaid)) S.dunSaid = [];
   if (typeof S.jc !== 'string') S.jc = '';
+  if (S.dz !== true) S.dz = false;
   if (S.lab !== 4 && S.lab !== 5) S.lab = labVisit();
   if (!Array.isArray(S.mk) || S.mk.length !== PLACES.length || !S.mk.every(m => m && m.day >= 1 && m.s && m.b && ITEMS.every(it => m.b[it.id] >= 1 && m.s[it.id] >= 0))) S.mk = newMarkets();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
@@ -1634,11 +1635,12 @@ const NOTES = [
   },
 ];
 const CD_PRICE = 150;
-/* Dinglezoons: the upgraded player Dale sells from his van. Bought once and kept for every retreat after, like the
-   collection. It plays the same songs and adds an AUTO switch per song (off: autoplay passes it over; tapping it or
-   Next still plays it), repeat one, and a pixelated cover. Both settings are kept, and do nothing until it's owned. */
+/* Dinglezoons: the upgraded player Dale sells from his van. Bought for one retreat (S.dz); the next retreat needs a
+   new one, while songs found stay in the collection as always. It plays the same songs and adds an AUTO switch per
+   song (off: autoplay, Next and Previous pass it over; tapping it still plays it), repeat one, and a pixelated cover.
+   The AUTO switches and repeat are kept as settings, and do nothing without a Dinglezoons. */
 const DZ_PRICE = 300;
-const dzOwned = () => store.get('unpw.dz', false) === true;
+const dzOwned = () => inRun() && S.dz === true;
 const DZ = { skip: [].concat(store.get('unpw.skip', [])).filter(id => typeof id === 'string'), rep: store.get('unpw.rep', false) === true, img: {}, pix: {} };
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
   want: false, held: false, at: null, fadeTimer: null };
@@ -1711,7 +1713,7 @@ function buyCD() {
 function buyDZ() {
   if (!S || S.over || !PLACES[S.loc].van || dzOwned() || S.cash < DZ_PRICE) return false;
   S.cash -= DZ_PRICE;
-  store.set('unpw.dz', true);
+  S.dz = true;
   SND.receive();
   log(`Dale hands over a Dinglezoons for ${fmt(DZ_PRICE)}.`);
   render();
@@ -1961,13 +1963,14 @@ function musicToggle(force) {
   } else M.audio.pause();
   musicUI();
 }
-/* Dinglezoons: AUTO off on a song means autoplay passes it over. Only the songs you can play right now count, and if
-   all of them have it off, autoplay passes none over. */
+/* Dinglezoons: AUTO off on a song means autoplay, Next and Previous pass it over. Only the songs you can play right
+   now count, and if all of them have it off, none is passed over. */
 const dzSkips = id => dzOwned() && DZ.skip.includes(id);
 const dzCanSkip = id => avail().some(x => x !== id && !DZ.skip.includes(x));
-function autoNext(list, i) {
-  if (!list.some(id => !dzSkips(id))) return list[(i + 1) % list.length];
-  for (let k = 1; k <= list.length; k++) { const id = list[(i + k) % list.length]; if (!dzSkips(id)) return id; }
+function stepTo(list, i, d) {
+  const at = k => list[((i + d * k) % list.length + list.length) % list.length];
+  if (!list.some(id => !dzSkips(id))) return at(1);
+  for (let k = 1; k <= list.length; k++) if (!dzSkips(at(k))) return at(k);
 }
 /* A song ended on its own: repeat it if the Dinglezoons is set to, otherwise autoplay moves on. */
 function musicEnded() {
@@ -1996,7 +1999,7 @@ function musicStep(d, auto) {
   const i = Math.max(0, list.indexOf(M.cur));
   const was = musicPlaying() || auto || d > 0 || (d < 0 && eventPlaying());
   if (!auto) musicTakeover();
-  if (!musicLoad(auto ? autoNext(list, i) : list[(i + d + list.length) % list.length])) return;
+  if (!musicLoad(stepTo(list, i, auto ? 1 : d))) return;
   M.want = was;
   if (was) tryPlay(M.audio).then(musicUI);
   musicUI();
@@ -2146,7 +2149,7 @@ function musicSheet() {
     </div>
     <div class="dzpl">
       <div class="dzbar"><span>Playlist</span></div>
-      <p class="dzhelp">When a song ends, the next one with AUTO lit plays. Tap any song to play it.</p>
+      <p class="dzhelp">Autoplay, Next and Previous only play songs with AUTO lit. Tap any song to play it.</p>
       <div class="tracks">${rows}</div>
     </div>` : `<div class="dalefi">
       <div class="lcd" aria-hidden="true">
@@ -2716,7 +2719,7 @@ function handbookSheet() {
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
       <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>
-      <p>Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. You buy it once and keep it for every retreat after. It plays the same songs and adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, the player moves on to the next one with AUTO lit, passing over the rest; Next, Previous and tapping a song still play any of them. You can't switch off the last song that's still lit. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
+      <p>Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat; the next retreat starts with the plain Dale-Fi again, and your songs stay with you as always. It plays the same songs and adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
       <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, and Esc closes things.</p>
@@ -2972,15 +2975,15 @@ const INSPECT = {
   version: '1.6',
   intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
   items: [
-    ['Buying it from Dale', 'At the van with less than $300 on you, the Dinglezoons button is off. With $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone, on this retreat and every one after.'],
+    ['Buying it from Dale', 'At the van with less than $300 on you, the Dinglezoons button is off. With $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone for the rest of the retreat. Start a new retreat: the plain Dale-Fi is back, with every song you’ve found, and Dale sells you another.'],
     ['The upgraded player', 'Open the Dale-Fi: a dark Dinglezoons with green lettering, a pixelated cover, a small analyzer and your songs. Play, pause, previous, next, seeking and volume work as before, at 320 and 375 wide too, with nothing cramped or cut off. Your songs and their order are unchanged.'],
     ['Repeat', 'Turn on repeat and let a song finish: it starts again. Pick another song: that one repeats. Turn repeat off: the next song follows.'],
-    ['AUTO off', 'Switch AUTO off on a song and let the one before it finish: the player passes over it. Tap it, or press Next onto it, and it plays. The last song still lit can’t be switched off.'],
+    ['AUTO off', 'Switch AUTO off on a song. Let the one before it finish, or press Next or Previous across it: the player passes over it. Tap it and it plays. The last song still lit can’t be switched off.'],
     ['Covers and cards', 'Each song’s cover shows pixelated in the player. The small cover in the list still opens its companion card at full size, also at 320 wide.'],
     ['Interruptions', 'With repeat on and a song playing: Guide Saffron’s theme, paying off Dale and checkout still step in and hand back; mute stays muted; leaving the app and coming back picks up the same song.'],
-    ['Saves and settings', 'Reload mid-retreat and Continue: the Dinglezoons, your AUTO switches and repeat are as you left them. On the welcome screen your collection plays on it too.'],
+    ['Saves and settings', 'Reload mid-retreat and Continue: the Dinglezoons, your AUTO switches and repeat are as you left them. Buy one on a later retreat and your switches and repeat are still set.'],
     ['Still open from 1.5, on an iPhone', 'Mute stays muted after closing and reopening; Beta and the PREVIEW tab clear the notch and home indicator; Radical Acceptance’s card fits at iPhone SE size.'],
-    ['Preview stays separate', 'Saves, guestbook scores, songs found and a Dinglezoons bought here never show up in the live game, and the live game’s never show up here.'],
+    ['Preview stays separate', 'Saves, guestbook scores and songs found here never show up in the live game, and the live game’s never show up here.'],
   ],
 };
 function inspectSheet() {

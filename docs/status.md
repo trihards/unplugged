@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: still the 1.5 build at `/preview/`; the 1.6 build is ready to replace it once the owner OKs updating `/preview/` on `main`.
+As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: the 1.6 build (Dinglezoons) at `/preview/`, for the owner's review; not merged into the live game.
 
 ## Shipped
 
@@ -19,7 +19,7 @@ As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). 
 
 | Item | Status | Next action |
 | --- | --- | --- |
-| 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`) | Built on `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`): the van offer, the Winamp-style player, AUTO switches, repeat, the pixelated cover, handbook, Beta's 1.6 checklist, Saffron's draft note, cache `unplugged-1.6-a`. Full regression suite passes in Chromium. Several interpretations await the owner (`decisions.md`, Release 1.6). | Owner OKs copying it to `/preview/` on `main`; then playtest, decide the proposed items, approve or rewrite Saffron's note, and the iPhone checks below. |
+| 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`) and at `/preview/`: the van offer, the Winamp-style player, AUTO switches (autoplay, Next and Previous), repeat, the pixelated cover; ownership per retreat; handbook, Beta's 1.6 checklist, Saffron's draft note, cache `unplugged-1.6-b`. Full regression suite passes in Chromium. | Owner's iPhone playtest; creative review of the drafts; decide the remaining proposed items (`decisions.md`, Release 1.6). Not to be merged without approval. |
 
 ## Approved and queued
 

@@ -1,6 +1,6 @@
 // unplugged service worker: caches the whole retreat so it plays with no signal.
 // The version is generated from the files' contents; rebuilding with any change makes a new one.
-const VERSION = 'unplugged-1.6-a';
+const VERSION = 'unplugged-1.6-b';
 const FONTS = 'unplugged-fonts';
 // The live game and the permanent preview at /preview/ share one origin, so each keeps to its own caches.
 const PREVIEW = /\/preview\//.test(self.location.pathname);

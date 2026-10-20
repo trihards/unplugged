@@ -32,18 +32,21 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 ## Release 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`)
 
-**In preview, not shipped.** Built on `release-1.6`; awaiting the owner's review and playtest.
+**In preview, not shipped.** Built on `release-1.6` and published to `/preview/` on 2026-10-20 with the owner's approval; not merged into the live game. Awaiting the owner's iPhone playtest.
+
+**Approved by the owner** (2026-10-20, after the first build):
+
+- **Ownership resets with each retreat.** You buy it from Dale during a retreat and keep it for the rest of that retreat (`S.dz`, saved with the retreat; older saves load without it). A new retreat starts with the plain Dale-Fi and needs a new purchase. It isn't on the welcome screen or after checkout. Songs found and the collection keep their usual persistence. This replaces the first build's permanent ownership.
+- **Next and Previous respect AUTO**, like autoplay: they go to the nearest song with AUTO lit. Tapping a song in the list still plays it. With nothing lit (possible when switches set on an earlier retreat cover every song this retreat has), autoplay, Next and Previous pass nothing over and move to the neighbouring song as usual.
 
 **Approved in the brief, built as written:** Dinglezoons, "The premier MP3 player of the Central Coast.", sold only from Dale's van as a one-time purchase in run cash; Dale's pitch verbatim; a Winamp 2.x-inspired player (graphite chassis, beveled keys, green pixel lettering, scrolling title, a small analyzer, a pixelated cover) for the same Dale-Fi collection; skip in autoplay, repeat one, the pixelated cover; no skins, equalizer, new music or new currencies. The original Dale-Fi is unchanged until you buy it. Songs, discovery, cards, economy, debt, mute and the audio lifecycle are untouched.
 
 **Proposed** (Claude Code's interpretation; confirm or change):
 
 - **Price $300**, as suggested. Checked against the economy: you start with $400, Dale's CD is $150, the first bigger cushion about $120, and the lowest takeaway threshold is $5,000, so it's a real choice on day one and small change later. It lowers net worth like any purchase.
-- **Ownership is permanent**, kept in the browser like the song collection (`unpw.dz`), not in the saved retreat: bought once, it stays for every retreat after and on the welcome screen. The alternative, buying it again each retreat like Dale's CD, fits "one-time purchase" less well. The preview keeps its own copy, as with everything else.
-- **"AUTO" instead of "skip".** Each found song gets a lit AUTO switch; off means autoplay passes it over. The word "skip" is avoided so it can't be confused with Next. A line above the playlist explains it: "When a song ends, the next one with AUTO lit plays. Tap any song to play it."
-- **Next and Previous ignore AUTO**, the brief's literal reading (only automatic advancement passes songs over). Worth considering instead: Next also passes over songs with AUTO off, which is what most music apps do with a hidden song; tapping the song would stay the manual way in.
-- **Never an empty rotation:** the last lit song among the ones you can play can't be switched off. Because a retreat only has the songs found on it, switches set on the welcome screen can still leave every song off; then autoplay simply passes none over.
-- **Repeat** plays the current song again whenever it ends, including a song with AUTO off that you picked. Next, Previous and tapping a song still move, and the new song repeats. AUTO switches and repeat are kept as settings (like volume), across retreats.
+- **"AUTO" instead of "skip".** Each found song gets a lit AUTO switch; off means autoplay, Next and Previous pass it over. The word "skip" is avoided so it can't be confused with Next. A line above the playlist explains it: "Autoplay, Next and Previous only play songs with AUTO lit. Tap any song to play it."
+- **Never an empty rotation:** the last lit song among the ones you can play can't be switched off. Switches set on an earlier retreat can still leave every song this retreat has off; then nothing is passed over.
+- **Repeat** plays the current song again whenever it ends, including a song with AUTO off that you picked. Next, Previous and tapping a song still move, and the new song repeats. AUTO switches and repeat are kept as settings (like volume) across retreats, and only act while you have a Dinglezoons.
 - **The pixelated cover** is drawn in the browser from the existing card art: cropped square, shrunk to 24×24 with eight levels per color, shown at 72 px with hard pixel edges. No new image files. Event songs show an empty frame. Thumbnails and companion cards keep the full-size art.
 - **Wording:** the van offer ("Dinglezoons, the premier MP3 player of the Central Coast." then "Dale: “…”"), the line after buying ("Dale hands over the Dinglezoons. Your songs are already on it."), the journal entry ("Dale hands over a Dinglezoons for $300."), "128kbps 44kHz" on the display, the handbook paragraph under The Dale-Fi, and Beta's 1.6 checklist. The sheet's title stays "Dale-Fi" (the system); the device says DINGLEZOONS.
 - **Saffron's note, "On What We Choose to Hear"**, drafted by Claude Code as the brief asks; not yet approved. Dated 2026-10-20 for now; it gets the release day if it ships.
