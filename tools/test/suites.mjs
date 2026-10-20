@@ -1138,7 +1138,7 @@ const audio = {
 };
 
 /* ======================= dinglezoons: the upgraded player ======================= */
-const OWN = 'S.dz = true';
+const OWN = "store.set('unpw.dz', true)";
 const SONGS = ids => `${JSON.stringify(ids)}.forEach(id => { if (!S.songs.includes(id)) S.songs.push(id); })`;
 const atVan = (cash, day = 3) => `S.loc = VAN_IX; S.day = ${day}; S.cash = ${cash}; render(); $('#toasts').innerHTML = ''`;
 /* Let the playing song reach its real end (the test songs are 60 seconds). */
@@ -1155,7 +1155,7 @@ const dinglezoons = {
       ok((await g.page.textContent('.dzoffer')).includes('Top of the line, man. Comes with two tracks from Gary’s ’98 tape. Don’t ask me how he recorded ’em.'), "Dale's pitch");
       eq(await g.page.textContent('[data-act="buydz"]'), 'Buy $300', 'price on the button');
       await g.tap('[data-act="buydz"]');
-      eq(await g.run("[S.cash, dzOwned(), S.dz, localStorage.getItem('unpw.dz'), sheetKind]"), [700, true, true, null, 'van'], 'paid, owned with this retreat (not stored outside it), still at the van');
+      eq(await g.run("[S.cash, dzOwned(), localStorage.getItem('unpw.dz'), 'dz' in S, sheetKind]"), [700, true, 'true', false, 'van'], 'paid, owned (kept outside the saved retreat), still at the van');
       eq(await g.page.locator('#sheet [data-act="buydz"]').count(), 0, 'offer gone');
       ok(await g.run("S.log.some(e => /Dinglezoons for \\$300/.test(e.t || e))"), 'journaled');
       eq(await g.run('({ debt: S.debt, van: S.van, songs: S.songs.slice(), cap: S.cap })'), before, 'debt, glovebox, songs and cushion untouched');
@@ -1189,7 +1189,7 @@ const dinglezoons = {
       eq(await g.page.locator('[data-act="buydz"]').count(), 0, 'no offer once owned');
       eq(await g.run('[buyDZ(), S.cash]'), [false, 700], 'a second purchase does nothing');
       await g.run('closeSheet(true); startGame(MODES[2]); ' + atVan(1000) + '; vanSheet()');
-      eq(await g.run('[dzOwned(), S.dz, S.cash, avail()]'), [false, false, 1000, ['s0']], 'the next retreat starts without it, or Gary’s songs');
+      eq(await g.run("[dzOwned(), localStorage.getItem('unpw.dz'), S.cash, avail()]"), [false, null, 1000, ['s0']], 'the next retreat starts without it, or Gary’s songs');
       ok(await g.page.isVisible('#sheet [data-act="buydz"]'), 'Dale offers it again');
       eq(await g.run('collected()'), ['s0', 'w1', 'w3'], 'the collection is untouched');
       await g.run('closeSheet(true); musicSheet()');
@@ -1197,16 +1197,33 @@ const dinglezoons = {
       await g.run('closeSheet(true); buyDZ()');
       eq(await g.run('[dzOwned(), S.cash]'), [true, 700], 'and it can be bought again');
     }),
-    tst('ownership lasts the retreat: kept through a reload; not on the welcome screen or the next retreat', {}, async g => {
-      await g.start(2); await g.run(atVan(1000) + '; buyDZ(); saveRun()');
+    tst('ownership lasts until the next retreat: through a reload, checkout, the results and the welcome screen, and a reload after checkout', { storage: { 'unpw.collected': '["s0","w1","square"]' } }, async g => {
+      await g.start(2); await g.run(SONGS(['w1']) + '; ' + atVan(1000) + '; buyDZ(); saveRun()');
       await g.page.reload(); await g.page.waitForFunction(() => window.__U);
-      eq(await g.run('dzOwned()'), false, 'not owned on the welcome screen');
-      await g.run('musicSheet()');
-      ok(await g.page.isVisible('#sheet .dalefi'), 'the welcome-screen collection plays on the plain Dale-Fi');
-      await g.run('closeSheet(true)'); await g.tap('[data-act="continue"]');
+      eq(await g.run('[dzOwned(), avail()]'), [true, ['s0', 'w1', 'square', 'shoe', 'clam']], 'mid-retreat, on the welcome screen: owned, with the collection and Gary’s songs');
+      await g.tap('[data-act="continue"]');
       eq(await g.run('[dzOwned(), S.cash]'), [true, 700], 'the continued retreat still has it');
-      await g.run("S.day = S.days; endGame('time')");
-      eq(await g.run('[dzOwned(), avail().includes("shoe")]'), [false, false], 'over once the retreat is, Gary’s songs too');
+      await g.run("S.day = S.days; S.debt = 0; endGame('time')"); await g.wait(300);
+      eq(await g.run('[screen, dzOwned(), avail()]'), ['over', true, ['s0', 'w1', 'square', 'shoe', 'clam']], 'results screen: still owned');
+      await g.run('musicSheet()');
+      ok(await g.page.isVisible('#sheet .dz'), 'the Dinglezoons opens on the results screen');
+      await g.run('closeSheet(true)'); await g.tap('[data-act="welcome"]'); await g.wait(300);
+      await g.run('musicSheet()');
+      ok(await g.page.isVisible('#sheet .dz') && await g.page.isVisible('#sheet [data-track="clam"]'), 'and on the welcome screen, with Clam’s End');
+      eq(await g.page.textContent('#sheet .muted'), 'Your collection: 3 of 7 songs.', 'the count is still only songs found');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      eq(await g.run("[savedRun(), dzOwned(), avail()]"), [null, true, ['s0', 'w1', 'square', 'shoe', 'clam']], 'reopened after checkout, no retreat saved: still owned');
+      await g.run("musicSheet(); musicPick('shoe')"); await g.wait(400);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['shoe', true], 'Gary’s songs play there');
+      await g.run('closeSheet(true)'); await g.start(2); await g.wait(400);
+      eq(await g.run("[dzOwned(), localStorage.getItem('unpw.dz'), avail(), collected()]"), [false, null, ['s0'], ['s0', 'w1', 'square']], 'a new retreat: plain Dale-Fi, no Gary, the collection (You’re Square too) untouched');
+      eq(await g.run('[M.loaded !== "shoe", musicPlaying()]'), [true, true], 'the Gary song that was playing gave way to one you keep');
+      await g.run("musicSheet()");
+      ok(await g.page.isVisible('#sheet .dalefi'), 'the plain Dale-Fi');
+      await g.run('closeSheet(true); ' + atVan(1000, 2) + '; vanSheet()');
+      eq(await g.page.locator('[data-act="buydz"]').count(), 0, 'not for sale again before day 3');
+      await g.run('closeSheet(true); ' + atVan(1000, 3) + '; vanSheet()');
+      ok(await g.page.isVisible('[data-act="buydz"]'), 'and for sale again from day 3');
     }),
     tst('buying keeps the collection and the retreat\'s songs exactly', { storage: { 'unpw.collected': '["s0","w1","w3"]' } }, async g => {
       await g.start(2); await g.run("S.songs = ['s0', 'w1']; " + atVan(1000));
@@ -1308,14 +1325,15 @@ const dinglezoons = {
       const r = await g.run('({ cur: M.cur, playing: musicPlaying(), t: M.audio.currentTime })');
       ok(r.cur === 'shoe' && r.playing && r.t < 5, 'repeat works on it', r);
     }),
-    tst('Gary’s songs stop being playable when the retreat ends, even mid-song', {}, async g => {
+    tst('Gary’s songs play on through checkout and stop being playable when a new retreat starts, even mid-song', {}, async g => {
       await g.start(2); await g.run(atVan(1000) + '; buyDZ()'); await dzPlay(g, 'shoe');
       await g.run("closeSheet(true); S.day = S.days; endGame('time')"); await g.wait(400);
       await g.tap('[data-act="welcome"]'); await g.wait(1300);
-      const s = await g.run('({ cur: M.cur, loaded: M.loaded, avail: avail() })');
-      ok(s.loaded !== 'shoe' && !s.avail.includes('shoe'), 'the Dale-Fi moved on to a song you keep', s);
+      eq(await g.run('[M.cur, musicPlaying(), avail().includes("shoe")]'), ['shoe', true, true], 'after the checkout song, Side A is back on the welcome screen');
+      await g.start(2); await g.wait(300);
+      const s = await g.run('({ loaded: M.loaded, playing: musicPlaying(), avail: avail() })');
+      ok(s.loaded !== 'shoe' && s.playing && !s.avail.includes('shoe'), 'a new retreat: the Dale-Fi moved on to a song you keep', s);
       await g.run('musicSheet()');
-      ok(await g.page.isVisible('#sheet .dalefi'), 'and the welcome screen has the plain Dale-Fi');
       eq(await g.page.locator('#sheet [data-track="shoe"]').count(), 0, 'Side A not playable there');
     }),
     tst('You’re Square: paying Dale off in full adds it for good, with the approved card; partial payments don’t', { storage: { 'unpw.collected': '["s0","w2"]' } }, async g => {
@@ -1374,9 +1392,12 @@ const dinglezoons = {
       eq(await g.run('[dzOwned(), DZ.skip, DZ.rep, S.songs, avail()]'), [true, ['w1'], true, ['s0', 'w1'], ['s0', 'w1', 'shoe', 'clam']], 'all kept, Gary’s songs too');
       await g.run("closeSheet(true); startGame(MODES[2]); " + atVan(1000) + '; buyDZ()');
       eq(await g.run('[DZ.skip, DZ.rep]'), [['w1'], true], 'the switches and repeat are still set on the next Dinglezoons');
-      await g.run("const old = JSON.parse(JSON.stringify(S)); delete old.dz; store.set('unpw.save', old)");
+      await g.run("store.del('unpw.dz'); const old = JSON.parse(JSON.stringify(S)); old.dz = true; store.set('unpw.save', old)");
       await g.page.reload(); await g.page.waitForFunction(() => window.__U); await g.tap('[data-act="continue"]');
-      eq(await g.run('[S.dz, dzOwned(), screen]'), [false, false, 'game'], 'an older save without the field loads, without a Dinglezoons');
+      eq(await g.run("[dzOwned(), 'dz' in S, screen]"), [true, false, 'game'], 'a retreat saved by an earlier 1.6 preview with one bought keeps it');
+      await g.run("store.del('unpw.dz'); saveRun()");
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U); await g.tap('[data-act="continue"]');
+      eq(await g.run('[dzOwned(), screen]'), [false, 'game'], 'an older save without one loads without a Dinglezoons');
     }),
     tst('pixelated cover: drawn from the card art, small and crisp; companion cards keep the full-size art', {}, async g => {
       await g.start(2); await g.run(OWN + '; ' + SONGS(['w1'])); await g.run('musicSheet()'); await g.wait(600);

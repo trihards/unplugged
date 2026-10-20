@@ -19,7 +19,7 @@ As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). 
 
 | Item | Status | Next action |
 | --- | --- | --- |
-| 1.6: Dinglezoons (handoffs `2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md` and `02_RELEASE_1_6_FINAL.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`): the first round (Winamp-style player, AUTO, repeat, pixelated cover, per-retreat ownership) plus the final handoff: from day 3, Gary's two bundled songs, You're Square as a collectible, separate Music and Sounds, Dale's new line, Saffron's redrafted note, Beta's checklist, cache `unplugged-1.6-e`. Gary's songs converted from the owner's MP3s. At `/preview/`. | Owner's iPhone playtest and creative review of the drafts (Dale's line, Saffron's note, Beta's checklist) and the interpretations in `decisions.md`. Not to be merged without approval. |
+| 1.6: Dinglezoons (handoffs `2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md` and `02_RELEASE_1_6_FINAL.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`): the first round (Winamp-style player, AUTO, repeat, pixelated cover, per-retreat ownership) plus the final handoff: from day 3, Gary's two bundled songs, You're Square as a collectible, separate Music and Sounds, Dale's new line, Saffron's redrafted note, Beta's checklist, cache `unplugged-1.6-f`. Gary's songs converted from the owner's MP3s. After the owner's playtest, ownership now lasts through checkout until a new retreat starts (cache `unplugged-1.6-f`). At `/preview/`. | Owner's iPhone playtest and creative review of the drafts (Dale's line, Saffron's note, Beta's checklist) and the interpretations in `decisions.md`. Not to be merged without approval. |
 
 ## Approved and queued
 

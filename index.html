@@ -869,10 +869,11 @@ let sheetKind = null;
 
 function startGame(m) {
   store.set('unpw.mode', m.id);
+  store.del('unpw.dz'); // a new retreat starts with the plain Dale-Fi
   S = {
     mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
     day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, decoyShares: 0, zen: 100,
-    loc: 0, prices: {}, inv: {}, paid: {}, log: [], jc: '', lab: labVisit(), dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], dz: false, newSong: false, cdHint: false, stats: newStats(),
+    loc: 0, prices: {}, inv: {}, paid: {}, log: [], jc: '', lab: labVisit(), dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
   ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; });
@@ -1518,7 +1519,8 @@ function continueRun() {
   if (!(S.dunDay >= 0)) S.dunDay = 0;
   if (!Array.isArray(S.dunSaid)) S.dunSaid = [];
   if (typeof S.jc !== 'string') S.jc = '';
-  if (S.dz !== true) S.dz = false;
+  if (S.dz === true) store.set('unpw.dz', true); // bought in an earlier 1.6 preview, which kept it in the save
+  delete S.dz;
   if (S.lab !== 4 && S.lab !== 5) S.lab = labVisit();
   if (!Array.isArray(S.mk) || S.mk.length !== PLACES.length || !S.mk.every(m => m && m.day >= 1 && m.s && m.b && ITEMS.every(it => m.b[it.id] >= 1 && m.s[it.id] >= 0))) S.mk = newMarkets();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
@@ -1661,12 +1663,12 @@ const NOTES = [
   },
 ];
 const CD_PRICE = 150;
-/* Dinglezoons: the upgraded player Dale sells from his van from day 3. Bought for one retreat (S.dz); the next retreat
-   needs a new one, while songs found stay in the collection as always. It comes with Gary's two songs (BUNDLE). It plays the same songs and adds an AUTO switch per
-   song (off: autoplay, Next and Previous pass it over; tapping it still plays it), repeat one, and a pixelated cover.
+/* Dinglezoons: the upgraded player Dale sells from his van from day 3. Kept (unpw.dz) through checkout, the results
+   and the welcome screen until a new retreat starts, which needs a new one; songs found stay in the collection as
+   always. It comes with Gary's two songs (BUNDLE). It plays the same songs and adds an AUTO switch per song (off: autoplay, Next and Previous pass it over; tapping it still plays it), repeat one, and a pixelated cover.
    The AUTO switches and repeat are kept as settings, and do nothing without a Dinglezoons. */
 const DZ_PRICE = 300, DZ_DAY = 3;
-const dzOwned = () => inRun() && S.dz === true;
+const dzOwned = () => store.get('unpw.dz', false) === true;
 const DZ = { skip: [].concat(store.get('unpw.skip', [])).filter(id => typeof id === 'string'), rep: store.get('unpw.rep', false) === true, img: {}, pix: {} };
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
   want: false, held: false, at: null, fadeTimer: null };
@@ -1674,7 +1676,7 @@ const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) { /* not supported */ }
 const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
 const inRun = () => screen === 'game' && S && !S.over;
-const avail = () => (inRun() ? S.songs.concat(S.dz === true ? BUNDLE : []) : collected()).filter(id => TBYID[id]);
+const avail = () => (inRun() ? S.songs : collected()).concat(dzOwned() ? BUNDLE : []).filter(id => TBYID[id]);
 const hasSong = id => S && S.songs && S.songs.includes(id);
 
 /* A song turns up. The first time you ever find it, its companion card is revealed: right away if you asked for it
@@ -1739,7 +1741,7 @@ function buyCD() {
 function buyDZ() {
   if (!S || S.over || !PLACES[S.loc].van || dzOwned() || S.day < DZ_DAY || S.cash < DZ_PRICE) return false;
   S.cash -= DZ_PRICE;
-  S.dz = true;
+  store.set('unpw.dz', true);
   SND.receive();
   log(`Dale hands over a Dinglezoons for ${fmt(DZ_PRICE)}.`);
   render();
@@ -2159,7 +2161,7 @@ function musicSheet() {
         ${run && t.id === 'w2' && PLACES[S.loc].van ? `<button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button>` : ''}</div>`).join('');
   openSheet(`<div class="grab"></div>
     <h3 id="sheetTitle">Dale-Fi</h3>
-    <p class="muted">${run ? (S.songs.length === 1 ? "It came preloaded with the retreat's spa track. Dale says there's better stuff out there." : `${S.songs.length} of ${COLLECTIBLE.length} songs found this retreat.`) : `Your collection: ${list.length} of ${COLLECTIBLE.length} songs.`}</p>
+    <p class="muted">${run ? (S.songs.length === 1 ? "It came preloaded with the retreat's spa track. Dale says there's better stuff out there." : `${S.songs.length} of ${COLLECTIBLE.length} songs found this retreat.`) : `Your collection: ${collected().length} of ${COLLECTIBLE.length} songs.`}</p>
     ${dz ? `<div class="dz">
       <div class="dzbar"><span>Dinglezoons</span></div>
       <div class="dzscr" aria-hidden="true">
@@ -2758,7 +2760,7 @@ function handbookSheet() {
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${COLLECTIBLE.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
       <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Checking out has songs of its own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. In the menu and in Options, <b>Music</b> switches the songs on and off and <b>Sounds</b> the chimes and other effects, each on its own.</p>
-      <p>From day ${DZ_DAY}, Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat; the next retreat starts with the plain Dale-Fi again, and your songs stay with you as always. It plays your songs plus two that come with it, from Gary's Cream of the Crop ’98 tape; they only play on a Dinglezoons and leave with it. It adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
+      <p>From day ${DZ_DAY}, Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat and afterwards, on the results and the welcome screen, until you start your next retreat, which begins with the plain Dale-Fi again; your songs stay with you as always. It plays your songs plus two that come with it, from Gary's Cream of the Crop ’98 tape; they only play on a Dinglezoons and leave with it. It adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
       <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, and Esc closes things.</p>
@@ -3016,8 +3018,8 @@ const INSPECT = {
   version: '1.6',
   intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
   items: [
-    ['Buying it from Dale', 'On days 1 and 2 the van has no Dinglezoons. From day 3, with less than $300 on you its button is off; with $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone for the rest of the retreat. Start a new retreat: the plain Dale-Fi is back, with every song you’ve found, and from day 3 Dale sells you another.'],
-    ['Gary’s tape', 'With the Dinglezoons, What’s on Your Shoe and Clam’s End are in the playlist, each with the cassette card. They play, repeat and take AUTO, Next and Previous like any song. On the plain Dale-Fi and on the welcome screen they show as not found, with their hints. A new retreat starts without them.'],
+    ['Buying it from Dale', 'On days 1 and 2 the van has no Dinglezoons. From day 3, with less than $300 on you its button is off; with $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone for the rest of the retreat. Check out: the Dinglezoons and Gary’s songs are still there on the results and the welcome screen, also after closing and reopening the game. Start a new retreat: the plain Dale-Fi is back, with every song you’ve found, and from day 3 Dale sells you another.'],
+    ['Gary’s tape', 'With the Dinglezoons, What’s on Your Shoe and Clam’s End are in the playlist, each with the cassette card. They play, repeat and take AUTO, Next and Previous like any song. On the plain Dale-Fi they show as not found, with their hints. They stay after checkout until a new retreat starts, which begins without them.'],
     ['The upgraded player', 'Open the Dale-Fi: a dark Dinglezoons with green lettering, a pixelated cover, a small analyzer and your songs. Play, pause, previous, next, seeking and volume all work, at 320 and 375 wide too, with nothing cramped or cut off. Your songs and their order are unchanged.'],
     ['Repeat', 'Turn on repeat and let a song finish: it starts again. Pick another song: that one repeats. Turn repeat off: the next song follows.'],
     ['AUTO off', 'Switch AUTO off on a song. Let the one before it finish, or press Next or Previous across it: the player passes over it. Tap it and it plays. The last song still lit can’t be switched off.'],
