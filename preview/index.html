@@ -515,6 +515,72 @@ input[type=range]:disabled { opacity: .35; }
 @media (prefers-reduced-motion: reduce) {
   .saf-port::before, .mq, .eq.on svg, #sheet.carob { animation: none; }
 }
+/* Dinglezoons: the upgraded Dale-Fi. Graphite chassis, beveled metal keys, green pixel lettering, after classic
+   desktop players. Colors live in custom properties on .dz and .dzpl. */
+.dz, .dzpl {
+  --dz-body: #2B2E35; --dz-edge: #121318; --dz-hi: rgba(255,255,255,.16); --dz-screen: #050806;
+  --dz-green: #3CF06A; --dz-dim: #2E9A4E; --dz-glow: rgba(60, 240, 106, .45); --dz-key: linear-gradient(180deg, #E4E6EA, #A9ADB5 55%, #8A8F98);
+  position: relative; margin: 12px 0 0; padding: 0 8px 8px; border-radius: 6px; color: var(--dz-green);
+  background: linear-gradient(180deg, #3A3E47, var(--dz-body) 40%, #23262C);
+  box-shadow: 0 0 0 1px var(--dz-edge), inset 1px 1px 0 var(--dz-hi), inset -1px -1px 0 rgba(0,0,0,.5), var(--lift);
+}
+.dzpl { margin-top: 10px; }
+.dzbar { display: flex; justify-content: center; margin: 0 -8px 6px; padding: 3px 8px; border-radius: 6px 6px 0 0;
+  background: repeating-linear-gradient(180deg, #7C808A 0 1px, #3A3E47 1px 3px); }
+.dzbar span { background: var(--dz-body); padding: 0 8px; font: 700 11px/14px var(--sans, system-ui); letter-spacing: .22em; text-transform: uppercase; color: #E9D9A0; }
+.dzscr { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center; padding: 8px; border-radius: 3px;
+  background: var(--dz-screen); box-shadow: inset 1px 1px 0 rgba(0,0,0,.8), inset -1px -1px 0 var(--dz-hi), 0 0 0 1px #000;
+  font-family: "VT323", "Lucida Console", monospace; font-size: 17px; line-height: 1.05; text-shadow: 0 0 4px var(--dz-glow); }
+#dzArt { width: 72px; height: 72px; display: block; background: #0C140E; box-shadow: 0 0 0 1px var(--dz-dim);
+  image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; image-rendering: pixelated; }
+.dzinfo { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dz .lr { display: flex; justify-content: space-between; gap: 6px; white-space: nowrap; color: var(--dz-dim); text-shadow: none; overflow: hidden; }
+.dz .lr span:first-child { color: var(--dz-green); text-shadow: 0 0 4px var(--dz-glow); }
+.dztime { font-size: 26px; letter-spacing: .02em; white-space: nowrap; }
+.dz .bars { height: 22px; margin: 0; gap: 2px; }
+.dz .bars i { border-radius: 0; background: linear-gradient(0deg, #2BD45A 0, #3CF06A 45%, #E8E33A 75%, #F0502E 100%) bottom / 100% 22px no-repeat; }
+.dz .marq { grid-column: 1 / -1; margin: 2px 0 0; font-size: 20px; }
+.dz .prog { height: 10px; margin: 8px 0 2px; border: 0; border-radius: 2px; background: #0C140E; box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--dz-hi); }
+.dz #lcdFill { background: linear-gradient(180deg, #E4E6EA, #8A8F98); border-radius: 2px; }
+.dzkeys, .dzvol { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+.dzk { min-width: 48px; height: 44px; padding: 0 10px; border: 0; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--dz-key); color: #1C1E23; font: 700 22px/1 var(--sans, system-ui);
+  box-shadow: 0 0 0 1px var(--dz-edge), inset 1px 1px 0 rgba(255,255,255,.8), inset -1px -1px 0 rgba(0,0,0,.35), 0 2px 0 #0B0C0F; }
+.dzk:active { transform: translateY(1px); box-shadow: 0 0 0 1px var(--dz-edge), inset 1px 1px 2px rgba(0,0,0,.35), 0 1px 0 #0B0C0F; }
+.dzk svg { width: 22px; height: 22px; }
+.dzk.play { min-width: 60px; }
+.dzk.rep { margin-left: auto; min-width: 64px; }
+.dzk .led, .dzauto .led { width: 7px; height: 7px; border-radius: 1px; background: #1A3322; box-shadow: inset 0 0 0 1px rgba(0,0,0,.5); flex: 0 0 auto; }
+.dzk.rep.on .led, .dzauto[aria-checked="true"] .led { background: var(--dz-green); box-shadow: 0 0 6px var(--dz-green); }
+.dzvol #lcdVol { flex: 1; min-width: 0; height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 3px; background: var(--dz-screen);
+  box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--dz-hi); font: 18px/1 "VT323", "Lucida Console", monospace; text-shadow: 0 0 4px var(--dz-glow); }
+.dzvol #lcdVol b { flex: 1; display: flex; gap: 2px; height: 14px; }
+.dzvol #lcdVol i { flex: 1; background: #12301C; }
+.dzvol #lcdVol i.on { background: var(--dz-green); }
+.dztag { display: block; margin: 8px 2px 0; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #A3A8B1; }
+.dzhelp { margin: 0 2px 6px !important; font-size: 13.5px; line-height: 1.35; color: #B9BEC7; }
+.dzpl .tracks { margin: 0; padding: 0 5px; border-radius: 3px; background: var(--dz-screen); box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--dz-hi); }
+.dzpl .trkline, .dzpl .trk { border-color: #16261B; }
+.dzpl .trkline { gap: 5px; }
+.dzpl .trk { grid-template-columns: 16px 1fr auto; gap: 8px; padding: 8px 0; min-height: 52px; }
+.dzpl .trk .tt { font-size: 15.5px; line-height: 1.25; }
+.dzpl .trk .ta { font-size: 13px; }
+.dzpl .trk .n, .dzpl .trk .ta { color: var(--dz-dim); }
+.dzpl .trk .tt { color: var(--dz-green); }
+.dzpl .trk.cur .tt { color: #F2F5F0; }
+.dzpl .trk .pl { color: #F2F5F0; }
+.dzpl .trk.locked .tt, .dzpl .trk.locked .ta { color: #2F8F4A; }
+.dzpl .trkline.off .tt { color: var(--dz-dim); }
+.dzpl .trkline.off .trk.cur .tt { color: #9AA39C; }
+.dzpl .cardthumb { box-shadow: 0 0 0 1px var(--dz-dim); background: #0C140E; }
+.dzauto { flex: 0 0 auto; width: 50px; height: 44px; padding: 0; border: 0; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  background: linear-gradient(180deg, #4A4E58, #30333B); color: #C9CDD4; font: 700 11px/1 var(--sans, system-ui); letter-spacing: .06em;
+  box-shadow: 0 0 0 1px #000, inset 1px 1px 0 rgba(255,255,255,.18); }
+.dzauto[aria-checked="true"] { color: var(--dz-green); }
+.dzauto:disabled { opacity: .55; }
+.dzoffer { flex-wrap: nowrap; }
+.dzoffer q { display: block; margin-top: 3px; color: var(--ink2); }
+.dzoffer q::before { content: "Dale: “"; } .dzoffer q::after { content: "”"; }
 
 
 /* ---------- characters in sheets ---------- */
@@ -795,7 +861,7 @@ function startGame(m) {
   S = {
     mode: m.id, modeName: m.name, days: m.days, rate: m.rate, k: m.k,
     day: 1, hour: WAKE, cash: START_CASH, van: 0, debt: START_DEBT, cap: START_CAP, decoys: 0, decoyShares: 0, zen: 100,
-    loc: 0, prices: {}, inv: {}, paid: {}, log: [], jc: '', lab: labVisit(), dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], newSong: false, cdHint: false, stats: newStats(),
+    loc: 0, prices: {}, inv: {}, paid: {}, log: [], jc: '', lab: labVisit(), dunDay: 0, dunSaid: [], over: false, reason: '', saved: false, songs: ['s0'], dz: false, newSong: false, cdHint: false, stats: newStats(),
     flavor: 'Check-in is done. Your phone is sealed in a velvet pouch. Your cushion has a zipper nobody noticed.',
   };
   ITEMS.forEach(i => { S.inv[i.id] = 0; S.paid[i.id] = 0; });
@@ -1322,6 +1388,7 @@ function vanSheet(msg, ok) {
       ? `<img src="${IMG.daleMad}" alt="Dale, glaring" class="bust"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">Dale looks up from his crossword. He is not thrilled about the ${fmt(S.debt)}.</p></div>`
       : `<img src="${IMG.daleCross}" alt="Dale doing his crossword" class="pose"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">Dale doesn't look up from his crossword.</p></div>`}</div>
     ${hasSong('w2') ? '' : `<div class="cdoffer"><span>Dale's burned CD, “Late Night Record Shop”</span><button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button></div>`}
+    ${dzOwned() ? '' : `<div class="cdoffer dzoffer"><span><b>Dinglezoons</b>, the premier MP3 player of the Central Coast.<q>Top of the line, man. You can skip stuff now. Even plays the same song over and over, if that's your thing.</q></span><button type="button" class="chip" data-act="buydz" ${S.cash >= DZ_PRICE ? '' : 'disabled'}>Buy ${fmt(DZ_PRICE)}</button></div>`}
     <div class="ledger">
       <span>On you</span><span class="v num">${fmt(S.cash)}</span>
       <span>In the glovebox</span><span class="v num">${fmt(S.van)}</span>
@@ -1440,6 +1507,7 @@ function continueRun() {
   if (!(S.dunDay >= 0)) S.dunDay = 0;
   if (!Array.isArray(S.dunSaid)) S.dunSaid = [];
   if (typeof S.jc !== 'string') S.jc = '';
+  if (S.dz !== true) S.dz = false;
   if (S.lab !== 4 && S.lab !== 5) S.lab = labVisit();
   if (!Array.isArray(S.mk) || S.mk.length !== PLACES.length || !S.mk.every(m => m && m.day >= 1 && m.s && m.b && ITEMS.every(it => m.b[it.id] >= 1 && m.s[it.id] >= 0))) S.mk = newMarkets();
   S.songs = S.songs.filter(id => TBYID[id]); if (!S.songs.includes('s0')) S.songs.unshift('s0');
@@ -1483,11 +1551,25 @@ const CARDS = {
    date is YYYY-MM-DD; body is a list of paragraphs, verbatim from the approved text; sign is the sign-off lines. */
 /* The game's version, shown beside What's New. Bump it only when a release ships, together with its note above.
    1.0 was the launch on 2026-10-09; 1.1 the 2026-10-15 release; 1.2 the 2026-10-16 map; 1.3 the 2026-10-17 Dale-Fi companion cards;
-   1.4 Dale's Outstanding Balance; 1.5 limited stock, Radical Acceptance, the journal and a fresh guestbook. */
-const GAME_VERSION = '1.5';
+   1.4 Dale's Outstanding Balance; 1.5 limited stock, Radical Acceptance, the journal and a fresh guestbook;
+   1.6 the Dinglezoons. */
+const GAME_VERSION = '1.6';
 const NOTES = [
   {
-    date: '2026-10-18',
+    date: '2026-10-20',
+    title: 'On What We Choose to Hear',
+    body: [
+      'Dear Guests,',
+      'Dale has begun offering premium recreational electronics from his van. We have chosen not to learn what they are called.',
+      'Some of you will now pass over the songs you would rather not hear. We invite you to notice how easily the mind learns to avoid what it finds uncomfortable, and how rarely it asks why.',
+      'Others will play a single song again and again. Repetition can be a practice. It can also be a habit. We trust you to know the difference.',
+      'We understand the artwork is now shown at a lower resolution. We consider this a step in the right direction.',
+      'Silence remains included with your stay, at no additional cost.',
+    ],
+    sign: ['With care,', 'Guide Saffron'],
+  },
+  {
+    date: '2026-10-19',
     title: 'On the Nature of Abundance',
     body: [
       'Dear Guests,',
@@ -1553,6 +1635,13 @@ const NOTES = [
   },
 ];
 const CD_PRICE = 150;
+/* Dinglezoons: the upgraded player Dale sells from his van. Bought for one retreat (S.dz); the next retreat needs a
+   new one, while songs found stay in the collection as always. It plays the same songs and adds an AUTO switch per
+   song (off: autoplay, Next and Previous pass it over; tapping it still plays it), repeat one, and a pixelated cover.
+   The AUTO switches and repeat are kept as settings, and do nothing without a Dinglezoons. */
+const DZ_PRICE = 300;
+const dzOwned = () => inRun() && S.dz === true;
+const DZ = { skip: [].concat(store.get('unpw.skip', [])).filter(id => typeof id === 'string'), rep: store.get('unpw.rep', false) === true, img: {}, pix: {} };
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
   want: false, held: false, at: null, fadeTimer: null };
 const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
@@ -1621,6 +1710,15 @@ function buyCD() {
   S.cash -= CD_PRICE;
   unlockSong('w2', `Dale hands over a burned CD for ${fmt(CD_PRICE)}.`, true);
 }
+function buyDZ() {
+  if (!S || S.over || !PLACES[S.loc].van || dzOwned() || S.cash < DZ_PRICE) return false;
+  S.cash -= DZ_PRICE;
+  S.dz = true;
+  SND.receive();
+  log(`Dale hands over a Dinglezoons for ${fmt(DZ_PRICE)}.`);
+  render();
+  return true;
+}
 
 function trackURL(id) { return `assets/audio/${id}.m4a`; }
 const canPlayAAC = () => { try { return !!new Audio().canPlayType('audio/mp4; codecs="mp4a.40.2"'); } catch (e) { return false; } };
@@ -1639,7 +1737,7 @@ function ensureAudio() {
   try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; }
   M.audio = new Audio();
   M.audio.preload = 'auto';
-  M.audio.addEventListener('ended', () => musicStep(1, true));
+  M.audio.addEventListener('ended', musicEnded);
   M.audio.addEventListener('play', musicUI);
   M.audio.addEventListener('pause', musicUI);
   M.audio.addEventListener('loadedmetadata', musicUI);
@@ -1865,12 +1963,43 @@ function musicToggle(force) {
   } else M.audio.pause();
   musicUI();
 }
+/* Dinglezoons: AUTO off on a song means autoplay, Next and Previous pass it over. Only the songs you can play right
+   now count, and if all of them have it off, none is passed over. */
+const dzSkips = id => dzOwned() && DZ.skip.includes(id);
+const dzCanSkip = id => avail().some(x => x !== id && !DZ.skip.includes(x));
+function stepTo(list, i, d) {
+  const at = k => list[((i + d * k) % list.length + list.length) % list.length];
+  if (!list.some(id => !dzSkips(id))) return at(1);
+  for (let k = 1; k <= list.length; k++) if (!dzSkips(at(k))) return at(k);
+}
+/* A song ended on its own: repeat it if the Dinglezoons is set to, otherwise autoplay moves on. */
+function musicEnded() {
+  if (dzOwned() && DZ.rep && M.loaded === M.cur && avail().includes(M.cur)) {
+    try { M.audio.currentTime = 0; } catch (e) { /* not seekable yet */ }
+    if (soundOn && !M.held && !document.hidden) tryPlay(M.audio).then(musicUI);
+    return musicUI();
+  }
+  musicStep(1, true);
+}
+function dzRepeat() {
+  if (!dzOwned()) return;
+  DZ.rep = !DZ.rep; store.set('unpw.rep', DZ.rep);
+  SND.tap(); musicUI();
+}
+function dzAuto(id) {
+  if (!dzOwned() || !TBYID[id]) return;
+  const off = DZ.skip.includes(id);
+  if (!off && !dzCanSkip(id)) return;
+  DZ.skip = off ? DZ.skip.filter(x => x !== id) : DZ.skip.concat(id);
+  store.set('unpw.skip', DZ.skip);
+  SND.tap(); musicUI();
+}
 function musicStep(d, auto) {
   const list = avail();
   const i = Math.max(0, list.indexOf(M.cur));
   const was = musicPlaying() || auto || d > 0 || (d < 0 && eventPlaying());
   if (!auto) musicTakeover();
-  if (!musicLoad(list[(i + d + list.length) % list.length])) return;
+  if (!musicLoad(stepTo(list, i, auto ? 1 : d))) return;
   M.want = was;
   if (was) tryPlay(M.audio).then(musicUI);
   musicUI();
@@ -1919,9 +2048,43 @@ function musicUI() {
   const play = $('#mplay'); if (play) { play.setAttribute('aria-label', on ? 'Pause' : 'Play'); play.innerHTML = on ? ICON.pause : ICON.play; }
   const ti = $('#lcdTitle'); if (ti && ti.dataset.id !== show.id) { ti.dataset.id = show.id; const lbl = `${show.title}${ev ? '' : shownArtist(t.id) ? ` - ${shownArtist(t.id)}` : ''}`; ti.innerHTML = `<span>${lbl}&nbsp;&nbsp;&nbsp;&nbsp;</span><span aria-hidden="true">${lbl}&nbsp;&nbsp;&nbsp;&nbsp;</span>`; }
   const no = $('#lcdNo'); if (no) no.textContent = ev ? 'EVENT' : `${String(Math.max(1, list.indexOf(t.id) + 1)).padStart(2, '0')}/${String(list.length).padStart(2, '0')}`;
-  const vo = $('#lcdVol'); if (vo) vo.textContent = `VOL ${Math.round(M.vol * 10)}`;
+  const vo = $('#lcdVol'), nv = Math.round(M.vol * 10);
+  if (vo) vo.innerHTML = vo.closest('.dzvol') ? `VOL <b>${'<i class="on"></i>'.repeat(nv)}${'<i></i>'.repeat(10 - nv)}</b>` : `VOL ${nv}`;
   document.querySelectorAll('[data-track]').forEach(r => r.classList.toggle('cur', r.dataset.track === t.id));
+  const cv = $('#dzArt'); if (cv && cv.dataset.id !== show.id) dzArt(cv, show.id);
+  const rep = $('#mrep'); if (rep) { rep.setAttribute('aria-pressed', DZ.rep); rep.classList.toggle('on', DZ.rep); }
+  document.querySelectorAll('[data-auto]').forEach(b => {
+    const id = b.dataset.auto, on = !DZ.skip.includes(id);
+    b.setAttribute('aria-checked', on); b.disabled = on && !dzCanSkip(id);
+    b.closest('.trkline').classList.toggle('off', !on);
+  });
   if (!M.raf) M.raf = requestAnimationFrame(lcdLoop);
+}
+/* The Dinglezoons cover: the song's companion-card art, cropped square and shrunk to PIX by PIX with fewer colors,
+   in a small canvas that CSS blows back up with hard pixel edges. The card itself always shows the full-size art. */
+const PIX = 24;
+function dzArt(cv, id) {
+  cv.dataset.id = id;
+  const g = cv.getContext('2d'), k = CARDS[id];
+  g.clearRect(0, 0, PIX, PIX);
+  if (!k) return;
+  if (DZ.pix[id]) return g.putImageData(DZ.pix[id], 0, 0);
+  const im = DZ.img[id] || (DZ.img[id] = Object.assign(new Image(), { src: IMG[k.art] }));
+  if (!im.complete || !im.naturalWidth) { im.addEventListener('load', () => { if (cv.dataset.id === id) dzArt(cv, id); }, { once: true }); return; }
+  try {
+    const s = Math.min(im.naturalWidth, im.naturalHeight);
+    let w = s, src = im, sx = (im.naturalWidth - s) / 2, sy = (im.naturalHeight - s) / 2;
+    while (w / 2 >= PIX) { // halve in steps so every source pixel counts, then posterize
+      const n = Math.round(w / 2), c = document.createElement('canvas');
+      c.width = c.height = n; c.getContext('2d').drawImage(src, sx, sy, w, w, 0, 0, n, n);
+      src = c; sx = sy = 0; w = n;
+    }
+    g.imageSmoothingEnabled = true; g.drawImage(src, sx, sy, w, w, 0, 0, PIX, PIX);
+    const d = g.getImageData(0, 0, PIX, PIX);
+    for (let i = 0; i < d.data.length; i++) if (i % 4 !== 3) d.data[i] = Math.min(255, Math.round(d.data[i] / 36) * 36);
+    g.putImageData(d, 0, 0);
+    DZ.pix[id] = d;
+  } catch (e) { /* a file:// page can't read canvas pixels; the cover stays dark */ }
 }
 function lcdLoop() {
   if (sheetKind !== 'music') { M.raf = null; return; }
@@ -1943,22 +2106,52 @@ const ICON = {
   pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>',
   prev: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="6" width="2.4" height="12" rx="1"/><path d="M19 6v12L8.5 12z"/></svg>',
   next: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="16.6" y="6" width="2.4" height="12" rx="1"/><path d="M5 6v12l10.5-6z"/></svg>',
+  rep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11V9a3 3 0 013-3h11"/><path d="M15 3l3 3-3 3"/><path d="M20 13v2a3 3 0 01-3 3H6"/><path d="M9 21l-3-3 3-3"/><path d="M12 10.5l1.2-.8V14" stroke-width="1.8"/></svg>',
 };
 function musicSheet() {
   ensureAudio();
   if (inRun()) S.newSong = false;
   const list = avail();
   if (!list.includes(M.cur)) M.cur = list[0];
-  const run = inRun();
+  const run = inRun(), dz = dzOwned();
   const rows = TRACKS.map((t, i) => list.includes(t.id)
     ? `<div class="trkline"><button type="button" class="trk ${t.id === M.cur ? 'cur' : ''}" data-track="${t.id}">
-        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${esc(shownArtist(t.id))}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}</div>`
+        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${esc(shownArtist(t.id))}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}${dz ? `<button type="button" class="dzauto" data-auto="${t.id}" role="switch" aria-checked="true" aria-label="Autoplay: ${esc(t.title)}"><i class="led"></i>AUTO</button>` : ''}</div>`
     : `<div class="trk locked"><span class="n num">${i + 1}</span><span><span class="tt">Not found yet</span><span class="ta">${run && t.hint ? t.hint : 'Turns up somewhere on a retreat.'}</span></span>
         ${run && t.id === 'w2' && PLACES[S.loc].van ? `<button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button>` : ''}</div>`).join('');
   openSheet(`<div class="grab"></div>
     <h3 id="sheetTitle">Dale-Fi</h3>
     <p class="muted">${run ? (list.length === 1 ? "It came preloaded with the retreat's spa track. Dale says there's better stuff out there." : `${list.length} of ${TRACKS.length} songs found this retreat.`) : `Your collection: ${list.length} of ${TRACKS.length} songs.`}</p>
-    <div class="dalefi">
+    ${dz ? `<div class="dz">
+      <div class="dzbar"><span>Dinglezoons</span></div>
+      <div class="dzscr" aria-hidden="true">
+        <canvas id="dzArt" width="${PIX}" height="${PIX}"></canvas>
+        <div class="dzinfo">
+          <div class="lr"><span id="lcdNo">01/01</span><span>128kbps 44kHz</span></div>
+          <div class="dztime" id="lcdTime">0:00 / 0:00</div>
+          <div id="lcdBars" class="bars">${'<i></i>'.repeat(16)}</div>
+        </div>
+        <div class="marq"><div id="lcdTitle" class="mq"></div></div>
+      </div>
+      <div class="prog" id="lcdProg"><div id="lcdFill"></div></div>
+      <div class="dzkeys">
+        <button type="button" class="dzk" data-act="mprev" aria-label="Previous song">${ICON.prev}</button>
+        <button type="button" class="dzk play" id="mplay" data-act="mplay" aria-label="Play">${ICON.play}</button>
+        <button type="button" class="dzk" data-act="mnext" aria-label="Next song">${ICON.next}</button>
+        <button type="button" class="dzk rep" id="mrep" data-act="mrep" aria-pressed="false" aria-label="Repeat this song"><i class="led"></i>${ICON.rep}</button>
+      </div>
+      <div class="dzvol">
+        <button type="button" class="dzk" data-act="mvoldn" aria-label="Volume down">-</button>
+        <span id="lcdVol" aria-hidden="true"></span>
+        <button type="button" class="dzk" data-act="mvolup" aria-label="Volume up">+</button>
+      </div>
+      <span class="dztag">The premier MP3 player of the Central Coast</span>
+    </div>
+    <div class="dzpl">
+      <div class="dzbar"><span>Playlist</span></div>
+      <p class="dzhelp">Autoplay, Next and Previous only play songs with AUTO lit. Tap any song to play it.</p>
+      <div class="tracks">${rows}</div>
+    </div>` : `<div class="dalefi">
       <div class="lcd" aria-hidden="true">
         <div class="lr"><span id="lcdNo">01/01</span><span id="lcdVol"></span><span class="batt"><i></i></span></div>
         <div class="marq"><div id="lcdTitle" class="mq"></div></div>
@@ -1977,7 +2170,7 @@ function musicSheet() {
       </div>
       <span class="stamp">DALE-FI 256MB</span>
     </div>
-    <div class="tracks">${rows}</div>`, 'music');
+    <div class="tracks">${rows}</div>`}`, 'music');
   M.raf = null;
   document.querySelectorAll('.eq .newdot').forEach(d => d.remove());
   musicUI();
@@ -2448,7 +2641,7 @@ function modeSheet() {
 }
 /* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
    Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
-const HB_MARKS = { version: '1.5', updated: ['Buying and selling', 'Retreat lengths and scoring', 'The Dale-Fi'], added: [] };
+const HB_MARKS = { version: '1.6', updated: ['The Dale-Fi'], added: [] };
 function handbookSheet() {
   const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
   const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
@@ -2525,7 +2718,8 @@ function handbookSheet() {
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
-      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>`),
+      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>
+      <p>Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat; the next retreat starts with the plain Dale-Fi again, and your songs stay with you as always. It plays the same songs and adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
       <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, and Esc closes things.</p>
@@ -2679,6 +2873,8 @@ function act(a, el) {
     case 'mnext': return musicStep(1);
     case 'mvolup': return musicNudge(0.1);
     case 'mvoldn': return musicNudge(-0.1);
+    case 'mrep': return dzRepeat();
+    case 'buydz': return buyDZ() ? vanSheet('Dale hands over the Dinglezoons. Your songs are already on it.', true) : vanSheet();
     case 'sign': return saveScore();
     case 'sound': setSound(!soundOn); return menuSheet();
     case 'welcome': closeSheet(true); queue = []; $('#toasts').innerHTML = ''; screen = 'welcome'; if (E.on) { eventStop(); musicResume(); } return render();
@@ -2694,6 +2890,7 @@ document.addEventListener('click', e => {
   const md = t.closest('[data-mode]'); if (md) { closeSheet(true); return startGame(MODES[+md.dataset.mode]); }
   const go = t.closest('[data-go]'); if (go && !go.disabled) return walk(+go.dataset.go);
   const row = t.closest('[data-item]'); if (row) return openTrade(row.dataset.item);
+  const au = t.closest('[data-auto]'); if (au) return dzAuto(au.dataset.auto);
   const tr = t.closest('[data-track]'); if (tr) return musicPick(tr.dataset.track);
   const pg = t.closest('#lcdProg');
   const pa = E.on ? E.el : M.audio;
@@ -2775,14 +2972,17 @@ function betaSwim() {
 /* Beta's Inspection Notes: what to check by hand in this preview, opened by tapping her bowl. One list per release:
    replace it (and its version) for each new preview. A list for another version is never shown. */
 const INSPECT = {
-  version: '1.5',
+  version: '1.6',
   intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
   items: [
-    ['Sold out, on rows and sheets', 'Buy every one of something at a spot. Its row and its trade sheet should say SOLD OUT, on Receive and on Let go. If you are only short of cash, the sheet should say that instead.'],
-    ['Selling restocks that spot', 'Let a few go where you bought it out. That many should be for sale there again. Other spots stay as they were.'],
-    ['Saves and reloads', 'Mid-retreat, close the app or reload, then Continue. Same day, hour, cash, cushion and stock at each spot.'],
-    ['Radical Acceptance', 'Keep visiting The Labyrinth. On the fourth or fifth visit of a retreat the song turns up with its card. It plays, and stays in the Dale-Fi.'],
-    ['The journal', 'After a few days, open it: offers you turned down, gossip with prices, what Saffron took, getaways and song finds, with where each happened. Walks with nothing in them leave no entry. After checkout it ends with how the retreat ended and whether Dale was paid.'],
+    ['Buying it from Dale', 'At the van with less than $300 on you, the Dinglezoons button is off. With $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone for the rest of the retreat. Start a new retreat: the plain Dale-Fi is back, with every song you’ve found, and Dale sells you another.'],
+    ['The upgraded player', 'Open the Dale-Fi: a dark Dinglezoons with green lettering, a pixelated cover, a small analyzer and your songs. Play, pause, previous, next, seeking and volume work as before, at 320 and 375 wide too, with nothing cramped or cut off. Your songs and their order are unchanged.'],
+    ['Repeat', 'Turn on repeat and let a song finish: it starts again. Pick another song: that one repeats. Turn repeat off: the next song follows.'],
+    ['AUTO off', 'Switch AUTO off on a song. Let the one before it finish, or press Next or Previous across it: the player passes over it. Tap it and it plays. The last song still lit can’t be switched off.'],
+    ['Covers and cards', 'Each song’s cover shows pixelated in the player. The small cover in the list still opens its companion card at full size, also at 320 wide.'],
+    ['Interruptions', 'With repeat on and a song playing: Guide Saffron’s theme, paying off Dale and checkout still step in and hand back; mute stays muted; leaving the app and coming back picks up the same song.'],
+    ['Saves and settings', 'Reload mid-retreat and Continue: the Dinglezoons, your AUTO switches and repeat are as you left them. Buy one on a later retreat and your switches and repeat are still set.'],
+    ['Still open from 1.5, on an iPhone', 'Mute stays muted after closing and reopening; Beta and the PREVIEW tab clear the notch and home indicator; Radical Acceptance’s card fits at iPhone SE size.'],
     ['Preview stays separate', 'Saves, guestbook scores and songs found here never show up in the live game, and the live game’s never show up here.'],
   ],
 };
