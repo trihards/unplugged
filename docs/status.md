@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-19. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: the same 1.5 build at `/preview/`, with Beta.
+As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: still the 1.5 build at `/preview/`; the 1.6 build is ready to replace it once the owner OKs updating `/preview/` on `main`.
 
 ## Shipped
 
@@ -17,7 +17,9 @@ As of 2026-10-19. Live version: **1.5** (deployed to GitHub Pages from `main`). 
 
 ## In progress
 
-Nothing. The next release starts from `main`; its preview replaces `/preview/` in place (see `decisions.md`, Process).
+| Item | Status | Next action |
+| --- | --- | --- |
+| 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`) | Built on `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`): the van offer, the Winamp-style player, AUTO switches, repeat, the pixelated cover, handbook, Beta's 1.6 checklist, Saffron's draft note, cache `unplugged-1.6-a`. Full regression suite passes in Chromium. Several interpretations await the owner (`decisions.md`, Release 1.6). | Owner OKs copying it to `/preview/` on `main`; then playtest, decide the proposed items, approve or rewrite Saffron's note, and the iPhone checks below. |
 
 ## Approved and queued
 
@@ -29,6 +31,7 @@ Nothing. The next release starts from `main`; its preview replaces `/preview/` i
 
 | Issue | Status | Next action |
 | --- | --- | --- |
+| 1.6 (preview): no physical-iPhone check yet of the Dinglezoons: repeat through a lock and Saffron's theme, AUTO in autoplay, thumb-sized keys, the green display and pixelated cover in daylight (`tools/test/README.md`, item 8). | Outstanding. | Run during the 1.6 playtest. |
 | No systematic physical-iPhone pass is recorded for 1.5 beyond the owner's preview playtest. Unchecked on a device: Radical Acceptance plays (volume buttons work) and its card fits at iPhone SE size; the live game's offline cache updates to `unplugged-1.5` and the new song and art work in Airplane Mode; mute stays muted after reopening; the guestbook reset leaves a saved retreat and the Dale-Fi collection in place; Beta and the PREVIEW tab clear the notch and home indicator. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | The morning notification says "Dale's meter ran all night: you owe $0." (styled as bad news at full zen) once you're square with Dale. Found in the 1.5 discovery and reproduced in Chromium; `rest()`. | Live since 1.4 at least. Not in the 1.5 brief, so not fixed. | Owner decides whether to fix and with what wording. |
 | Gossip "Dale made a Costco run. Burners are piling up in the van." can fire at any spot, and with limited stock its crash now adds burners *there*, not at the van. Flagged in 1.5 as the handoff asked, not rewritten. | Copy question. | Owner decides (reword, or accept as gossip). |
@@ -51,6 +54,7 @@ Nothing. The next release starts from `main`; its preview replaces `/preview/` i
 | `main` | Live. |
 | `stage-01-market-scarcity`, `stage-02-zen-composure` | Unmerged, kept for reference. Stage 01's stock half shipped in 1.5 (ported by hand); saturation was rejected and Stage 02 (zen) is deferred. |
 | `map-preview` | Superseded by `release-map` (merged as 1.2). Kept, not deleted. |
+| `release-1.6`, `claude/nice-gauss-4vpbc9` | 1.6 in preview, not merged. The same commits on both. |
 | `release-1.5`, `docs-project-state`, `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
 
 ## Tools

@@ -113,9 +113,9 @@ const smoke = {
       const dates = await g.page.$$eval('.note time', t => t.map(x => x.getAttribute('datetime')));
       ok(dates.length >= 1 && dates.every((d, i) => i === 0 || d <= dates[i - 1]), 'dated, newest first', dates);
       const all = await g.page.textContent('.notes');
-      ok(all.includes('On the Importance of Knowing Where You Are') && all.includes('On Dependence and Resolution'), 'every release kept');
-      eq(await g.page.textContent('.note h4'), 'On the Nature of Abundance', 'the 1.5 note is first');
-      ok(all.includes('Those who achieved exceptional financial success are invited to experience the freedom of having no evidence of it.'), '1.5 note text');
+      ok(all.includes('On the Importance of Knowing Where You Are') && all.includes('On Dependence and Resolution') && all.includes('On the Nature of Abundance'), 'every release kept');
+      eq(await g.page.textContent('.note h4'), 'On What We Choose to Hear', 'the 1.6 note is first');
+      ok(all.includes('Those who achieved exceptional financial success are invited to experience the freedom of having no evidence of it.'), '1.5 note text unchanged');
       await g.tap('[data-act="close"]');
       eq(await g.run('sheetKind'), null, 'closes');
     }),
@@ -1105,6 +1105,167 @@ const audio = {
   ],
 };
 
+/* ======================= dinglezoons: the upgraded player ======================= */
+const OWN = "store.set('unpw.dz', true)";
+const SONGS = ids => `${JSON.stringify(ids)}.forEach(id => { if (!S.songs.includes(id)) S.songs.push(id); })`;
+const atVan = cash => `S.loc = VAN_IX; S.cash = ${cash}; render(); $('#toasts').innerHTML = ''`;
+/* Let the playing song reach its real end (the test songs are 60 seconds). */
+const finish = async g => { await g.run('M.audio.currentTime = M.audio.duration - 0.3'); await g.wait(1300); };
+const dzPlay = async (g, id = 's0') => { await g.run(`musicSheet(); musicPick('${id}')`); await g.wait(400); };
+const dinglezoons = {
+  name: 'dinglezoons', about: 'buying the Dinglezoons from Dale, AUTO switches, repeat, the pixelated cover', where: 'desktop Chromium, songs stubbed',
+  tests: [
+    tst('buying from Dale: $300 off once, journaled, the offer gone; nothing else changes', {}, async g => {
+      await g.start(2); await g.run(atVan(1000));
+      const before = await g.run('({ debt: S.debt, van: S.van, songs: S.songs.slice(), cap: S.cap })');
+      await g.tap('[data-act="van"]');
+      ok(await g.page.isVisible('#sheet [data-act="buydz"]'), 'offer at the van');
+      ok((await g.page.textContent('.dzoffer')).includes('Top of the line, man. You can skip stuff now. Even plays the same song over and over, if that\'s your thing.'), "Dale's pitch, verbatim");
+      eq(await g.page.textContent('[data-act="buydz"]'), 'Buy $300', 'price on the button');
+      await g.tap('[data-act="buydz"]');
+      eq(await g.run("[S.cash, dzOwned(), localStorage.getItem('unpw.dz'), sheetKind]"), [700, true, 'true', 'van'], 'paid, owned, saved, still at the van');
+      eq(await g.page.locator('#sheet [data-act="buydz"]').count(), 0, 'offer gone');
+      ok(await g.run("S.log.some(e => /Dinglezoons for \\$300/.test(e.t || e))"), 'journaled');
+      eq(await g.run('({ debt: S.debt, van: S.van, songs: S.songs.slice(), cap: S.cap })'), before, 'debt, glovebox, songs and cushion untouched');
+    }),
+    tst('not enough cash: the button is off and nothing changes', {}, async g => {
+      await g.start(2); await g.run(atVan(299)); await g.tap('[data-act="van"]');
+      ok(await g.page.isDisabled('[data-act="buydz"]'), 'Buy is off at $299');
+      eq(await g.run('[buyDZ(), S.cash, dzOwned()]'), [false, 299, false], 'no sale');
+      await g.run('closeSheet(true); S.loc = 0; S.cash = 5000; render()');
+      eq(await g.run('[buyDZ(), S.cash, dzOwned()]'), [false, 5000, false], 'only sold at the van');
+    }),
+    tst("can't buy twice: no offer, no charge, on this retreat or the next", {}, async g => {
+      await g.start(2); await g.run(atVan(1000) + '; buyDZ()');
+      await g.run('vanSheet()');
+      eq(await g.page.locator('[data-act="buydz"]').count(), 0, 'no offer once owned');
+      eq(await g.run('[buyDZ(), S.cash]'), [false, 700], 'a second purchase does nothing');
+      await g.run('closeSheet(true); startGame(MODES[2]); ' + atVan(1000) + '; vanSheet()');
+      eq(await g.page.locator('[data-act="buydz"]').count(), 0, 'no offer on the next retreat');
+      eq(await g.run('[dzOwned(), S.cash]'), [true, 1000], 'still owned, cash untouched');
+    }),
+    tst('ownership survives a reload and shows on the welcome-screen collection', {}, async g => {
+      await g.start(2); await g.run(atVan(1000) + '; buyDZ(); saveRun()');
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U);
+      eq(await g.run('dzOwned()'), true, 'owned after reload');
+      await g.run('musicSheet()');
+      ok(await g.page.isVisible('#sheet .dz'), 'the welcome-screen player is the Dinglezoons');
+      await g.run('closeSheet(true)'); await g.tap('[data-act="continue"]');
+      eq(await g.run('[dzOwned(), S.cash]'), [true, 700], 'and in the continued retreat');
+    }),
+    tst('buying keeps the collection and the retreat\'s songs exactly', { storage: { 'unpw.collected': '["s0","w1","w3"]' } }, async g => {
+      await g.start(2); await g.run("S.songs = ['s0', 'w1']; " + atVan(1000));
+      await g.run('buyDZ(); musicSheet()');
+      eq(await g.run('[collected(), S.songs]'), [['s0', 'w1', 'w3'], ['s0', 'w1']], 'collection and retreat songs unchanged');
+      eq(await g.page.$$eval('#sheet [data-track]', r => r.map(e => e.dataset.track)), ['s0', 'w1'], 'the player lists the same songs, in order');
+      eq(await g.page.locator('#sheet .trk.locked').count(), 4, 'unfound songs still show as not found');
+    }),
+    tst('before buying: the Dale-Fi is unchanged, and stored settings do nothing', { storage: { 'unpw.rep': 'true', 'unpw.skip': '["w1"]' } }, async g => {
+      await g.start(2); await g.run(SONGS(['w1', 'w2'])); await dzPlay(g);
+      ok(await g.page.isVisible('#sheet .dalefi'), 'the original player');
+      eq(await g.page.locator('#sheet .dz, #sheet [data-auto], #mrep').count(), 0, 'no Dinglezoons controls');
+      await finish(g);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'autoplay moves on to the next song, as before');
+      await g.run('dzRepeat(); dzAuto("w2")');
+      eq(await g.run("[DZ.rep, DZ.skip]"), [true, ['w1']], 'the switches do nothing until owned');
+    }),
+    tst('AUTO off: autoplay passes the song over; tapping it or Next still plays it', {}, async g => {
+      await g.start(2); await g.run(OWN + '; ' + SONGS(['w1', 'w2'])); await dzPlay(g);
+      eq(await g.page.getAttribute('[data-auto="w1"]', 'aria-checked'), 'true', 'AUTO starts lit');
+      await g.tap('[data-auto="w1"]');
+      eq(await g.run("[DZ.skip, localStorage.getItem('unpw.skip')]"), [['w1'], '["w1"]'], 'switched off and saved');
+      eq(await g.page.getAttribute('[data-auto="w1"]', 'aria-checked'), 'false', 'shown off');
+      await finish(g);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w2', true], 'autoplay went past it');
+      await g.tap('#sheet [data-track="w1"]'); await g.wait(300);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'a tap plays it');
+      await finish(g);
+      eq(await g.run('M.cur'), 'w2', 'when it ends, autoplay carries on to the next lit song');
+      await g.run("musicPick('s0')"); await g.wait(200); await g.tap('[data-act="mnext"]'); await g.wait(300);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'Next still lands on it');
+      await g.tap('[data-auto="w1"]');
+      eq(await g.run('DZ.skip'), [], 'and it switches back on');
+    }),
+    tst('the last lit song can\'t be switched off; if every song is off anyway, autoplay passes none over', {}, async g => {
+      await g.start(2); await g.run(OWN + '; ' + SONGS(['w1'])); await dzPlay(g);
+      await g.tap('[data-auto="w1"]');
+      ok(await g.page.isDisabled('[data-auto="s0"]'), 'the last lit song is locked on');
+      await g.run("dzAuto('s0')");
+      eq(await g.run('DZ.skip'), ['w1'], 'and stays on');
+      await g.run("DZ.skip = ['s0', 'w1', 'w3']; musicUI()"); // e.g. switched off on the welcome screen with more songs
+      ok(!(await g.page.isDisabled('[data-auto="s0"]')), 'a song that is off can always be switched back on');
+      await finish(g);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'with nothing lit, autoplay plays the next song');
+    }),
+    tst('repeat: the song plays again; picking another repeats that one; turning it off moves on', {}, async g => {
+      await g.start(2); await g.run(OWN + '; ' + SONGS(['w1', 'w2'])); await dzPlay(g);
+      await g.tap('#mrep');
+      eq(await g.run("[DZ.rep, localStorage.getItem('unpw.rep')]"), [true, 'true'], 'on and saved');
+      eq(await g.page.getAttribute('#mrep', 'aria-pressed'), 'true', 'shown on');
+      await finish(g);
+      let s = await g.run('({ cur: M.cur, playing: musicPlaying(), t: M.audio.currentTime })');
+      ok(s.cur === 's0' && s.playing && s.t < 5, 'same song, from the top', s);
+      await g.tap('#sheet [data-track="w2"]'); await g.wait(300); await finish(g);
+      s = await g.run('({ cur: M.cur, playing: musicPlaying(), t: M.audio.currentTime })');
+      ok(s.cur === 'w2' && s.playing && s.t < 5, 'the picked song repeats', s);
+      await g.tap('[data-act="mprev"]'); await g.wait(300);
+      eq(await g.run('[M.cur, musicPlaying(), DZ.rep]'), ['w1', true, true], 'Previous still moves, repeat stays on');
+      await g.tap('#mrep'); await finish(g);
+      eq(await g.run('[M.cur, musicPlaying(), DZ.rep]'), ['w2', true, false], 'off: autoplay moves on');
+    }),
+    tst('repeat beats AUTO off on the song you chose', {}, async g => {
+      await g.start(2); await g.run(OWN + '; ' + SONGS(['w1'])); await dzPlay(g, 'w1');
+      await g.run("dzAuto('w1'); dzRepeat()"); await finish(g);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'repeats the song you picked even with AUTO off');
+    }),
+    tst('with repeat on: Saffron, an event song, mute and leaving the app behave as before', {}, async g => {
+      await g.start(2); await g.run(OWN + '; DZ.rep = true; ' + SONGS(['w1'])); await dzPlay(g, 'w1'); await g.run('closeSheet(true)');
+      await g.run(ENC); await g.wait(900);
+      eq(await g.run(`[!T.el.paused, ${AUDIBLE}]`), [true, 1], 'only her theme audible');
+      await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]'); await g.wait(900);
+      eq(await g.run(`[musicPlaying(), M.cur, M.duck, ${AUDIBLE}]`), [true, 'w1', 1, 1], 'back on the same song, full volume, alone');
+      await g.run("S.loc = VAN_IX; S.cash = 5000; render(); vanMode = 'pay'; vanSheet(); vanAmt = S.debt; vanGo(); closeSheet(true)"); await g.wait(900);
+      eq(await g.run(`[E.id, musicPlaying(), ${AUDIBLE}]`), ['square', false, 1], "you're square plays alone");
+      await g.run('E.el.currentTime = E.el.duration - 0.3'); await g.wait(1500);
+      eq(await g.run(`[E.on, musicPlaying(), M.cur, ${AUDIBLE}]`), [false, true, 'w1', 1], 'the Dale-Fi picks up the same song');
+      await g.run('setSound(false)'); await g.wait(300);
+      eq(await g.run(AUDIBLE), 0, 'mute silences it');
+      await g.run('M.audio.dispatchEvent(new Event("ended"))'); await g.wait(300);
+      eq(await g.run(AUDIBLE), 0, 'a repeat while muted stays silent');
+      await g.run('setSound(true)'); await g.wait(400);
+      eq(await g.run('[musicPlaying(), M.cur]'), [true, 'w1'], 'unmute brings it back');
+      await g.hidden(true); await g.wait(200);
+      eq(await g.run(AUDIBLE), 0, 'silent while away');
+      await g.hidden(false); await g.wait(600);
+      eq(await g.run('[musicPlaying(), M.cur]'), [true, 'w1'], 'back on return');
+    }),
+    tst('settings and ownership survive Save and leave, a reload and Continue', {}, async g => {
+      await g.start(2); await g.run(OWN + '; ' + SONGS(['w1']) + "; dzAuto('w1'); dzRepeat(); saveRun()");
+      await g.page.reload(); await g.page.waitForFunction(() => window.__U); await g.tap('[data-act="continue"]');
+      eq(await g.run('[dzOwned(), DZ.skip, DZ.rep, S.songs]'), [true, ['w1'], true, ['s0', 'w1']], 'all kept');
+      eq(await g.run("Object.keys(S).filter(k => /dz|skip|rep/i.test(k))"), [], 'nothing new in the saved retreat, so older saves need no migration');
+    }),
+    tst('pixelated cover: drawn from the card art, small and crisp; companion cards keep the full-size art', {}, async g => {
+      await g.start(2); await g.run(OWN + '; ' + SONGS(['w1'])); await g.run('musicSheet()'); await g.wait(600);
+      const px = await g.page.evaluate(() => {
+        const c = document.getElementById('dzArt'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, cols = new Set();
+        let drawn = 0; for (let i = 0; i < d.length; i += 4) { if (d[i + 3]) drawn++; cols.add(d[i] + ',' + d[i + 1] + ',' + d[i + 2]); }
+        const r = c.getBoundingClientRect();
+        return { w: c.width, css: Math.round(r.width), drawn, cols: cols.size, render: getComputedStyle(c).imageRendering, id: c.dataset.id };
+      });
+      ok(px.w === 24 && px.css === 72 && px.drawn === 24 * 24 && px.cols > 8 && px.cols <= 512 && px.render === 'pixelated' && px.id === 's0', 'a 24x24 cover shown at 72px, crisp', px);
+      await g.run("musicPick('w1')"); await g.wait(500);
+      eq(await g.run("$('#dzArt').dataset.id"), 'w1', 'follows the song');
+      eq(await g.page.getAttribute('[data-act="card"][data-id="w1"] img', 'src'), 'assets/img/card-w1.webp', 'list thumbnail is the original art');
+      await g.tap('[data-act="card"][data-id="w1"]'); await g.wait(400);
+      const art = await g.page.$eval('.cardart', i => [i.getAttribute('src'), i.naturalWidth]);
+      eq(art, ['assets/img/card-w1.webp', 480], 'the companion card shows the full-size art');
+      await g.tap('#sheet [data-act="music"]');
+      ok(await g.page.isVisible('#sheet .dz'), 'Back returns to the Dinglezoons');
+    }),
+  ],
+};
+
 /* ======================= layout: mobile emulation ======================= */
 /* Compare content width with the visible width. In mobile emulation innerWidth grows to fit wide content,
    so it can't reveal overflow; clientWidth and the visual viewport stay at the device width. */
@@ -1148,9 +1309,28 @@ const layoutTest = device => tst(`screens fit without sideways scrolling, button
   await close.scrollIntoViewIfNeeded(); await close.tap();
   eq(await g.run('[screen, sheetKind]'), ['over', null], 'back to the results by tap');
 });
+const dzLayout = device => tst(`the Dinglezoons, Dale's offer and a companion card fit (${device})`, { device }, async g => {
+  await g.start(2); await g.run(atVan(1000)); await g.tap('[data-act="van"]');
+  eq(await g.page.evaluate(OVERFLOW), 0, "horizontal overflow on Dale's offer");
+  const buy = await g.page.locator('[data-act="buydz"]').boundingBox();
+  ok(buy && buy.height >= 36 && buy.x + buy.width <= g.page.viewportSize().width, 'Buy on screen', buy);
+  await g.tap('[data-act="buydz"]'); await g.run("closeSheet(true); " + SONGS(['w0', 'w1', 'w2', 'w3', 'w4'])); await g.tap('.topbar [data-act="music"]');
+  eq(await g.page.evaluate(OVERFLOW), 0, 'horizontal overflow on the Dinglezoons');
+  const vw = g.page.viewportSize().width;
+  const keys = await g.page.$$eval('#sheet .dzk, #sheet .dzauto', bs => bs.map(b => { const r = b.getBoundingClientRect(); return [b.dataset.act || b.dataset.auto, Math.round(r.width), Math.round(r.height), Math.round(r.right)]; }));
+  ok(keys.length === 12 && keys.every(([, w, h, right]) => w >= 44 && h >= 44 && right <= vw), 'every key and AUTO switch at least 44px and on screen', keys);
+  const lbl = await g.page.$$eval('#sheet .dzpl .tt', ts => ts.map(t => Math.round(parseFloat(getComputedStyle(t).fontSize))));
+  ok(lbl.every(f => f >= 15), 'playlist text stays readable', lbl);
+  await g.tap('#sheet [data-auto="w1"]'); eq(await g.run('DZ.skip'), ['w1'], 'AUTO switch works by tap');
+  await g.tap('#mrep'); eq(await g.run('DZ.rep'), true, 'repeat works by tap');
+  await g.tap('[data-act="card"][data-id="w4"]'); await g.page.waitForFunction(() => document.querySelector('.cardart')?.naturalWidth > 0);
+  eq(await g.page.evaluate(OVERFLOW), 0, 'horizontal overflow on the companion card');
+  const art = await g.page.locator('.cardart').boundingBox();
+  ok(art && art.width <= vw - 40 && art.width >= 150, 'card art full size and fits', art);
+});
 const layout = {
   name: 'layout', about: 'phone-sized screens with touch emulation', where: 'Chromium mobile emulation, not a real phone',
-  tests: [layoutTest('tiny'), layoutTest('small'), layoutTest('phone'),
+  tests: [layoutTest('tiny'), layoutTest('small'), layoutTest('phone'), dzLayout('tiny'), dzLayout('small'),
     tst('desktop: the game sits in a centered column', { device: 'desktop' }, async g => {
       const w = await g.page.evaluate(() => document.getElementById('app').getBoundingClientRect().width);
       ok(w <= 560, 'column at most 560px wide', w);
@@ -1180,4 +1360,4 @@ const offline = {
   } }],
 };
 
-export default [staticSuite, smoke, trading, encounters, debt, saves, audio, layout, offline];
+export default [staticSuite, smoke, trading, encounters, debt, saves, audio, dinglezoons, layout, offline];

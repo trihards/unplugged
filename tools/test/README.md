@@ -7,7 +7,7 @@ A small harness that loads the real game in headless Chromium and checks the beh
 From the repo root:
 
 ```
-node tools/test/run.mjs                      # everything, about 80 seconds
+node tools/test/run.mjs                      # everything, about three minutes
 node tools/test/run.mjs trading encounters   # just those suites
 node tools/test/run.mjs static               # no browser, under a second
 node tools/test/run.mjs --list               # every suite and test
@@ -33,7 +33,8 @@ Node 18 or later, plus Playwright with Chromium. Cloud sessions already have bot
 | `debt` | desktop Chromium | any debt at checkout, even $1, is the Dale Fail at every length (wealthy, modest, broke, negative net worth); the original takeaways with no debt; could-pay and couldn't-pay copy; snapping unchanged; guestbook keeps real net worth; report card; balance reminders without announcing the ending; Dale's notes (balance, zen, journal, stop when paid, threshold); his morning check-ins (once a day while owed, varied lines, no zen, none when square, older saves); calm moments name no time of day; the airport line breaks between sentences; the complete journal after checkout, last 20 during play; what the journal records (no entry for a quiet walk, time and place on the first entry at each stop, gossip with the good and its price, offers shown whether taken or not, songs with how they were found, the ending and whether Dale was paid); new runs start clean |
 | `saves` | desktop Chromium | reload and continue; Save and leave; older saves missing fields; corrupt save; new run replaces save; guestbook top ten; the one-time 1.5 guestbook reset (only the guestbook, and only once); 1.5 save fields get defaults; sound and volume settings |
 | `audio` | desktop Chromium, songs stubbed | Dale-Fi play and track memory; mute and unmute; muted Saffron; muting mid-theme; event songs (Dale payoff, endings, Dale's unpaid-tab cue) never overlap the Dale-Fi; her theme replaces the Dale-Fi and it returns at full volume; deliberate pause survives; leaving the app; two iOS-rule emulations |
-| `layout` | Chromium mobile emulation at 320×568, 375×667, 390×844 with touch; plus desktop | no sideways scrolling on every main screen; bottom buttons on screen and at least 40px; check-in buttons reachable and tappable; Dale's ending art fits; Review your journal reachable after checkout; header journal, Dale-Fi and menu icons 40px and on screen |
+| `dinglezoons` | desktop Chromium, songs stubbed | buying it from Dale ($300, journaled, only at the van, Dale's pitch verbatim); not enough cash; no second purchase, on this retreat or the next; ownership kept through reloads, new retreats and on the welcome screen; the collection and the retreat's songs untouched; before buying the Dale-Fi is unchanged and stored settings do nothing; AUTO off passes a song over in autoplay while a tap or Next still plays it; the last lit song can't be switched off, and with nothing lit autoplay passes none over; repeat (picked songs, Previous, turning it off; beats AUTO off); with repeat on, Saffron, an event song, mute and leaving the app as before; settings kept with no new save fields; the pixelated cover (24×24 at 72 px, crisp, follows the song) while thumbnails and companion cards keep the full-size art |
+| `layout` | Chromium mobile emulation at 320×568, 375×667, 390×844 with touch; plus desktop | no sideways scrolling on every main screen; bottom buttons on screen and at least 40px; check-in buttons reachable and tappable; Dale's ending art fits; Review your journal reachable after checkout; header journal, Dale-Fi and menu icons 40px and on screen; at 320 and 375, Dale's Dinglezoons offer, the player (every key and AUTO switch at least 44px, readable playlist text, taps work) and a companion card fit |
 | `offline` | desktop Chromium, service worker on | installs, caches every listed file, reloads with no network |
 
 ## What this does and doesn't prove
@@ -57,6 +58,7 @@ Use this when a change touches audio, the service worker or home-screen install,
 5. **Pause and mute.** Pause the Dale-Fi, meet Saffron, carry on: it stays paused. Mute all sound from the menu, close and reopen the app: still muted.
 6. **Volume.** The Dale-Fi + and − buttons change the volume (element volume is read-only on iOS, so this exercises the game's own gain).
 7. **Home-screen app.** Add to Home Screen, open it, play a song, turn on Airplane Mode, force-quit and reopen. The game and the music still load.
-8. **Edges.** On a phone with a notch or Dynamic Island, the header, the bottom buttons and the Saffron screen clear the safe areas, and nothing scrolls sideways.
+8. **Dinglezoons** (once bought). Repeat a song through a lock and unlock and through Saffron's theme: the same song carries on. Switch AUTO off on a song and let the one before it end: it's passed over. The keys and AUTO switches are easy to hit with a thumb, and the green display and pixelated cover read well in daylight.
+9. **Edges.** On a phone with a notch or Dynamic Island, the header, the bottom buttons and the Saffron screen clear the safe areas, and nothing scrolls sideways.
 
 Write down the iOS version and device with the result.

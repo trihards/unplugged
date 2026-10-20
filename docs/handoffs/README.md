@@ -18,6 +18,10 @@ The 1.4 briefs ("Dale's Outstanding Balance" and its three follow-ups: final rev
 
 [`2026-10-18/01_RELEASE_1_5.md`](2026-10-18/01_RELEASE_1_5.md): the 1.5 implementation handoff (limited stock, Radical Acceptance, the journal, a fresh guestbook, Saffron's note), delivered in a Claude Code session and saved here verbatim. It followed a discovery report in the same session, which was not saved.
 
+## 2026-10-20 (release 1.6)
+
+[`2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`](2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md): the 1.6 handoff (the Dinglezoons player Dale sells), delivered in a Claude Code session and saved here verbatim.
+
 ## Not in the repository
 
 These are referenced but have not been available to Claude Code, so nothing here reconstructs them:
