@@ -271,7 +271,7 @@ body:has(.beta-ver):has(#scrim[hidden]):has(#dos[hidden]):has(#toasts:empty) #pr
 }
 #sheet.alert { box-shadow: 0 -4px 0 var(--urchin), var(--lift); }
 @keyframes rise { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
-.xbtn { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--fog); color: var(--ink2); display: grid; place-items: center; }
+.xbtn { position: absolute; z-index: 2; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--fog); color: var(--ink2); display: grid; place-items: center; }
 .xbtn svg { width: 18px; height: 18px; }
 .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 2px auto 12px; }
 #sheet h3 { font-family: var(--serif); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 0 0 4px; }
@@ -1808,8 +1808,8 @@ function musicAway() {
   musicUI();
 }
 function musicBack() {
-  if (!musicOn) return;
   acWake();
+  if (!musicOn) return;
   if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(true); }
   if (E.on && E.el.paused) eventPlay();
   else musicResume();
@@ -1819,8 +1819,8 @@ window.addEventListener('pagehide', musicAway);
 /* Any tap is a chance to fix audio iOS stopped behind our back: wake the AudioContext, retry an event song
    that wasn't allowed to start, and bring back a Dale-Fi song that should be playing but isn't. */
 function audioTap() {
+  acWake(); // chimes need the AudioContext too, even with Music off
   if (!musicOn || !M.audio) return;
-  acWake();
   if (E.on) { if (E.retry && E.el.paused) eventPlay(); return; }
   if (!T.on && M.want && !musicPlaying()) musicResume();
 }

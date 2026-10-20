@@ -1460,6 +1460,12 @@ const dzLayout = device => tst(`the Dinglezoons, Dale's offer and a companion ca
   eq(await g.page.evaluate(OVERFLOW), 0, 'horizontal overflow on the companion card');
   const art = await g.page.locator('.cardart').boundingBox();
   ok(art && art.width <= vw - 40 && art.width >= 150, 'card art full size and fits', art);
+  for (const id of ['shoe', 'square']) {
+    await g.run(`S.songs.push('square'); cardSheet('${id}')`); await g.page.waitForFunction(() => document.querySelector('.cardart')?.naturalWidth > 0);
+    const hit = await g.page.evaluate(() => { const r = document.querySelector('.xbtn').getBoundingClientRect(); return !!document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest('.xbtn'); });
+    ok(hit, `the close button stays on top of the ${id} card's art`);
+  }
+  await g.tap('.xbtn'); eq(await g.run('sheetKind'), null, 'and closes it by tap');
 });
 const layout = {
   name: 'layout', about: 'phone-sized screens with touch emulation', where: 'Chromium mobile emulation, not a real phone',

@@ -51,7 +51,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 **Interpretations in the final round** (confirm or change):
 
-- **Gary's audio is missing.** The brief says to use the supplied audio; none came with it. The code expects `assets/audio/shoe.m4a` and `assets/audio/clam.m4a`. Until they arrive the static test fails on purpose and the preview isn't updated.
+- **Gary's audio** arrived separately as MP3s (2026-10-20) and was converted to AAC like the other songs: `shoe.m4a` lowered 0.6 dB and `clam.m4a` raised 0.8 dB, so both sit at about −15.2 LUFS, where the other Dale-Fi songs are (−14.5 to −15.5). Nothing else about them was changed.
 - **"’98" in Dale's line** uses an apostrophe (’98), as the rest of the brief writes it; the brief's line had an opening quote (‘98), read as a typo.
 - **You're Square across retreats** follows the "ordinary collectible" rule: it stays in the collection (the welcome-screen player has it), and, like every found song, a new retreat's Dale-Fi only has it once you pay Dale off on that retreat. The other reading, having it on every retreat from the start, would make it the only song that works that way.
 - **Its discovery line** reuses Dale's existing van line: "Dale counts it twice. You are square." (card: "… New on your Dale-Fi."; journal: "… New on your Dale-Fi: You’re Square.").

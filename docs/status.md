@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: the first 1.6 build (Dinglezoons) at `/preview/`; the final 1.6 build waits on two audio files. Not merged into the live game.
+As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: the final 1.6 build (Dinglezoons) at `/preview/`, for the owner's review. Not merged into the live game.
 
 ## Shipped
 
@@ -19,7 +19,7 @@ As of 2026-10-20. Live version: **1.5** (deployed to GitHub Pages from `main`). 
 
 | Item | Status | Next action |
 | --- | --- | --- |
-| 1.6: Dinglezoons (handoffs `2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md` and `02_RELEASE_1_6_FINAL.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`): the first round (Winamp-style player, AUTO, repeat, pixelated cover, per-retreat ownership) plus the final handoff: from day 3, Gary's two bundled songs, You're Square as a collectible, separate Music and Sounds, Dale's new line, Saffron's redrafted note, Beta's checklist, cache `unplugged-1.6-d`. `/preview/` still has the first round. **Blocked:** the audio for What's on Your Shoe and Clam's End wasn't supplied; with placeholder files in a scratch copy the full suite passes (116 tests). | Owner supplies `shoe.m4a` and `clam.m4a` (or the masters to convert); then the preview is updated for the iPhone playtest and creative review. Not to be merged without approval. |
+| 1.6: Dinglezoons (handoffs `2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md` and `02_RELEASE_1_6_FINAL.md`) | On `release-1.6` (also pushed as `claude/nice-gauss-4vpbc9`): the first round (Winamp-style player, AUTO, repeat, pixelated cover, per-retreat ownership) plus the final handoff: from day 3, Gary's two bundled songs, You're Square as a collectible, separate Music and Sounds, Dale's new line, Saffron's redrafted note, Beta's checklist, cache `unplugged-1.6-e`. Gary's songs converted from the owner's MP3s. At `/preview/`. | Owner's iPhone playtest and creative review of the drafts (Dale's line, Saffron's note, Beta's checklist) and the interpretations in `decisions.md`. Not to be merged without approval. |
 
 ## Approved and queued
 
