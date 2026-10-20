@@ -139,6 +139,11 @@ button:disabled { cursor: default; }
 .btn.soft { background: var(--sea-soft); color: var(--ink); }
 .btn .ver { position: absolute; right: 18px; font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--ink2); }
 .btn.news { position: relative; }
+.sheet-actions.toggles, .toggles + .sheet-actions { margin-top: 10px; }
+.toggles .btn { justify-content: flex-start; min-width: 0; }
+.toggles .btn .ver { right: 14px; font-weight: 700; color: var(--ink); }
+.toggles .btn[aria-checked="false"] { background: var(--mist); }
+.toggles .btn[aria-checked="false"] .ver { color: var(--ink2); font-weight: 500; }
 .btn.warn { background: var(--urchin); color: var(--mist); }
 .btn:disabled { opacity: .4; box-shadow: none; }
 .welcome .btn { border-color: #22382B; box-shadow: 0 3px 0 #22382B; background: #FBEBD3; color: #22382B; }
@@ -499,6 +504,8 @@ input[type=range]:disabled { opacity: .35; }
 .trkline .trk { flex: 1; min-width: 0; border-bottom: 0; }
 .cardthumb { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 8px; overflow: hidden; background: var(--fog); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 .cardthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cardthumb.cut img { object-fit: contain; padding: 2px; }
+.cardart.cut { border-radius: 0; box-shadow: none; filter: drop-shadow(0 6px 14px rgba(0,0,0,.28)); }
 .cardkick { margin: 2px 0 10px; padding-right: 48px; font-size: 14.5px; font-weight: 600; color: var(--sea); }
 .ccard { text-align: center; }
 .cardart { display: block; margin: 4px auto 14px; max-width: 100%; max-height: min(34vh, 320px); width: auto; height: auto; border-radius: 10px; box-shadow: var(--lift); }
@@ -656,7 +663,7 @@ input[type=range]:disabled { opacity: .35; }
 <body>
 <div id="loader" role="status" aria-live="polite"><div class="ld-dot"></div><p>Checking you in…</p></div>
 <div id="backdrop" aria-hidden="true"></div>
-<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "daleTab": "assets/img/dale-tab.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp", "card_w3": "assets/img/card-w3.webp", "card_w4": "assets/img/card-w4.webp"};</script>
+<script>window.IMG = {"logo": "assets/img/logo.webp", "tagline": "assets/img/tagline.webp", "welcome": "assets/img/bg-welcome.webp", "header": "assets/img/bg-header.webp", "lineup": "assets/img/lineup.webp", "saffronCalm": "assets/img/saffron-calm.webp", "saffronSide": "assets/img/saffron-side.webp", "daleCalm": "assets/img/dale-calm.webp", "daleMad": "assets/img/dale-mad.webp", "daleCross": "assets/img/dale-crossword.webp", "vol1": "assets/img/vol1.webp", "vol2": "assets/img/vol2.webp", "vol3": "assets/img/vol3.webp", "vol4": "assets/img/vol4.webp", "saffronShock": "assets/img/saffron-shock.webp", "saffronPuzzled": "assets/img/saffron-puzzled.webp", "saffronJoy": "assets/img/saffron-joy.webp", "daleCash": "assets/img/dale-cash.webp", "daleTab": "assets/img/dale-tab.webp", "it_burner": "assets/img/it-burner.webp", "it_charger": "assets/img/it-charger.webp", "it_wifi": "assets/img/it-wifi.webp", "it_wine": "assets/img/it-wine.webp", "it_doritos": "assets/img/it-doritos.webp", "it_coke": "assets/img/it-coke.webp", "it_choc": "assets/img/it-choc.webp", "it_espresso": "assets/img/it-espresso.webp", "it_petagotchi": "assets/img/it-petagotchi.webp", "card_s0": "assets/img/card-s0.webp", "card_w0": "assets/img/card-w0.webp", "card_w1": "assets/img/card-w1.webp", "card_w2": "assets/img/card-w2.webp", "card_w3": "assets/img/card-w3.webp", "card_w4": "assets/img/card-w4.webp", "card_square": "assets/img/card-square.webp", "card_cotc98": "assets/img/card-cotc98.webp"};</script>
 <div id="app"></div>
 <div id="toasts" aria-live="polite"></div>
 <div id="veil" aria-hidden="true"></div>
@@ -816,9 +823,13 @@ const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (
 
 /* ================= sound: soft sine chimes ================= */
 let ac = null;
-let soundOn = store.get('unpw.sound', true);
+/* Two switches: Music (songs, Saffron's theme, event songs) and Sounds (chimes and effects). Before 1.6 one switch,
+   unpw.sound, did both; it still sets either one that hasn't been saved yet, so a muted player stays muted. */
+const legacySound = store.get('unpw.sound', true) !== false;
+let musicOn = store.get('unpw.music', legacySound) !== false;
+let sfxOn = store.get('unpw.sfx', legacySound) !== false;
 function chime(notes, decay = 0.7, gain = 0.05) {
-  if (!soundOn) return;
+  if (!sfxOn) return;
   try {
     ac = ac || new (window.AudioContext || window.webkitAudioContext)();
     if (ac.state === 'suspended') ac.resume();
@@ -1388,7 +1399,7 @@ function vanSheet(msg, ok) {
       ? `<img src="${IMG.daleMad}" alt="Dale, glaring" class="bust"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">Dale looks up from his crossword. He is not thrilled about the ${fmt(S.debt)}.</p></div>`
       : `<img src="${IMG.daleCross}" alt="Dale doing his crossword" class="pose"><div><h3 id="sheetTitle">Dale's van</h3><p class="muted">Dale doesn't look up from his crossword.</p></div>`}</div>
     ${hasSong('w2') ? '' : `<div class="cdoffer"><span>Dale's burned CD, “Late Night Record Shop”</span><button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button></div>`}
-    ${dzOwned() ? '' : `<div class="cdoffer dzoffer"><span><b>Dinglezoons</b>, the premier MP3 player of the Central Coast.<q>Top of the line, man. You can skip stuff now. Even plays the same song over and over, if that's your thing.</q></span><button type="button" class="chip" data-act="buydz" ${S.cash >= DZ_PRICE ? '' : 'disabled'}>Buy ${fmt(DZ_PRICE)}</button></div>`}
+    ${dzOwned() || S.day < DZ_DAY ? '' : `<div class="cdoffer dzoffer"><span><b>Dinglezoons</b>, the premier MP3 player of the Central Coast.<q>Top of the line, man. Comes with two tracks from Gary’s ’98 tape. Don’t ask me how he recorded ’em.</q></span><button type="button" class="chip" data-act="buydz" ${S.cash >= DZ_PRICE ? '' : 'disabled'}>Buy ${fmt(DZ_PRICE)}</button></div>`}
     <div class="ledger">
       <span>On you</span><span class="v num">${fmt(S.cash)}</span>
       <span>In the glovebox</span><span class="v num">${fmt(S.van)}</span>
@@ -1425,7 +1436,7 @@ function updateVan() {
 function vanGo() {
   const a = vanAmt; if (!(a > 0) || a > vanMax(vanMode)) return;
   let msg = '';
-  if (vanMode === 'pay') { daleCounting = true; S.cash -= a; S.debt -= a; if (!S.debt && ST().paidDay == null) { ST().paidDay = S.day; eventSong('square'); } msg = S.debt ? `Paid Dale ${fmt(a)}. You still owe ${fmt(S.debt)}.` : `Paid Dale ${fmt(a)}. You're square.`; }
+  if (vanMode === 'pay') { daleCounting = true; S.cash -= a; S.debt -= a; if (!S.debt && ST().paidDay == null) ST().paidDay = S.day; if (!S.debt) unlockSong('square', 'Dale counts it twice. You are square.'); msg = S.debt ? `Paid Dale ${fmt(a)}. You still owe ${fmt(S.debt)}.` : `Paid Dale ${fmt(a)}. You're square.`; }
   else if (vanMode === 'borrow') { S.cash += a; S.debt += a; ST().borrowed += a; msg = `Borrowed ${fmt(a)} at ${pct(S.rate)} an hour.`; }
   else if (vanMode === 'stash') { S.cash -= a; S.van += a; msg = `Stashed ${fmt(a)} in the glovebox.`; }
   else { S.van -= a; S.cash += a; msg = `Took ${fmt(a)} out of the glovebox.`; }
@@ -1527,7 +1538,14 @@ const TRACKS = [
   { id: 'w2', title: 'Late Night Record Shop', artist: 'TORiTiA', hint: 'Dale keeps a burned CD in his van.' },
   { id: 'w3', title: 'The Unprocessed Self', artist: 'TORiTiA', hint: 'Some things grow better with a little funk.' },
   { id: 'w4', title: 'Radical Acceptance', artist: 'TORiTiA', hint: '' },
+  { id: 'square', title: 'You’re Square', artist: 'TORiTiA', hint: 'Dale appreciates a settled tab.' },
+  { id: 'shoe', title: 'What’s on Your Shoe', artist: 'TORiTiA', hint: 'Not sold separately. Dale might know?' },
+  { id: 'clam', title: 'Clam’s End', artist: 'TORiTiA', hint: 'One of two exclusive bonus cuts.' },
 ];
+/* Gary's Cream of the Crop ’98: two songs that come with every Dinglezoons. Never found or collected; playable only
+   while you own one, gone when the retreat ends, back with the next one bought. */
+const BUNDLE = ['shoe', 'clam'];
+const COLLECTIBLE = TRACKS.filter(t => !BUNDLE.includes(t.id));
 const TBYID = Object.fromEntries(TRACKS.map(t => [t.id, t]));
 /* Companion cards: the in-world liner notes for each recording, shown from the Dale-Fi and when you first find one.
    Keyed by track id; a future multi-track release can point several tracks at one card. Copy is approved, verbatim. */
@@ -1544,6 +1562,12 @@ const CARDS = {
     review: 'A gloriously filthy slice of California funk from a band whose only documented live appearances were at the 1977 and 1978 Folsom County Fair, on the second stage. The bassline is practically geological. Their subsequent disappearance remains one of the great minor injustices of American music.' },
   w4: { art: 'card_w4', title: 'Radical Acceptance', artist: 'VANTAGE', meta: '12″ · Horizon Beat Records · 1985 · Synth-Pop',
     review: 'A gleaming instrumental built on insistent drum machines, sweeping synthesizers, and an almost heroic sense of emotional urgency. VANTAGE approaches self-acceptance with the intensity of someone attempting to prevent a nuclear launch.' },
+  square: { art: 'card_square', cut: true, title: 'You’re Square', artist: 'Dale', meta: 'Late 1970s California country rock',
+    review: 'Recorded during Dale’s brief but deeply cherished studio years, this four-track demo remains his proudest musical accomplishment. He has kept the original master in his possession ever since and maintains that the fourth take was the one where everything came together.' },
+  shoe: { art: 'card_cotc98', cut: true, title: 'What’s on Your Shoe', artist: '', meta: 'Cream of the Crop ’98 · Side A',
+    review: 'Gary discovered this cassette beneath the passenger seat of Dale’s van in 1998 and immediately declared it the greatest recording ever to grace his ears. Dale has no recollection of how it got there.' },
+  clam: { art: 'card_cotc98', cut: true, title: 'Clam’s End', artist: '', meta: 'Cream of the Crop ’98 · Side B',
+    review: 'Gary listened to the second side six times that evening, eventually announcing that he had experienced something beyond music. Dale asked for his tape back.' },
 };
 
 /* What's New, written by Guide Saffron: the permanent release history under Options. Newest first.
@@ -1560,11 +1584,13 @@ const NOTES = [
     title: 'On What We Choose to Hear',
     body: [
       'Dear Guests,',
-      'Dale has begun offering premium recreational electronics from his van. We have chosen not to learn what they are called.',
-      'Some of you will now pass over the songs you would rather not hear. We invite you to notice how easily the mind learns to avoid what it finds uncomfortable, and how rarely it asks why.',
+      'Midway through your stay, Dale may now offer you premium recreational electronics. We have chosen not to learn what they are called.',
+      'Each device arrives with two recordings of uncertain origin. We have not listened to them. We do not intend to.',
+      'Some of you will pass over the songs you would rather not hear. We invite you to notice how easily the mind learns to avoid what it finds uncomfortable, and how rarely it asks why.',
       'Others will play a single song again and again. Repetition can be a practice. It can also be a habit. We trust you to know the difference.',
       'We understand the artwork is now shown at a lower resolution. We consider this a step in the right direction.',
-      'Silence remains included with your stay, at no additional cost.',
+      'Guests who settle their accounts with Dale may find he has something to share. We have asked him to keep it brief.',
+      'Music and sounds may now be silenced separately. We are pleased to offer you two new ways to choose silence.',
     ],
     sign: ['With care,', 'Guide Saffron'],
   },
@@ -1635,11 +1661,11 @@ const NOTES = [
   },
 ];
 const CD_PRICE = 150;
-/* Dinglezoons: the upgraded player Dale sells from his van. Bought for one retreat (S.dz); the next retreat needs a
-   new one, while songs found stay in the collection as always. It plays the same songs and adds an AUTO switch per
+/* Dinglezoons: the upgraded player Dale sells from his van from day 3. Bought for one retreat (S.dz); the next retreat
+   needs a new one, while songs found stay in the collection as always. It comes with Gary's two songs (BUNDLE). It plays the same songs and adds an AUTO switch per
    song (off: autoplay, Next and Previous pass it over; tapping it still plays it), repeat one, and a pixelated cover.
    The AUTO switches and repeat are kept as settings, and do nothing without a Dinglezoons. */
-const DZ_PRICE = 300;
+const DZ_PRICE = 300, DZ_DAY = 3;
 const dzOwned = () => inRun() && S.dz === true;
 const DZ = { skip: [].concat(store.get('unpw.skip', [])).filter(id => typeof id === 'string'), rep: store.get('unpw.rep', false) === true, img: {}, pix: {} };
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
@@ -1648,7 +1674,7 @@ const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) { /* not supported */ }
 const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
 const inRun = () => screen === 'game' && S && !S.over;
-const avail = () => (inRun() ? S.songs : collected()).filter(id => TBYID[id]);
+const avail = () => (inRun() ? S.songs.concat(S.dz === true ? BUNDLE : []) : collected()).filter(id => TBYID[id]);
 const hasSong = id => S && S.songs && S.songs.includes(id);
 
 /* A song turns up. The first time you ever find it, its companion card is revealed: right away if you asked for it
@@ -1679,9 +1705,9 @@ function cardSheet(id, reveal) {
   openSheet(`<div class="grab"></div>
     ${reveal ? `<p class="cardkick">${reveal} New on your Dale-Fi.</p>` : ''}
     <div class="ccard">
-      <img class="cardart" src="${IMG[k.art]}" alt="Cover of ${esc(k.title)}">
+      <img class="cardart${k.cut ? ' cut' : ''}" src="${IMG[k.art]}" alt="Cover of ${esc(k.title)}">
       <h3 id="sheetTitle" class="cardtt">${esc(k.title)}</h3>
-      <p class="cardby">${esc(k.artist)}</p>
+      ${k.artist ? `<p class="cardby">${esc(k.artist)}</p>` : ''}
       <p class="cardmeta">${esc(k.meta)}</p>
       <p class="cardrev">${esc(k.review)}</p>
     </div>
@@ -1711,7 +1737,7 @@ function buyCD() {
   unlockSong('w2', `Dale hands over a burned CD for ${fmt(CD_PRICE)}.`, true);
 }
 function buyDZ() {
-  if (!S || S.over || !PLACES[S.loc].van || dzOwned() || S.cash < DZ_PRICE) return false;
+  if (!S || S.over || !PLACES[S.loc].van || dzOwned() || S.day < DZ_DAY || S.cash < DZ_PRICE) return false;
   S.cash -= DZ_PRICE;
   S.dz = true;
   SND.receive();
@@ -1744,7 +1770,7 @@ function ensureAudio() {
   if (ac) {
     try { M.an = ac.createAnalyser(); M.an.fftSize = 64; M.an.smoothingTimeConstant = 0.75; M.bins = new Uint8Array(M.an.frequencyBinCount); } catch (e) { M.an = null; }
     M.gain = routed(M.audio, M.an).gain || null;
-    ac.addEventListener('statechange', () => { if (ac.state !== 'running' && !document.hidden && soundOn) acWake(); });
+    ac.addEventListener('statechange', () => { if (ac.state !== 'running' && !document.hidden && (musicOn || sfxOn)) acWake(); });
   }
   musicVol();
   clearMediaSession();
@@ -1753,7 +1779,7 @@ function ensureAudio() {
    While it is, every song is silent even though it's technically playing. Waking it needs a tap, so
    this runs on every tap; it's a no-op when the context is fine. Never wait on its promise: iOS can leave it hanging. */
 function acWake() {
-  if (ac && soundOn && ac.state !== 'running' && ac.state !== 'closed') { try { ac.resume().catch(() => {}); } catch (e) { /* ignore */ } }
+  if (ac && (musicOn || sfxOn) && ac.state !== 'running' && ac.state !== 'closed') { try { ac.resume().catch(() => {}); } catch (e) { /* ignore */ } }
 }
 /* play() that never throws: resolves to '' when the song starts, or the error's name when it doesn't. */
 function tryPlay(el) {
@@ -1782,7 +1808,7 @@ function musicAway() {
   musicUI();
 }
 function musicBack() {
-  if (!soundOn) return;
+  if (!musicOn) return;
   acWake();
   if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(true); }
   if (E.on && E.el.paused) eventPlay();
@@ -1793,7 +1819,7 @@ window.addEventListener('pagehide', musicAway);
 /* Any tap is a chance to fix audio iOS stopped behind our back: wake the AudioContext, retry an event song
    that wasn't allowed to start, and bring back a Dale-Fi song that should be playing but isn't. */
 function audioTap() {
-  if (!soundOn || !M.audio) return;
+  if (!musicOn || !M.audio) return;
   acWake();
   if (E.on) { if (E.retry && E.el.paused) eventPlay(); return; }
   if (!T.on && M.want && !musicPlaying()) musicResume();
@@ -1824,7 +1850,7 @@ function musicResume() {
   if (T.on || E.on || !M.audio) return;
   M.held = false;
   clearTimeout(M.fadeTimer);
-  if (!M.want || !soundOn || document.hidden) { musicVol(); return musicUI(); }
+  if (!M.want || !musicOn || document.hidden) { musicVol(); return musicUI(); }
   const at = M.at;
   if (M.loaded !== M.cur || !avail().includes(M.cur)) {
     if (!musicLoad(M.cur)) return;
@@ -1838,7 +1864,7 @@ function musicResume() {
 
 /* Guide Saffron's theme: plays once as she shows up. The Dale-Fi steps aside for it, then comes back quietly until she leaves. */
 const T = { el: null, gain: null, stopTimer: null, on: false };
-const themeReady = () => soundOn && canPlayAAC();
+const themeReady = () => musicOn && canPlayAAC();
 function themeStart(resume) {
   if (!themeReady()) return;
   ensureAudio();
@@ -1868,11 +1894,10 @@ function themeStop() {
   T.stopTimer = setTimeout(() => { T.el.pause(); }, 650);
 }
 
-/* Event songs: full-length tracks that belong to a moment (squaring up with Dale, checking out).
+/* Event songs: full-length tracks that belong to a moment (checking out).
    They play once, in place of the Dale-Fi, which picks up where it left off when they end.
-   Guide Saffron showing up, any Dale-Fi button, muting or leaving the results screen ends one early. */
+   Guide Saffron showing up, any Dale-Fi button, Music off or leaving the results screen ends one early. */
 const EVENT_SONGS = {
-  square: { title: "you're square", artist: 'TORiTiA' },
   'win-moment': { title: 'The Winning Moment', artist: 'TORiTiA' },
   'win-thats': { title: "That's Winning", artist: 'TORiTiA' },
   checkout: { title: 'the checkout (sadder)', artist: 'TORiTiA' },
@@ -1954,7 +1979,7 @@ function musicToggle(force) {
   ensureAudio();
   acWake();
   const play = force != null ? force : !anyPlaying();
-  if (play && !soundOn) setSound(true, true);
+  if (play && !musicOn) setMusic(true, true);
   musicTakeover();
   M.want = play;
   if (play) {
@@ -1976,7 +2001,7 @@ function stepTo(list, i, d) {
 function musicEnded() {
   if (dzOwned() && DZ.rep && M.loaded === M.cur && avail().includes(M.cur)) {
     try { M.audio.currentTime = 0; } catch (e) { /* not seekable yet */ }
-    if (soundOn && !M.held && !document.hidden) tryPlay(M.audio).then(musicUI);
+    if (musicOn && !M.held && !document.hidden) tryPlay(M.audio).then(musicUI);
     return musicUI();
   }
   musicStep(1, true);
@@ -1994,6 +2019,13 @@ function dzAuto(id) {
   store.set('unpw.skip', DZ.skip);
   SND.tap(); musicUI();
 }
+/* A song you can't play any more (Gary's, once the retreat and its Dinglezoons are over) gives way to the first song
+   you can, playing on if it was playing. */
+function musicFit() {
+  if (!M.audio || !M.loaded || avail().includes(M.loaded)) return;
+  const was = musicPlaying();
+  if (musicLoad(M.cur) && was) tryPlay(M.audio).then(musicUI);
+}
 function musicStep(d, auto) {
   const list = avail();
   const i = Math.max(0, list.indexOf(M.cur));
@@ -2006,17 +2038,17 @@ function musicStep(d, auto) {
 }
 function musicPick(id) {
   if (id === M.cur && M.loaded === id && !E.on) return musicToggle();
-  if (!soundOn) setSound(true, true);
+  if (!musicOn) setMusic(true, true);
   musicTakeover();
   if (!musicLoad(id)) return;
   M.want = true;
   tryPlay(M.audio).then(musicUI);
   musicUI();
 }
-/* One switch: muting stops the music and the effects; unmuting brings back the song you were playing.
-   An event song that gets muted is over; it doesn't come back with the sound. */
-function setSound(on, quiet) {
-  soundOn = on; store.set('unpw.sound', on);
+/* Music off stops every song; on again brings back the song you were playing. An event song that gets switched off
+   is over; it doesn't come back with the music. Sounds only gate the chimes, which are short and never resume. */
+function setMusic(on, quiet) {
+  musicOn = on; store.set('unpw.music', on);
   if (!on) {
     if (T.el) { clearTimeout(T.stopTimer); T.el.pause(); }
     T.on = false;
@@ -2029,6 +2061,12 @@ function setSound(on, quiet) {
   }
   musicUI();
 }
+function setSfx(on) { sfxOn = on; store.set('unpw.sfx', on); if (on) { acWake(); SND.tap(); } }
+/* The Music and Sounds switches, as in Options and the in-game menu. */
+const audioToggles = () => `<div class="sheet-actions two toggles">
+      <button type="button" class="btn soft news" role="switch" aria-checked="${musicOn}" data-act="musictog">Music<span class="ver">${musicOn ? 'On' : 'Off'}</span></button>
+      <button type="button" class="btn soft news" role="switch" aria-checked="${sfxOn}" data-act="sfxtog">Sounds<span class="ver">${sfxOn ? 'On' : 'Off'}</span></button>
+    </div>`;
 function musicNudge(d) {
   M.vol = Math.round(Math.min(1, Math.max(0, M.vol + d)) * 10) / 10;
   store.set('unpw.vol', M.vol);
@@ -2116,12 +2154,12 @@ function musicSheet() {
   const run = inRun(), dz = dzOwned();
   const rows = TRACKS.map((t, i) => list.includes(t.id)
     ? `<div class="trkline"><button type="button" class="trk ${t.id === M.cur ? 'cur' : ''}" data-track="${t.id}">
-        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${esc(shownArtist(t.id))}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}${dz ? `<button type="button" class="dzauto" data-auto="${t.id}" role="switch" aria-checked="true" aria-label="Autoplay: ${esc(t.title)}"><i class="led"></i>AUTO</button>` : ''}</div>`
-    : `<div class="trk locked"><span class="n num">${i + 1}</span><span><span class="tt">Not found yet</span><span class="ta">${run && t.hint ? t.hint : 'Turns up somewhere on a retreat.'}</span></span>
+        <span class="n num">${i + 1}</span><span><span class="tt">${t.title}</span><span class="ta">${esc(shownArtist(t.id) || (CARDS[t.id] ? CARDS[t.id].meta : ''))}</span></span><span class="pl" aria-hidden="true"><i></i><i></i><i></i></span></button>${CARDS[t.id] ? `<button type="button" class="cardthumb${CARDS[t.id].cut ? ' cut' : ''}" data-act="card" data-id="${t.id}" aria-label="Companion card: ${esc(CARDS[t.id].title)}"><img src="${IMG[CARDS[t.id].art]}" alt=""></button>` : ''}${dz ? `<button type="button" class="dzauto" data-auto="${t.id}" role="switch" aria-checked="true" aria-label="Autoplay: ${esc(t.title)}"><i class="led"></i>AUTO</button>` : ''}</div>`
+    : `<div class="trk locked"><span class="n num">${i + 1}</span><span><span class="tt">Not found yet</span><span class="ta">${(run || BUNDLE.includes(t.id)) && t.hint ? t.hint : 'Turns up somewhere on a retreat.'}</span></span>
         ${run && t.id === 'w2' && PLACES[S.loc].van ? `<button type="button" class="chip" data-act="buycd" ${S.cash >= CD_PRICE ? '' : 'disabled'}>Buy ${fmt(CD_PRICE)}</button>` : ''}</div>`).join('');
   openSheet(`<div class="grab"></div>
     <h3 id="sheetTitle">Dale-Fi</h3>
-    <p class="muted">${run ? (list.length === 1 ? "It came preloaded with the retreat's spa track. Dale says there's better stuff out there." : `${list.length} of ${TRACKS.length} songs found this retreat.`) : `Your collection: ${list.length} of ${TRACKS.length} songs.`}</p>
+    <p class="muted">${run ? (S.songs.length === 1 ? "It came preloaded with the retreat's spa track. Dale says there's better stuff out there." : `${S.songs.length} of ${COLLECTIBLE.length} songs found this retreat.`) : `Your collection: ${list.length} of ${COLLECTIBLE.length} songs.`}</p>
     ${dz ? `<div class="dz">
       <div class="dzbar"><span>Dinglezoons</span></div>
       <div class="dzscr" aria-hidden="true">
@@ -2179,6 +2217,7 @@ function musicSheet() {
 /* ================= rendering ================= */
 function skyFor(h) { let s = SKIES[0]; for (const k of SKIES) if (h >= k[0]) s = k; return s; }
 function render() {
+  musicFit();
   const app = $('#app');
   const listTop = $('.list')?.scrollTop || 0, overTop = $('.over')?.scrollTop || 0;
   document.getElementById('loader')?.remove();
@@ -2227,8 +2266,8 @@ function optionsSheet() {
       <button type="button" class="btn soft news" data-act="news">What's New<span class="ver">v${GAME_VERSION}</span></button>
       <button type="button" class="btn soft" data-act="scores">Guestbook</button>
       <button type="button" class="btn soft" data-act="music">Dale-Fi music player</button>
-      <button type="button" class="btn soft" data-act="soundopt">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
     </div>
+    ${audioToggles()}
     <p class="muted" style="margin-top:16px">After Drug Wars by John E. Dell, 1984. Music by TORiTiA.</p>`, 'options');
 }
 
@@ -2717,9 +2756,9 @@ function handbookSheet() {
       <p>The rest only apply if you're square with Dale. Owe him anything at checkout, even a dollar, and it's the first row, whatever your net worth.</p>
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
-      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${TRACKS.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
-      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Squaring up with Dale and checking out have songs of their own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. <b>Mute all sound</b> in the menu silences the music and the sound effects together.</p>
-      <p>Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat; the next retreat starts with the plain Dale-Fi again, and your songs stay with you as always. It plays the same songs and adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
+      <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${COLLECTIBLE.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
+      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Checking out has songs of its own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game and picks back up when you return. In the menu and in Options, <b>Music</b> switches the songs on and off and <b>Sounds</b> the chimes and other effects, each on its own.</p>
+      <p>From day ${DZ_DAY}, Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat; the next retreat starts with the plain Dale-Fi again, and your songs stay with you as always. It plays your songs plus two that come with it, from Gary's Cream of the Crop ’98 tape; they only play on a Dinglezoons and leave with it. It adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
       <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, and Esc closes things.</p>
@@ -2784,7 +2823,9 @@ function menuSheet() {
       <button type="button" class="btn soft" data-act="handbook">Retreat handbook</button>
       <button type="button" class="btn soft news" data-act="news">What's New<span class="ver">v${GAME_VERSION}</span></button>
       <button type="button" class="btn soft" data-act="scores">Guestbook</button>
-      <button type="button" class="btn soft" data-act="sound">${soundOn ? 'Mute all sound' : 'Turn sound back on'}</button>
+    </div>
+    ${audioToggles()}
+    <div class="sheet-actions">
       <button type="button" class="btn quiet" data-act="welcome">Save and leave</button>
       <button type="button" class="btn quiet" data-act="close">Close</button>
     </div>`, 'menu');
@@ -2843,7 +2884,8 @@ function act(a, el) {
     case 'reroll': return reportSheet(true);
     case 'sharecard': return shareCard();
     case 'options': return optionsSheet();
-    case 'soundopt': setSound(!soundOn); return optionsSheet();
+    case 'musictog': setMusic(!musicOn); return sheetKind === 'menu' ? menuSheet() : optionsSheet();
+    case 'sfxtog': setSfx(!sfxOn); return sheetKind === 'menu' ? menuSheet() : optionsSheet();
     case 'handbook': return handbookSheet();
     case 'scores': return scoresSheet();
     case 'news': return newsSheet();
@@ -2876,7 +2918,6 @@ function act(a, el) {
     case 'mrep': return dzRepeat();
     case 'buydz': return buyDZ() ? vanSheet('Dale hands over the Dinglezoons. Your songs are already on it.', true) : vanSheet();
     case 'sign': return saveScore();
-    case 'sound': setSound(!soundOn); return menuSheet();
     case 'welcome': closeSheet(true); queue = []; $('#toasts').innerHTML = ''; screen = 'welcome'; if (E.on) { eventStop(); musicResume(); } return render();
     case 'close': return closeSheet();
   }
@@ -2975,14 +3016,17 @@ const INSPECT = {
   version: '1.6',
   intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
   items: [
-    ['Buying it from Dale', 'At the van with less than $300 on you, the Dinglezoons button is off. With $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone for the rest of the retreat. Start a new retreat: the plain Dale-Fi is back, with every song you’ve found, and Dale sells you another.'],
+    ['Buying it from Dale', 'On days 1 and 2 the van has no Dinglezoons. From day 3, with less than $300 on you its button is off; with $300 or more, one tap: $300 comes off your cash, the journal notes it and the offer is gone for the rest of the retreat. Start a new retreat: the plain Dale-Fi is back, with every song you’ve found, and from day 3 Dale sells you another.'],
+    ['Gary’s tape', 'With the Dinglezoons, What’s on Your Shoe and Clam’s End are in the playlist, each with the cassette card. They play, repeat and take AUTO, Next and Previous like any song. On the plain Dale-Fi and on the welcome screen they show as not found, with their hints. A new retreat starts without them.'],
     ['The upgraded player', 'Open the Dale-Fi: a dark Dinglezoons with green lettering, a pixelated cover, a small analyzer and your songs. Play, pause, previous, next, seeking and volume all work, at 320 and 375 wide too, with nothing cramped or cut off. Your songs and their order are unchanged.'],
     ['Repeat', 'Turn on repeat and let a song finish: it starts again. Pick another song: that one repeats. Turn repeat off: the next song follows.'],
     ['AUTO off', 'Switch AUTO off on a song. Let the one before it finish, or press Next or Previous across it: the player passes over it. Tap it and it plays. The last song still lit can’t be switched off.'],
-    ['Covers and cards', 'Each song’s cover shows pixelated in the player. The small cover in the list still opens its companion card at full size, also at 320 wide.'],
-    ['Interruptions', 'With repeat on and a song playing: Guide Saffron’s theme, paying off Dale and checkout still step in and hand back; mute stays muted; leaving the app and coming back picks up the same song.'],
-    ['Saves and settings', 'Reload mid-retreat and Continue: the Dinglezoons, your AUTO switches and repeat are as you left them. Buy one on a later retreat and your switches and repeat are still set.'],
-    ['Still open from 1.5, on an iPhone', 'Mute stays muted after closing and reopening; Beta and the PREVIEW tab clear the notch and home indicator; Radical Acceptance’s card fits at iPhone SE size.'],
+    ['You’re Square', 'Pay Dale off in full: no song starts, and whatever was playing carries on. Close the van and You’re Square’s reel-to-reel card appears; the song plays from the Dale-Fi like any other and stays in your collection after the retreat.'],
+    ['Music and Sounds', 'In the menu and in Options, try all four: Music on or off, Sounds on or off. Music covers songs, Guide Saffron’s theme and the checkout songs; Sounds covers the chimes. Reload: both stay as you set them.'],
+    ['Covers and cards', 'Each song’s cover shows pixelated in the player. The small cover in the list opens its companion card at full size, also at 320 wide; the reel and the cassette sit on the page without a box around them.'],
+    ['Interruptions', 'With repeat on and a song playing: Guide Saffron’s theme and checkout still step in and hand back; Music off stays off; leaving the app and coming back picks up the same song.'],
+    ['Saves and settings', 'Reload mid-retreat and Continue: the Dinglezoons, Gary’s songs, your AUTO switches and repeat are as you left them.'],
+    ['Still open from 1.5, on an iPhone', 'Mute stays muted after closing and reopening (now Music and Sounds); Beta and the PREVIEW tab clear the notch and home indicator; Radical Acceptance’s card fits at iPhone SE size.'],
     ['Preview stays separate', 'Saves, guestbook scores and songs found here never show up in the live game, and the live game’s never show up here.'],
   ],
 };

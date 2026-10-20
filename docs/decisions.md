@@ -41,7 +41,26 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 **Approved in the brief, built as written:** Dinglezoons, "The premier MP3 player of the Central Coast.", sold only from Dale's van as a one-time purchase in run cash; Dale's pitch verbatim; a Winamp 2.x-inspired player (graphite chassis, beveled keys, green pixel lettering, scrolling title, a small analyzer, a pixelated cover) for the same Dale-Fi collection; skip in autoplay, repeat one, the pixelated cover; no skins, equalizer, new music or new currencies. The original Dale-Fi is unchanged until you buy it. Songs, discovery, cards, economy, debt, mute and the audio lifecycle are untouched.
 
-**Proposed** (Claude Code's interpretation; confirm or change):
+**Approved in the final handoff** (`handoffs/2026-10-20/02_RELEASE_1_6_FINAL.md`), built as written:
+
+- **From day 3.** Dale only offers the Dinglezoons from day 3 of a retreat to its last day (on a weekend retreat that's day 3 itself). Before that the offer doesn't appear and it can't be bought. Still $300, per retreat.
+- **Gary's Cream of the Crop ’98:** "What's on Your Shoe" (Side A) and "Clam's End" (Side B) come with every Dinglezoons. They play only while you own one, never join the songs found or the collection, and leave when the retreat ends (a song of theirs playing at that moment gives way to one you keep). They take AUTO, Next, Previous and repeat like any song. Before you have them they show as not found with their approved hints, on the welcome screen too, and their cards stay hidden. Approved card copy, on the supplied cassette art, which both share.
+- **You're Square** is now an ordinary collectible: paying Dale off in full finds it (first time: its card, with the supplied reel art, after you close the van; later: the usual note), and it stays in the collection. The full song no longer plays at the payoff; the existing payoff chime and the song-found chime remain, under Sounds. Loan rules, payments, messages and endings are unchanged.
+- **Music and Sounds** replace "Mute all sound", as two switches in the menu and in Options. Music: Dale-Fi and Dinglezoons songs, Guide Saffron's theme, the checkout songs and Dale's checkout cue. Sounds: the chimes. Both are kept (`unpw.music`, `unpw.sfx`); a player who had muted everything before starts with both off.
+- **Dale's line:** "Top of the line, man. Comes with two tracks from Gary’s ’98 tape. Don’t ask me how he recorded ’em."
+
+**Interpretations in the final round** (confirm or change):
+
+- **Gary's audio is missing.** The brief says to use the supplied audio; none came with it. The code expects `assets/audio/shoe.m4a` and `assets/audio/clam.m4a`. Until they arrive the static test fails on purpose and the preview isn't updated.
+- **"’98" in Dale's line** uses an apostrophe (’98), as the rest of the brief writes it; the brief's line had an opening quote (‘98), read as a typo.
+- **You're Square across retreats** follows the "ordinary collectible" rule: it stays in the collection (the welcome-screen player has it), and, like every found song, a new retreat's Dale-Fi only has it once you pay Dale off on that retreat. The other reading, having it on every retreat from the start, would make it the only song that works that way.
+- **Its discovery line** reuses Dale's existing van line: "Dale counts it twice. You are square." (card: "… New on your Dale-Fi."; journal: "… New on your Dale-Fi: You’re Square.").
+- **Song counts** ("N of 7 songs") count only songs you can find; Gary's two aren't counted. Their rows show their hints even on the welcome screen, where other unfound songs show "Turns up somewhere on a retreat."
+- **Cards with no artist** (Gary's) show only the title, the side and the text; their list row shows the side instead of an artist. The two transparent images get a soft shadow around the picture itself, not a box.
+- **Dale's checkout cue** ("The Unsettled Account") counts as Music, since it's a recorded track like the other checkout songs, not a chime.
+- **Saffron's note** is redrafted for the final release (see the What's New entry); still a draft.
+
+**Proposed** in the first round (Claude Code's interpretation; confirm or change):
 
 - **Price $300**, as suggested. Checked against the economy: you start with $400, Dale's CD is $150, the first bigger cushion about $120, and the lowest takeaway threshold is $5,000, so it's a real choice on day one and small change later. It lowers net worth like any purchase.
 - **"AUTO" instead of "skip".** Each found song gets a lit AUTO switch; off means autoplay, Next and Previous pass it over. The word "skip" is avoided so it can't be confused with Next. A line above the playlist explains it: "Autoplay, Next and Previous only play songs with AUTO lit. Tap any song to play it."

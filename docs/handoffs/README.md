@@ -22,6 +22,8 @@ The 1.4 briefs ("Dale's Outstanding Balance" and its three follow-ups: final rev
 
 [`2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`](2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md): the 1.6 handoff (the Dinglezoons player Dale sells), delivered in a Claude Code session and saved here verbatim.
 
+[`2026-10-20/02_RELEASE_1_6_FINAL.md`](2026-10-20/02_RELEASE_1_6_FINAL.md): the final 1.6 handoff (day 3 availability, Gary's Cream of the Crop ’98 songs, You're Square as a collectible, separate Music and Sounds), saved verbatim. Its two images (the You're Square reel and the Cream of the Crop ’98 cassette) are `assets/img/card-square.webp` and `card-cotc98.webp`, resized to 720 px with their transparency; the owner keeps the originals.
+
 ## Not in the repository
 
 These are referenced but have not been available to Claude Code, so nothing here reconstructs them:
