@@ -32,7 +32,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 ## Release 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`)
 
-**In preview, not shipped.** Built on `release-1.6` and published to `/preview/` on 2026-10-20 with the owner's approval; not merged into the live game. Awaiting the owner's iPhone playtest.
+**Shipped** 2026-10-27, after the owner's iPhone playtests of the preview and their go-ahead ("push 1.6"). The owner knows of a few small audio bugs and chose to test them in the live release instead of the preview (see `status.md`, Known issues).
 
 **Approved by the owner** (2026-10-20, after the first build):
 
@@ -51,7 +51,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 
 **Approved by the owner after iPhone testing** (2026-10-20): **playback follows the playlist.** Autoplay, Next and Previous now move through the songs in the order the playlist shows them, from whichever song you picked, wrapping around. Before, they followed the order the songs were found (the pre-1.6 behavior), so a song just found and played from its card's Listen was followed by the first song instead of the one below it. Listen and tapping a song in the list were already the same code and still are; the one difference is that Listen on the song already playing keeps it playing, where tapping it in the list pauses it. AUTO, repeat, interruptions and Saffron's theme are unchanged.
 
-**Interpretations in the final round** (confirm or change):
+**Interpretations in the final round**, shipped as built with the owner's go-ahead; not confirmed one by one, so any of them can still be revisited:
 
 - **Gary's audio** arrived separately as MP3s (2026-10-20) and was converted to AAC like the other songs: `shoe.m4a` lowered 0.6 dB and `clam.m4a` raised 0.8 dB, so both sit at about −15.2 LUFS, where the other Dale-Fi songs are (−14.5 to −15.5). Nothing else about them was changed.
 - **"’98" in Dale's line** uses an apostrophe (’98), as the rest of the brief writes it; the brief's line had an opening quote (‘98), read as a typo.
@@ -60,9 +60,9 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **Song counts** ("N of 7 songs") count only songs you can find; Gary's two aren't counted. Their rows show their hints even on the welcome screen, where other unfound songs show "Turns up somewhere on a retreat."
 - **Cards with no artist** (Gary's) show only the title, the side and the text; their list row shows the side instead of an artist. The two transparent images get a soft shadow around the picture itself, not a box.
 - **Dale's checkout cue** ("The Unsettled Account") counts as Music, since it's a recorded track like the other checkout songs, not a chime.
-- **Saffron's note** is redrafted for the final release (see the What's New entry); still a draft.
+- **Saffron's note** is redrafted for the final release (see the What's New entry) and shipped as drafted.
 
-**Proposed** in the first round (Claude Code's interpretation; confirm or change):
+**Proposed** in the first round (Claude Code's interpretation), shipped as built with the owner's go-ahead; any of them can still be revisited:
 
 - **Price $300**, as suggested. Checked against the economy: you start with $400, Dale's CD is $150, the first bigger cushion about $120, and the lowest takeaway threshold is $5,000, so it's a real choice on day one and small change later. It lowers net worth like any purchase.
 - **"AUTO" instead of "skip".** Each found song gets a lit AUTO switch; off means autoplay, Next and Previous pass it over. The word "skip" is avoided so it can't be confused with Next. A line above the playlist explains it: "Autoplay, Next and Previous only play songs with AUTO lit. Tap any song to play it."
@@ -70,7 +70,7 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **Repeat** plays the current song again whenever it ends, including a song with AUTO off that you picked. Next, Previous and tapping a song still move, and the new song repeats. AUTO switches and repeat are kept as settings (like volume) across retreats, and only act while you have a Dinglezoons.
 - **The pixelated cover** is drawn in the browser from the existing card art: cropped square, shrunk to 24×24 with eight levels per color, shown at 72 px with hard pixel edges. No new image files. Event songs show an empty frame. Thumbnails and companion cards keep the full-size art.
 - **Wording:** the van offer ("Dinglezoons, the premier MP3 player of the Central Coast." then "Dale: “…”"), the line after buying ("Dale hands over the Dinglezoons. Your songs are already on it."), the journal entry ("Dale hands over a Dinglezoons for $300."), "128kbps 44kHz" on the display, the handbook paragraph under The Dale-Fi, and Beta's 1.6 checklist. The sheet's title stays "Dale-Fi" (the system); the device says DINGLEZOONS.
-- **Saffron's note, "On What We Choose to Hear"**, drafted by Claude Code as the brief asks; not yet approved. Dated 2026-10-20 for now; it gets the release day if it ships.
+- **Saffron's note, "On What We Choose to Hear"**, drafted by Claude Code as the brief asks; shipped with the owner's go-ahead, not approved line by line. Dated 2026-10-27, the release day.
 
 ## Release 1.5 (handoff `handoffs/2026-10-18/01_RELEASE_1_5.md`)
 
