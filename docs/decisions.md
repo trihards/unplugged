@@ -30,6 +30,48 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **The Unprocessed Self** (The Low Maintenance Orchestra, Sunspill Records, 1977, funk; production credit TORiTiA): Dale-Fi song `w3`, a 45% find per Kitchen Garden visit (the Meditation Hall's odds). Card subtitle "45 · Sunspill Records · 1977 · Funk" (45 is the format). Hint "Some things grow better with a little funk." Discovery line and review are the approved copy. The sleeve's "A quieter kind of funk" against the review's "gloriously filthy" is intentional.
 - Calm moments on walks are time-neutral ("A deer walks right up to you.", "The fog lifts off the Pacific and you forget your inbox exists.").
 
+## Release 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`)
+
+**Shipped** 2026-10-27, after the owner's iPhone playtests of the preview and their go-ahead ("push 1.6"). The owner knows of a few small audio bugs and chose to test them in the live release instead of the preview (see `status.md`, Known issues).
+
+**Approved by the owner** (2026-10-20, after the first build):
+
+- **Ownership resets with each new retreat.** You buy it from Dale during a retreat and keep it until you start the next one: through the rest of that retreat, checkout, the results and the welcome screen, and reloads in between. Starting a new retreat (and only that) brings back the plain Dale-Fi; another needs buying. It's kept in its own stored flag (`unpw.dz`), not in the saved retreat, because checkout deletes the save. A retreat saved by an earlier 1.6 preview with one bought (`S.dz`) keeps it. Songs found and the collection keep their usual persistence. This replaces the first build's permanent ownership, and, after the owner's playtest (2026-10-20), the second build's ending at checkout.
+- **Next and Previous respect AUTO**, like autoplay: they go to the nearest song with AUTO lit. Tapping a song in the list still plays it. With nothing lit (possible when switches set on an earlier retreat cover every song this retreat has), autoplay, Next and Previous pass nothing over and move to the neighbouring song as usual.
+
+**Approved in the brief, built as written:** Dinglezoons, "The premier MP3 player of the Central Coast.", sold only from Dale's van as a one-time purchase in run cash; Dale's pitch verbatim; a Winamp 2.x-inspired player (graphite chassis, beveled keys, green pixel lettering, scrolling title, a small analyzer, a pixelated cover) for the same Dale-Fi collection; skip in autoplay, repeat one, the pixelated cover; no skins, equalizer, new music or new currencies. The original Dale-Fi is unchanged until you buy it. Songs, discovery, cards, economy, debt, mute and the audio lifecycle are untouched.
+
+**Approved in the final handoff** (`handoffs/2026-10-20/02_RELEASE_1_6_FINAL.md`), built as written:
+
+- **From day 3.** Dale only offers the Dinglezoons from day 3 of a retreat to its last day (on a weekend retreat that's day 3 itself). Before that the offer doesn't appear and it can't be bought. Still $300, per retreat.
+- **Gary's Cream of the Crop ’98:** "What's on Your Shoe" (Side A) and "Clam's End" (Side B) come with every Dinglezoons. They play wherever the Dale-Fi does while you own one (results and welcome screen included), never join the songs found or the collection, and leave when a new retreat starts (a song of theirs playing at that moment gives way to one you keep). They take AUTO, Next, Previous and repeat like any song. Before you have them they show as not found with their approved hints, on the welcome screen too, and their cards stay hidden. Approved card copy, on the supplied cassette art, which both share.
+- **You're Square** is now an ordinary collectible: paying Dale off in full finds it (first time: its card, with the supplied reel art, after you close the van; later: the usual note), and it stays in the collection. The full song no longer plays at the payoff; the existing payoff chime and the song-found chime remain, under Sounds. Loan rules, payments, messages and endings are unchanged.
+- **Music and Sounds** replace "Mute all sound", as two switches in the menu and in Options. Music: Dale-Fi and Dinglezoons songs, Guide Saffron's theme, the checkout songs and Dale's checkout cue. Sounds: the chimes. Both are kept (`unpw.music`, `unpw.sfx`); a player who had muted everything before starts with both off.
+- **Dale's line:** "Top of the line, man. Comes with two tracks from Gary’s ’98 tape. Don’t ask me how he recorded ’em."
+
+**Approved by the owner after iPhone testing** (2026-10-20): **playback follows the playlist.** Autoplay, Next and Previous now move through the songs in the order the playlist shows them, from whichever song you picked, wrapping around. Before, they followed the order the songs were found (the pre-1.6 behavior), so a song just found and played from its card's Listen was followed by the first song instead of the one below it. Listen and tapping a song in the list were already the same code and still are; the one difference is that Listen on the song already playing keeps it playing, where tapping it in the list pauses it. AUTO, repeat, interruptions and Saffron's theme are unchanged.
+
+**Interpretations in the final round**, shipped as built with the owner's go-ahead; not confirmed one by one, so any of them can still be revisited:
+
+- **Gary's audio** arrived separately as MP3s (2026-10-20) and was converted to AAC like the other songs: `shoe.m4a` lowered 0.6 dB and `clam.m4a` raised 0.8 dB, so both sit at about −15.2 LUFS, where the other Dale-Fi songs are (−14.5 to −15.5). Nothing else about them was changed.
+- **"’98" in Dale's line** uses an apostrophe (’98), as the rest of the brief writes it; the brief's line had an opening quote (‘98), read as a typo.
+- **You're Square across retreats** follows the "ordinary collectible" rule: it stays in the collection (the welcome-screen player has it), and, like every found song, a new retreat's Dale-Fi only has it once you pay Dale off on that retreat. The other reading, having it on every retreat from the start, would make it the only song that works that way.
+- **Its discovery line** reuses Dale's existing van line: "Dale counts it twice. You are square." (card: "… New on your Dale-Fi."; journal: "… New on your Dale-Fi: You’re Square.").
+- **Song counts** ("N of 7 songs") count only songs you can find; Gary's two aren't counted. Their rows show their hints even on the welcome screen, where other unfound songs show "Turns up somewhere on a retreat."
+- **Cards with no artist** (Gary's) show only the title, the side and the text; their list row shows the side instead of an artist. The two transparent images get a soft shadow around the picture itself, not a box.
+- **Dale's checkout cue** ("The Unsettled Account") counts as Music, since it's a recorded track like the other checkout songs, not a chime.
+- **Saffron's note** is redrafted for the final release (see the What's New entry) and shipped as drafted.
+
+**Proposed** in the first round (Claude Code's interpretation), shipped as built with the owner's go-ahead; any of them can still be revisited:
+
+- **Price $300**, as suggested. Checked against the economy: you start with $400, Dale's CD is $150, the first bigger cushion about $120, and the lowest takeaway threshold is $5,000, so it's a real choice on day one and small change later. It lowers net worth like any purchase.
+- **"AUTO" instead of "skip".** Each found song gets a lit AUTO switch; off means autoplay, Next and Previous pass it over. The word "skip" is avoided so it can't be confused with Next. A line above the playlist explains it: "Autoplay, Next and Previous only play songs with AUTO lit. Tap any song to play it."
+- **Never an empty rotation:** the last lit song among the ones you can play can't be switched off. Switches set on an earlier retreat can still leave every song this retreat has off; then nothing is passed over.
+- **Repeat** plays the current song again whenever it ends, including a song with AUTO off that you picked. Next, Previous and tapping a song still move, and the new song repeats. AUTO switches and repeat are kept as settings (like volume) across retreats, and only act while you have a Dinglezoons.
+- **The pixelated cover** is drawn in the browser from the existing card art: cropped square, shrunk to 24×24 with eight levels per color, shown at 72 px with hard pixel edges. No new image files. Event songs show an empty frame. Thumbnails and companion cards keep the full-size art.
+- **Wording:** the van offer ("Dinglezoons, the premier MP3 player of the Central Coast." then "Dale: “…”"), the line after buying ("Dale hands over the Dinglezoons. Your songs are already on it."), the journal entry ("Dale hands over a Dinglezoons for $300."), "128kbps 44kHz" on the display, the handbook paragraph under The Dale-Fi, and Beta's 1.6 checklist. The sheet's title stays "Dale-Fi" (the system); the device says DINGLEZOONS.
+- **Saffron's note, "On What We Choose to Hear"**, drafted by Claude Code as the brief asks; shipped with the owner's go-ahead, not approved line by line. Dated 2026-10-27, the release day.
+
 ## Release 1.5 (handoff `handoffs/2026-10-18/01_RELEASE_1_5.md`)
 
 **Shipped** 2026-10-19, after the owner playtested the preview and said ship. Where this differs from Stage 01 and Stage 02 below, this is newer.

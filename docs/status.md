@@ -1,6 +1,6 @@
 # Status
 
-As of 2026-10-19. Live version: **1.5** (deployed to GitHub Pages from `main`). Preview: the same 1.5 build at `/preview/`, with Beta.
+As of 2026-10-27. Live version: **1.6** (deployed to GitHub Pages from `main`). Preview: the same 1.6 build at `/preview/`, with Beta.
 
 ## Shipped
 
@@ -13,6 +13,7 @@ As of 2026-10-19. Live version: **1.5** (deployed to GitHub Pages from `main`). 
 | — | 2026-10-16 | Handbook accuracy fixes and section marks (docs only) | none |
 | 1.3 | 2026-10-17 | Dale-Fi companion cards; in-world artist credits; all notes sign "With care". Personally tested and approved by the owner. | On Listening Closely |
 | 1.5 | 2026-10-19 | Limited stock per spot (selling restocks that spot; sold out shown on rows and sheets), re-matched rank thresholds; Dale-Fi song Radical Acceptance (VANTAGE) in the Labyrinth; a journal of what happened and where, including offers, gossip prices, Saffron, songs and the ending; guestbook cleared once; the permanent `/preview/` with Beta and her Inspection Notes, its own saves and cache. Owner playtested the preview and said ship. | On the Nature of Abundance |
+| 1.6 | 2026-10-27 | The Dinglezoons: a Winamp-style upgrade of the Dale-Fi sold from Dale's van from day 3 ($300, lasts until a new retreat), with AUTO, repeat and a pixelated cover; Gary's two songs from his ’98 tape come with it; You're Square is an ordinary collectible; separate Music and Sounds switches; autoplay, Next and Previous follow the playlist. Owner playtested the preview on iPhone and said ship, knowing of a few small audio bugs to test in the live build. | On What We Choose to Hear |
 | 1.4 | 2026-10-17 | Dale's Outstanding Balance: any debt at checkout is the Dale Fail (art and cue); complete post-game journal and a header journal icon; Dale's morning check-ins; time-neutral calm moments; new Dale-Fi song The Unprocessed Self. Owner playtest on macOS Safari and physical iPhone checks passed; background playback deferred (`parking-lot.md`). | On Outstanding Balances |
 
 ## In progress
@@ -29,6 +30,9 @@ Nothing. The next release starts from `main`; its preview replaces `/preview/` i
 
 | Issue | Status | Next action |
 | --- | --- | --- |
+| The trading test "circulation: buy out a spot…" fails now and then: its real `walk()` can roll a gossip crash that adds stock at the destination, tripping its "nothing moved" check. Seen once in the 1.6 work, then passed 3 of 3 reruns and a full run. Test-only; not caused by 1.6. | Flaky test. | Pin the walk's rolls with `g.rolls()` in the test. |
+| The owner reports a few small audio bugs in 1.6, not yet described. Shipped anyway on the owner's call, to test them in the live release instead of the preview. | Outstanding. | Owner describes them after testing the live build; fix in a follow-up. |
+| No systematic physical-iPhone pass is recorded for 1.6 beyond the owner's preview playtests. Unchecked on a device: repeat through a lock and Saffron's theme, AUTO in autoplay, thumb-sized keys, the green display and pixelated cover in daylight (`tools/test/README.md`, item 8); the live game's offline cache updates to `unplugged-1.6` and Gary's songs work in Airplane Mode; a pre-1.6 mute keeps Music and Sounds both off. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | No systematic physical-iPhone pass is recorded for 1.5 beyond the owner's preview playtest. Unchecked on a device: Radical Acceptance plays (volume buttons work) and its card fits at iPhone SE size; the live game's offline cache updates to `unplugged-1.5` and the new song and art work in Airplane Mode; mute stays muted after reopening; the guestbook reset leaves a saved retreat and the Dale-Fi collection in place; Beta and the PREVIEW tab clear the notch and home indicator. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | The morning notification says "Dale's meter ran all night: you owe $0." (styled as bad news at full zen) once you're square with Dale. Found in the 1.5 discovery and reproduced in Chromium; `rest()`. | Live since 1.4 at least. Not in the 1.5 brief, so not fixed. | Owner decides whether to fix and with what wording. |
 | Gossip "Dale made a Costco run. Burners are piling up in the van." can fire at any spot, and with limited stock its crash now adds burners *there*, not at the van. Flagged in 1.5 as the handoff asked, not rewritten. | Copy question. | Owner decides (reword, or accept as gossip). |
@@ -51,7 +55,7 @@ Nothing. The next release starts from `main`; its preview replaces `/preview/` i
 | `main` | Live. |
 | `stage-01-market-scarcity`, `stage-02-zen-composure` | Unmerged, kept for reference. Stage 01's stock half shipped in 1.5 (ported by hand); saturation was rejected and Stage 02 (zen) is deferred. |
 | `map-preview` | Superseded by `release-map` (merged as 1.2). Kept, not deleted. |
-| `release-1.5`, `docs-project-state`, `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
+| `release-1.6`, `claude/nice-gauss-4vpbc9`, `release-1.5`, `docs-project-state`, `claude-agent-setup`, `unplugged-handoff-1`, `whats-new`, `whats-new-version`, `release-map`, `handbook-audit`, `dalefi-cards`, `claude/optimistic-dijkstra-9bdhx3` (1.4) | Fully merged into `main`. Safe to delete when the owner chooses. |
 
 ## Tools
 

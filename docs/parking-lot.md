@@ -2,15 +2,9 @@
 
 Ideas that have been explicitly deferred. **Nothing here is approved for implementation.** Moving an item out of this list takes the owner's decision, and then it goes to `decisions.md`.
 
-## Dingleberryzune: a premium MP3 player sold by Dale
+## Dinglezoons skins
 
-**Deferred. Not approved.** A pricier alternative to the Dale-Fi that Dale sells. Ideas noted so far:
-
-- Skipping tracks for automatic playback (moving on to the next song by itself).
-- Repeating a single track.
-- Low-resolution album art on its display.
-
-Open before it could be considered: price and where it's sold, how it relates to the existing Dale-Fi and the companion-card art, and whether it touches gameplay at all.
+**Deferred** by the 1.6 brief. The player Dale sells (once noted here as the "Dingleberryzune", approved and built for 1.6 as the Dinglezoons; see `decisions.md`) might later get collectible, interchangeable skins after classic Winamp customization. Not in 1.6: no skin selector, unlocks, inventory, alternate themes or customization settings.
 
 ## Music
 
