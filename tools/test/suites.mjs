@@ -1173,6 +1173,15 @@ const audio = {
       ok((await g.run('window.__acs')) <= 1, 'at most one rebuild across quick taps', await g.run('window.__acs'));
       ok((await g.run(PLAYING)) <= 1, 'and nothing playing twice', await g.run(PLAYING));
     }),
+    tst('while another app holds the audio, ordinary taps don\'t rebuild it; players let go never act up', { init: SESSION }, async g => {
+      await g.start(2); await startMusic(g); await g.run(ENC); await g.wait(400);
+      await g.run("window.__oldT = T.el; navigator.audioSession.state = 'interrupted'; navigator.audioSession.dispatchEvent(new Event('statechange')); " + STICK);
+      for (let i = 0; i < 6; i++) { await g.page.click('.stats', { force: true }); await g.wait(700); }
+      eq(await g.run('[ac === window.__oldAc, T.on]'), [true, true], 'no rebuild, her theme kept');
+      await g.run("navigator.audioSession.state = 'active'; acRebuild(); themeStart()"); await g.wait(300);
+      await g.run('window.__oldT.dispatchEvent(new Event("ended")); window.__oldT.dispatchEvent(new Event("error"))'); await g.wait(200);
+      eq(await g.run('[T.on, !T.el.paused]'), [true, true], 'a late event from the old theme player doesn\'t end the new one');
+    }),
     tst('paying Dale off plays no song: the Dale-Fi carries on where it was', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.run('M.audio.currentTime = 20'); await g.wait(200);

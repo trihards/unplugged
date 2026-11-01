@@ -1783,7 +1783,7 @@ function ensureAudio() {
   acMake();
   M.audio = new Audio();
   M.audio.preload = 'auto';
-  M.audio.addEventListener('ended', musicEnded);
+  M.audio.addEventListener('ended', e => { if (e.target === M.audio) musicEnded(); }); // never a player let go by acRebuild
   M.audio.addEventListener('play', musicUI);
   M.audio.addEventListener('pause', musicUI);
   M.audio.addEventListener('loadedmetadata', musicUI);
@@ -1896,7 +1896,9 @@ window.addEventListener('pageshow', e => { if (e.persisted && !document.hidden) 
    should be playing but isn't. The Dale-Fi's own buttons do their own thing, so a tap on one is left to them. */
 const MUSIC_KEYS = '[data-act="mplay"],[data-act="mnext"],[data-act="mprev"],[data-act="cardplay"],[data-track]';
 function audioTap(e) {
-  if ((musicOn || sfxOn) && acStuck()) acRebuild(); else acWake(true); // chimes need the AudioContext too, even with Music off
+  // Chimes need the AudioContext too, even with Music off. While another app holds the audio, an ordinary tap doesn't
+  // rebuild it (that can't help, and would cut off Saffron's theme); a Dale-Fi button still can.
+  if ((musicOn || sfxOn) && sessionState() !== 'interrupted' && acStuck()) acRebuild(); else acWake(true);
   if (!musicOn) return;
   if (E.on) { if (E.retry && E.el && E.el.paused) eventPlay(); return; }
   const key = e && e.target && e.target.closest ? e.target.closest(MUSIC_KEYS) : null;
@@ -1971,8 +1973,8 @@ function themeStart(resume) {
   if (E.on) eventStop();
   if (!T.el) {
     T.el = new Audio(); T.el.loop = false; T.el.src = trackURL('saffron');
-    T.el.addEventListener('ended', themeEnded);
-    T.el.addEventListener('error', themeEnded);
+    T.el.addEventListener('ended', e => { if (e.target === T.el) themeEnded(); });
+    T.el.addEventListener('error', e => { if (e.target === T.el) themeEnded(); });
     T.gain = routed(T.el).gain || null;
     if (T.gain) T.gain.gain.value = 0;
   }
@@ -2011,8 +2013,8 @@ function eventSong(id) {
   musicHold();
   if (!E.el) {
     E.el = new Audio(); E.el.preload = 'auto';
-    E.el.addEventListener('ended', eventDone);
-    E.el.addEventListener('error', () => { if (E.el.getAttribute('src')) eventDone(); });
+    E.el.addEventListener('ended', e => { if (e.target === E.el) eventDone(); });
+    E.el.addEventListener('error', e => { if (e.target === E.el && E.el.getAttribute('src')) eventDone(); });
     E.el.addEventListener('play', musicUI);
     E.el.addEventListener('pause', musicUI);
     if (ac) { try { E.an = ac.createAnalyser(); E.an.fftSize = 64; E.an.smoothingTimeConstant = 0.75; } catch (e) { E.an = null; } }
@@ -3123,7 +3125,7 @@ const INSPECT = {
   intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
   items: [
     ['Coming back after a while', 'Play a song, then leave the game for several minutes (another app, another tab, or lock the phone). Come back: nothing starts by itself. Press play once: the same song carries on from about where it was.'],
-    ['Play always plays', 'Whenever you press play, you hear the song. If it can’t start, “Tap play again to start the music.” appears and the next press plays it. The player never shows a song playing with no sound.'],
+    ['Play always plays', 'Whenever you press play, you hear the song. If it can’t start, “Tap play again to start the music.” appears and the next press plays it.'],
     ['Your other music first', 'Start Spotify or Apple Music, open the game and play on without touching the Dale-Fi. Walk until Guide Saffron appears: the other app keeps playing. Her theme plays over it with the ringer on, and stays quiet with the silent switch on. Chimes don’t stop it either.'],
     ['The Dale-Fi when you choose it', 'Press play on the Dale-Fi: the other app stops, like any music player, and the Dale-Fi plays with the silent switch on or off. Guide Saffron’s theme takes its place and hands it back, as before.'],
     ['Another app takes over', 'With the Dale-Fi playing, start the other app from Control Center or the lock screen. The Dale-Fi stops and stays stopped through taps and Guide Saffron. Play brings it back.'],
