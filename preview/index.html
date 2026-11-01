@@ -830,7 +830,7 @@ let musicOn = store.get('unpw.music', legacySound) !== false;
 let sfxOn = store.get('unpw.sfx', legacySound) !== false;
 /* The page's one AudioContext, made on first use. AW tracks waking it: tried is when a tap last asked it to resume
    and it hasn't yet; redo asks the next tap to rebuild the audio; last is when it was last rebuilt (see acRebuild). */
-const AW = { tried: 0, redo: false, last: 0 };
+const AW = { tried: 0, redo: false, last: 0, awayAt: 0, stale: false };
 function acMake() {
   if (ac) return ac;
   try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; return null; }
@@ -838,18 +838,19 @@ function acMake() {
   try {
     me.addEventListener('statechange', () => {
       if (me !== ac) return;
-      if (me.state === 'running') AW.tried = 0;
-      else if (!document.hidden) acWake();
+      if (me.state === 'running') { AW.tried = 0; AW.stale = false; }
+      else if (me.state === 'interrupted' && M.claim && !document.hidden) { musicClaim(false); musicUI(); } // another app took the audio
+      // Anything else (suspended) is never woken from here: that could race another app taking the audio. A tap wakes it.
     });
   } catch (e) { /* no state events */ }
   return ac;
 }
+/* Chimes only sound while the player has the Dale-Fi playing (granted, below): any game sound can take the audio away
+   from another app on an iPhone, and the game never does that on its own. */
 function chime(notes, decay = 0.7, gain = 0.05) {
-  if (!sfxOn) return;
+  if (!sfxOn || !granted()) return;
   try {
-    if (!acMake()) return;
-    acWake();
-    const t0 = ac.currentTime + 0.01;
+    if (!acMake() || ac.state !== 'running') return; // asleep: a tap wakes it, a chime never does = ac.currentTime + 0.01;
     for (const [f, at] of notes) {
       const o = ac.createOscillator(), g = ac.createGain();
       o.type = 'sine'; o.frequency.value = f;
@@ -1687,7 +1688,7 @@ const DZ_PRICE = 300, DZ_DAY = 3;
 const dzOwned = () => store.get('unpw.dz', false) === true;
 const DZ = { skip: [].concat(store.get('unpw.skip', [])).filter(id => typeof id === 'string'), rep: store.get('unpw.rep', false) === true, img: {}, pix: {} };
 const M = { audio: null, an: null, gain: null, bins: null, cur: store.get('unpw.cur', 's0'), vol: store.get('unpw.vol', 0.7), duck: 1, urls: {}, raf: null,
-  want: false, claim: false, held: false, at: null, pend: null, fadeTimer: null, checkT: null };
+  want: false, claim: false, held: false, at: null, pend: null, fadeTimer: null, checkT: null, routed: null, ours: 0 };
 const mmss = s => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) { /* not supported */ }
 const collected = () => { const c = store.get('unpw.collected', ['s0']).filter(id => TBYID[id]); return c.includes('s0') ? c : ['s0', ...c]; };
@@ -1779,36 +1780,53 @@ function routed(el, an) {
   } catch (e) { return {}; }
 }
 function ensureAudio() {
-  if (M.audio) return;
-  acMake();
+  if (M.audio) return musicRoute();
   M.audio = new Audio();
   M.audio.preload = 'auto';
   M.audio.addEventListener('ended', e => { if (e.target === M.audio) musicEnded(); }); // never a player let go by acRebuild
   M.audio.addEventListener('play', musicUI);
   M.audio.addEventListener('pause', musicUI);
   M.audio.addEventListener('loadedmetadata', musicUI);
-  /* Playing again with the claim given up can only be the system's doing (after a call, say): it's the player's music again. */
-  M.audio.addEventListener('play', () => { if (M.want && !M.claim && musicOn && !M.held && !document.hidden) musicClaim(true); });
-  if (ac) {
-    try { M.an = ac.createAnalyser(); M.an.fftSize = 64; M.an.smoothingTimeConstant = 0.75; M.bins = new Uint8Array(M.an.frequencyBinCount); } catch (e) { M.an = null; }
-    M.gain = routed(M.audio, M.an).gain || null;
-  }
+  /* Playing again with the claim given up can only be the system's doing (iOS resuming after a call): it's the player's music again. */
+  M.audio.addEventListener('play', e => {
+    if (e.target !== M.audio || !M.want || M.claim || !musicOn || M.held || document.hidden) return;
+    musicClaim(true); // iOS gave the audio back to us, so waking the context takes nothing from anyone
+    try { if (ac && ac.state === 'suspended') ac.resume().catch(() => {}); } catch (err) { /* ignore */ }
+  });
+  /* Paused by something other than the game (iOS does this when another app's audio starts): the claim is gone. */
+  M.audio.addEventListener('pause', e => { if (e.target === M.audio && M.claim && M.want && !M.held && !M.audio.ended && !document.hidden && Date.now() - M.ours > 400) { musicClaim(false); musicUI(); } });
   musicVol();
   clearMediaSession();
+  musicRoute();
+}
+/* Route the Dale-Fi through the AudioContext (for volume on iOS), creating the context, but only once the player has
+   pressed play: until then the game holds no AudioContext at all. */
+function musicRoute() {
+  if (!M.audio || M.routed === M.audio || !M.claim || !acMake()) return;
+  M.routed = M.audio;
+  try { M.an = ac.createAnalyser(); M.an.fftSize = 64; M.an.smoothingTimeConstant = 0.75; M.bins = new Uint8Array(M.an.frequencyBinCount); } catch (e) { M.an = null; }
+  M.gain = routed(M.audio, M.an).gain || null;
+  if (M.gain) M.audio.volume = 1;
+  musicVol();
 }
 /* iOS can leave the AudioContext suspended or "interrupted" (calls, Siri, other apps, coming back to the tab).
-   While it is, every song is silent even though it's technically playing. Waking it needs a tap, so
-   this runs on every tap (tap = true); it's a no-op when the context is fine. Never wait on its promise: iOS can leave
-   it hanging. Without a tap it doesn't fight an interruption another app started. */
+   While it is, every song is silent even though it's technically playing. Only a tap wakes it (tap = true: a press of
+   play, or any tap while the player has the Dale-Fi playing); without one this does nothing, so the game never wakes
+   its audio on its own and can't race another app taking it. No-op when the context is fine. Never wait on its
+   promise: iOS can leave it hanging. */
 function acWake(tap) {
-  if (!ac || !(musicOn || sfxOn) || ac.state === 'running') return;
-  if (tap && !AW.tried) AW.tried = Date.now();
-  if (!tap && sessionState() === 'interrupted') return;
+  if (!tap || !ac || !granted() || ac.state === 'running') return;
+  if (!AW.tried) AW.tried = Date.now();
   if (ac.state !== 'closed') { try { ac.resume().catch(() => {}); } catch (e) { /* ignore */ } }
 }
 /* Stuck: a tap asked the context to wake more than a second ago and it still hasn't (after a long time away iOS can
    leave it suspended or "interrupted" for good), or a Dale-Fi play was refused. Rebuilt at most every three seconds. */
 const acStuck = () => !!ac && Date.now() - AW.last >= 3000 && (AW.redo || (ac.state !== 'running' && AW.tried > 0 && Date.now() - AW.tried >= 1000));
+/* Pressing play after more than 30 seconds away (or with the context marked interrupted): if the context isn't
+   running, don't gamble on waking it; build fresh audio in that same tap, so the first press works. Nothing else is
+   playing then (leaving stopped it all), so starting over costs only a moment of loading. */
+const acStale = () => !!ac && ac.state !== 'running' && (AW.stale || ac.state === 'interrupted' || ac.state === 'closed');
+const acRepair = () => { if (acStuck() || acStale()) acRebuild(); };
 /* Start the audio over: a new AudioContext and new players, since a player stays tied to the context it was first
    routed through. Only ever on a tap. The Dale-Fi keeps its song and spot (it reloads them when it next plays);
    Guide Saffron's theme and an event song, silent anyway, are let go. */
@@ -1818,20 +1836,19 @@ function acRebuild() {
     else if (M.loaded) M.at = { id: M.loaded, t: M.audio.currentTime || 0 };
     M.audio.pause(); M.audio.removeAttribute('src'); try { M.audio.load(); } catch (e) { /* ignore */ }
   }
-  M.audio = M.gain = M.an = M.bins = M.pend = null; M.loaded = null;
+  M.audio = M.gain = M.an = M.bins = M.pend = M.routed = null; M.loaded = null;
   clearTimeout(M.fadeTimer); clearTimeout(M.checkT);
   clearTimeout(T.stopTimer); if (T.el) T.el.pause();
   T.el = T.gain = null; T.on = false; T.away = false;
   clearTimeout(E.stopTimer); if (E.el) E.el.pause();
   E.el = E.gain = E.an = null; E.on = false; E.retry = false;
   const old = ac;
-  ac = null; AW.tried = 0; AW.redo = false; AW.last = Date.now();
+  ac = null; AW.tried = 0; AW.redo = false; AW.stale = false; AW.last = Date.now();
   try { if (old && old.state !== 'closed') old.close().catch(() => {}); } catch (e) { /* ignore */ }
   acMake(); acWake(true);
 }
 /* play() that never throws: resolves to '' when the song starts, or the error's name when it doesn't. */
 function tryPlay(el) {
-  acWake();
   try { return Promise.resolve(el.play()).then(() => '', e => (e && e.name) || 'Error'); }
   catch (e) { return Promise.resolve((e && e.name) || 'Error'); }
 }
@@ -1843,12 +1860,11 @@ function clearMediaSession() {
     ['play', 'pause', 'nexttrack', 'previoustrack', 'seekto', 'seekbackward', 'seekforward', 'stop'].forEach(a => { try { navigator.mediaSession.setActionHandler(a, null); } catch (e) { /* unsupported action */ } });
   } catch (e) { /* not supported */ }
 }
-/* The player's own listening comes first. Where the browser has an audio session (Safari 16.4 and later), the game's
-   audio is "ambient": it mixes with music from other apps instead of stopping it (and, on an iPhone, follows the
-   silent switch). Only while the player has the Dale-Fi playing by their own choice (M.claim: they pressed play, and
-   nothing since has taken it away: leaving the game, pausing, Music off, another app's audio) is it "playback",
-   so the songs they asked for play like music, ringer switch or not; Guide Saffron's theme and the checkout songs
-   take the Dale-Fi's place inside that. Nothing the game starts by itself ever claims it. */
+/* The player's own listening comes first. The real protection is granted(), below: no game sound at all unless the
+   player has the Dale-Fi playing by their own choice (M.claim: they pressed play, and nothing since has taken it
+   away: leaving the game, pausing, Music off, another app's audio). The audio session (Safari 16.4 and later) is
+   only an extra hint: "ambient" while nothing is claimed, "playback" while it is. On an iPhone, "ambient" alone
+   did not stop Guide Saffron's theme from cutting off Spotify, so nothing relies on it. */
 const sessionState = () => { try { return navigator.audioSession ? navigator.audioSession.state : ''; } catch (e) { return ''; } };
 function sessionFit() {
   try {
@@ -1856,7 +1872,22 @@ function sessionFit() {
     if (s && s.type !== type) s.type = type;
   } catch (e) { /* not supported */ }
 }
-function musicClaim(on) { M.claim = !!on; sessionFit(); }
+/* The one gate for every game sound: the player pressed play on the Dale-Fi, Music is on, and nothing has taken the
+   audio away since. Saffron's theme, the checkout songs and the chimes play only then; otherwise the game is silent
+   and holds no running AudioContext, so music from another app is never cut off. */
+const granted = () => M.claim && musicOn && !document.hidden;
+function musicClaim(on) {
+  M.claim = !!on;
+  sessionFit();
+  if (on) return;
+  // Given up: everything the game was playing on that permission stops (the Dale-Fi too, if it's somehow still
+  // going), and the AudioContext is put to sleep.
+  clearTimeout(M.checkT);
+  if (musicPlaying()) { M.ours = Date.now(); M.audio.pause(); }
+  clearTimeout(T.stopTimer); if (T.el) T.el.pause(); T.on = false; T.away = false;
+  clearTimeout(E.stopTimer); if (E.el) E.el.pause(); E.on = false; E.retry = false;
+  try { if (ac && ac.state === 'running') ac.suspend().catch(() => {}); } catch (e) { /* ignore */ }
+}
 /* Another app's audio interrupting the Dale-Fi (Spotify, a call) takes the claim away: the game doesn't take it back
    by itself, and the next Play does. */
 try {
@@ -1865,13 +1896,11 @@ try {
   });
 } catch (e) { /* no session events */ }
 /* Leaving the game (another app, lock screen, another tab) pauses and fully unloads the song, so nothing keeps
-   playing or shows up in system controls, and gives up the claim: coming back, the Dale-Fi waits at the same spot
-   for Play rather than starting over whatever the player put on meanwhile. Saffron's theme and an event song,
-   which belong to the moment, pick up again (without claiming anything). */
+   playing or shows up in system controls, and gives up the claim: coming back, nothing plays (not the Dale-Fi, not
+   Saffron's theme or a checkout song) until the player presses play, which picks the song up at the same spot. */
 function musicAway() {
-  if (T.el && !T.el.paused) { clearTimeout(T.stopTimer); T.el.pause(); T.away = true; }
-  if (E.el && !E.el.paused) E.el.pause();
   clearTimeout(M.checkT);
+  if (!AW.awayAt) AW.awayAt = Date.now(); // when the player left (pagehide can follow visibilitychange)
   musicClaim(false);
   if (!M.audio || !musicPlaying()) return;
   M.at = { id: M.cur, t: M.audio.currentTime };
@@ -1881,26 +1910,24 @@ function musicAway() {
   musicUI();
 }
 function musicBack() {
-  acWake();
+  if (AW.awayAt && Date.now() - AW.awayAt >= 30000) AW.stale = true;
+  AW.awayAt = 0;
   sessionFit();
-  if (!musicOn) return;
-  if (T.away) { T.away = false; if (enc && sheetKind === 'enc') themeStart(true); else T.on = false; }
-  if (E.on && E.el.paused) eventPlay();
-  else musicResume();
+  musicResume(); // with the claim given up on leaving, this only refreshes the player
 }
 document.addEventListener('visibilitychange', () => (document.hidden ? musicAway() : musicBack()));
 window.addEventListener('pagehide', musicAway);
 window.addEventListener('pageshow', e => { if (e.persisted && !document.hidden) musicBack(); });
-/* Any tap is a chance to fix audio iOS stopped behind our back: wake the AudioContext (or rebuild it, if it's stuck),
-   retry an event song that wasn't allowed to start, and bring back a Dale-Fi song the player has claimed that
-   should be playing but isn't. The Dale-Fi's own buttons do their own thing, so a tap on one is left to them. */
+/* A tap is never permission to make sound. Only while the player has the Dale-Fi playing is it a chance to fix audio
+   iOS stopped behind our back: wake the AudioContext (or rebuild it, if it's stuck), retry an event song that wasn't
+   allowed to start, bring back the Dale-Fi if it should be playing but isn't. The Dale-Fi's own buttons do their own
+   thing, so a tap on one is left to them. */
 const MUSIC_KEYS = '[data-act="mplay"],[data-act="mnext"],[data-act="mprev"],[data-act="cardplay"],[data-track]';
 function audioTap(e) {
-  // Chimes need the AudioContext too, even with Music off. While another app holds the audio, an ordinary tap doesn't
-  // rebuild it (that can't help, and would cut off Saffron's theme); a Dale-Fi button still can.
-  if ((musicOn || sfxOn) && sessionState() !== 'interrupted' && acStuck()) acRebuild(); else acWake(true);
-  if (!musicOn) return;
+  if (!granted()) return;
+  if (sessionState() !== 'interrupted' && acStuck()) acRebuild(); else acWake(true);
   if (E.on) { if (E.retry && E.el && E.el.paused) eventPlay(); return; }
+  if (!M.audio) ensureAudio();
   const key = e && e.target && e.target.closest ? e.target.closest(MUSIC_KEYS) : null;
   if (!T.on && !key && M.want && M.claim && !musicPlaying()) musicResume();
 }
@@ -1945,7 +1972,7 @@ function musicGo() {
   clearTimeout(M.checkT);
   M.checkT = setTimeout(() => {
     if (!musicPlaying() || !ac || ac.state === 'running' || document.hidden) return;
-    AW.redo = true; M.audio.pause(); musicUI();
+    AW.redo = true; M.ours = Date.now(); M.audio.pause(); musicUI();
     toast('Tap play again to start the music.', '', 3000);
   }, 1500);
 }
@@ -1967,14 +1994,18 @@ function musicResume() {
 /* Guide Saffron's theme: plays once as she shows up. The Dale-Fi steps aside for it, then comes back quietly until she leaves. */
 const T = { el: null, gain: null, stopTimer: null, on: false };
 const themeReady = () => musicOn && canPlayAAC();
+/* Only while the player has the Dale-Fi playing (granted): otherwise she arrives in silence, and music from another
+   app plays on. */
 function themeStart(resume) {
-  if (!themeReady()) return;
+  if (!themeReady() || !granted()) return;
   ensureAudio();
+  if (!acMake()) return;
   if (E.on) eventStop();
   if (!T.el) {
     T.el = new Audio(); T.el.loop = false; T.el.src = trackURL('saffron');
     T.el.addEventListener('ended', e => { if (e.target === T.el) themeEnded(); });
     T.el.addEventListener('error', e => { if (e.target === T.el) themeEnded(); });
+    T.el.addEventListener('pause', e => { if (e.target === T.el && T.on && !T.el.ended && !document.hidden && M.claim) { musicClaim(false); musicUI(); } }); // another app took the audio
     T.gain = routed(T.el).gain || null;
     if (T.gain) T.gain.gain.value = 0;
   }
@@ -2005,16 +2036,18 @@ const EVENT_SONGS = {
   checkout: { title: 'the checkout (sadder)', artist: 'TORiTiA' },
   'dale-tab': { title: 'The Unsettled Account', artist: 'TORiTiA' },
 };
-const E = { el: null, gain: null, an: null, id: null, on: false, retry: false, stopTimer: null };
+const E = { el: null, gain: null, an: null, id: null, on: false, retry: false, stopTimer: null, ours: 0 };
 function eventSong(id) {
-  if (!themeReady() || !EVENT_SONGS[id]) return;
+  if (!themeReady() || !granted() || !EVENT_SONGS[id]) return; // like her theme, only while the Dale-Fi plays
   ensureAudio();
+  if (!acMake()) return;
   themeStop();
   musicHold();
   if (!E.el) {
     E.el = new Audio(); E.el.preload = 'auto';
     E.el.addEventListener('ended', e => { if (e.target === E.el) eventDone(); });
     E.el.addEventListener('error', e => { if (e.target === E.el && E.el.getAttribute('src')) eventDone(); });
+    E.el.addEventListener('pause', e => { if (e.target === E.el && E.on && !E.el.ended && !document.hidden && M.claim && Date.now() - E.ours > 400) { musicClaim(false); musicUI(); } });
     E.el.addEventListener('play', musicUI);
     E.el.addEventListener('pause', musicUI);
     if (ac) { try { E.an = ac.createAnalyser(); E.an.fftSize = 64; E.an.smoothingTimeConstant = 0.75; } catch (e) { E.an = null; } }
@@ -2022,7 +2055,7 @@ function eventSong(id) {
   }
   clearTimeout(E.stopTimer);
   E.on = true; E.id = id; E.retry = false;
-  E.el.src = trackURL(id);
+  E.ours = Date.now(); E.el.src = trackURL(id);
   if (E.gain) { E.gain.gain.cancelScheduledValues(ac.currentTime); E.gain.gain.setValueAtTime(0, ac.currentTime); E.gain.gain.linearRampToValueAtTime(M.vol, ac.currentTime + 0.6); }
   else E.el.volume = M.vol;
   eventPlay();
@@ -2070,7 +2103,7 @@ function musicLoad(id) {
   if (!canPlayAAC()) { toast("This browser can't play the Dale-Fi's songs. The game works fine without them.", '', 4500); return false; }
   const url = trackURL(id);
   if (!url) { toast('The music is still arriving. Try again in a few seconds.', '', 3000); return false; }
-  M.audio.src = url;
+  M.ours = Date.now(); M.audio.src = url;
   M.loaded = id;
   clearMediaSession();
   return true;
@@ -2078,15 +2111,15 @@ function musicLoad(id) {
 /* Pressing a Dale-Fi button means you want the Dale-Fi: it ends any event song first. */
 function musicTakeover() { themeStop(); if (E.on) eventStop(); M.held = false; clearTimeout(M.fadeTimer); musicVol(); }
 function musicToggle(force) {
-  if (acStuck()) acRebuild();
-  ensureAudio();
-  acWake(true);
   const play = force != null ? force : !anyPlaying();
+  if (play) acRepair();
   if (play && !musicOn) setMusic(true, true);
   musicTakeover();
   M.want = play;
-  musicClaim(play);
+  musicClaim(play); // the player pressed play: from here the game may make sound (and build its audio, in this tap)
+  ensureAudio();
   if (play) {
+    acWake(true);
     if ((M.audio.error || M.loaded !== M.cur || !avail().includes(M.cur)) && !musicReload()) return;
     musicGo();
   } else { clearTimeout(M.checkT); M.audio.pause(); }
@@ -2103,6 +2136,7 @@ function stepTo(list, i, d) {
 }
 /* A song ended on its own: repeat it if the Dinglezoons is set to, otherwise autoplay moves on. */
 function musicEnded() {
+  if (!M.claim) return musicUI(); // no autoplay or repeat on a permission that's gone
   if (dzOwned() && DZ.rep && M.loaded === M.cur && avail().includes(M.cur)) {
     try { M.audio.currentTime = 0; } catch (e) { /* not seekable yet */ }
     if (musicOn && !M.held && !document.hidden) tryPlay(M.audio).then(musicUI);
@@ -2134,29 +2168,30 @@ function musicStep(d, auto) {
   const list = avail();
   const i = Math.max(0, list.indexOf(M.cur));
   const was = musicPlaying() || auto || d > 0 || (d < 0 && eventPlaying());
-  if (!auto) { if (acStuck()) acRebuild(); musicTakeover(); }
+  if (!auto) { if (was) acRepair(); if (was && !musicOn) setMusic(true, true); musicTakeover(); musicClaim(was); }
   if (!musicLoad(stepTo(list, i, auto ? 1 : d))) return;
   M.want = was;
-  if (!auto) musicClaim(was);
+  if (was && !auto) acWake(true);
   if (was) { if (auto) tryPlay(M.audio).then(musicUI); else musicGo(); }
   musicUI();
 }
 function musicPick(id) {
   if (id === M.cur && (M.loaded === id || (!M.loaded && M.at && M.at.id === id)) && !E.on) return musicToggle();
-  if (acStuck()) acRebuild();
+  acRepair();
   if (!musicOn) setMusic(true, true);
   musicTakeover();
-  if (!musicLoad(id)) return;
   M.want = true;
   musicClaim(true);
+  if (!musicLoad(id)) return;
+  acWake(true);
   musicGo();
   musicUI();
 }
-/* Music off stops every song; on again brings back the song you were playing. An event song that gets switched off
+/* Music off stops every song; on again leaves the Dale-Fi waiting for play. An event song that gets switched off
    is over; it doesn't come back with the music. Sounds only gate the chimes, which are short and never resume. */
 function setMusic(on, quiet) {
   musicOn = on; store.set('unpw.music', on);
-  musicClaim(on && M.want); // switching Music back on is the player asking for their song again
+  if (!on) musicClaim(false); // switching Music back on isn't pressing play: the Dale-Fi waits for that
   if (!on) {
     if (T.el) { clearTimeout(T.stopTimer); T.el.pause(); }
     T.on = false;
@@ -2164,12 +2199,11 @@ function setMusic(on, quiet) {
     if (musicPlaying()) M.audio.pause();
   } else {
     if (!quiet) SND.tap();
-    acWake();
     musicResume();
   }
   musicUI();
 }
-function setSfx(on) { sfxOn = on; store.set('unpw.sfx', on); if (on) { acWake(); SND.tap(); } }
+function setSfx(on) { sfxOn = on; store.set('unpw.sfx', on); if (on) SND.tap(); }
 /* The Music and Sounds switches, as in Options and the in-game menu. */
 const audioToggles = () => `<div class="sheet-actions two toggles">
       <button type="button" class="btn soft news" role="switch" aria-checked="${musicOn}" data-act="musictog">Music<span class="ver">${musicOn ? 'On' : 'Off'}</span></button>
@@ -2178,7 +2212,7 @@ const audioToggles = () => `<div class="sheet-actions two toggles">
 function musicNudge(d) {
   M.vol = Math.round(Math.min(1, Math.max(0, M.vol + d)) * 10) / 10;
   store.set('unpw.vol', M.vol);
-  ensureAudio(); musicVol(); musicUI();
+  musicVol(); musicUI(); // no audio is built or woken just to set the volume
 }
 function eqHTML() {
   const fresh = inRun() && S.newSong;
@@ -2833,7 +2867,7 @@ function handbookSheet() {
       <p>While you owe him anything, Dale also checks in with you each morning. That one's free.</p>`),
     sec('Guide Saffron', `
       <img class="hbimg" src="${IMG.saffronCalm}" alt="Guide Saffron">
-      <p>You'll know she's here. She has her own theme music.</p>
+      <p>You'll know she's here. She has her own theme music, which she brings whenever your Dale-Fi is playing.</p>
       <p>She only comes for you when you're carrying something, and she can sense what it's worth. The more valuable your cushion, the fuller it is and the later in the retreat, the more likely she shows up after a walk. A cushion of burner phones draws her about twice as often as a cushion of espresso. Valuable cushions and late days also bring more silent volunteers, up to four.</p>
       <p>Every round she's still with you, she confiscates 12 to 25 percent of your most valuable goods, plus 2 percent more for each volunteer. She costs you 1 to 3 zen herself, and each volunteer may cost you 3 to 8 more. The check-in screen shows exactly what each attempt cost you, a running total, and what every option will cost before you pick it. Your choices:</p>
       <ul>
@@ -2865,7 +2899,7 @@ function handbookSheet() {
       <p>A guest who wings it usually leaves broke or as a side hustle sage. Buying a yurt usually takes a plan, and opening your own retreat takes a very good week. Sign the guestbook at the end to keep a top ten for each length.</p>`),
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${COLLECTIBLE.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
-      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. Checking out has songs of its own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game; when you're back, press play and it picks up where it left off. In the menu and in Options, <b>Music</b> switches the songs on and off and <b>Sounds</b> the chimes and other effects, each on its own.</p>
+      <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. If it's playing when you check out, checking out has songs of its own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game; when you're back, press play and it picks up where it left off. In the menu and in Options, <b>Music</b> switches the songs on and off and <b>Sounds</b> the chimes and other effects. Guide Saffron's theme, the checkout songs and the chimes only sound while the Dale-Fi is playing, so the game never cuts off music from another app. After a pause, Music off or leaving the game, nothing plays again until you press play.</p>
       <p>From day ${DZ_DAY}, Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat and afterwards, on the results and the welcome screen, until you start your next retreat, which begins with the plain Dale-Fi again; your songs stay with you as always. It plays your songs plus two that come with it, from Gary's Cream of the Crop ’98 tape; they only play on a Dinglezoons and leave with it. It adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
@@ -3124,14 +3158,15 @@ const INSPECT = {
   version: '1.6',
   intro: 'Beta has inspected this release from her bowl. She was not impressed, but she was thorough. Please check:',
   items: [
-    ['Coming back after a while', 'Play a song, then leave the game for several minutes (another app, another tab, or lock the phone). Come back: nothing starts by itself. Press play once: the same song carries on from about where it was.'],
+    ['Spotify first, start to finish', 'Start Spotify or Apple Music, then open the game. Without touching the Dale-Fi, walk around, buy and let go of things, meet Guide Saffron and get through her whole check-in (try to get away, hand over, carry on), open the menu, check out. The other app never stops or dips. The game makes no sound at all: no theme, no chimes, no checkout song.'],
+    ['Your Dale-Fi, your choice', 'Press play on the Dale-Fi: the other app stops, like any music player, and the Dale-Fi plays with the silent switch on or off. Now Guide Saffron brings her theme, which takes the Dale-Fi’s place and hands it back; chimes sound; checkout has its song.'],
+    ['Pause means quiet', 'Pause the Dale-Fi, start the other app, then do the first check again: the other app plays on, and the game stays silent until you press play.'],
+    ['Another app takes over', 'With the Dale-Fi playing, start the other app from Control Center or the lock screen. The Dale-Fi stops, and so does her theme if it was on. Taps, check-ins and checkout don’t bring anything back. Play does.'],
+    ['Coming back after a while', 'Play a song, then leave the game for several minutes (another app, another tab, or lock the phone). Come back: nothing plays, not even mid check-in. Press play once: the same song carries on from about where it was.'],
     ['Play always plays', 'Whenever you press play, you hear the song. If it can’t start, “Tap play again to start the music.” appears and the next press plays it.'],
-    ['Your other music first', 'Start Spotify or Apple Music, open the game and play on without touching the Dale-Fi. Walk until Guide Saffron appears: the other app keeps playing. Her theme plays over it with the ringer on, and stays quiet with the silent switch on. Chimes don’t stop it either.'],
-    ['The Dale-Fi when you choose it', 'Press play on the Dale-Fi: the other app stops, like any music player, and the Dale-Fi plays with the silent switch on or off. Guide Saffron’s theme takes its place and hands it back, as before.'],
-    ['Another app takes over', 'With the Dale-Fi playing, start the other app from Control Center or the lock screen. The Dale-Fi stops and stays stopped through taps and Guide Saffron. Play brings it back.'],
-    ['Pause, Music and Sounds', 'A paused Dale-Fi stays paused through leaving and coming back, and through Guide Saffron. Music off stays off. Sounds alone still chime.'],
-    ['Nothing else moved', 'Picking songs, autoplay, Next and Previous, AUTO and repeat on the Dinglezoons, and the checkout songs work as in 1.6.'],
-    ['The home-screen app', 'Repeat the first three checks in the game added to your Home Screen.'],
+    ['Music and Sounds', 'Music off stays off, and turning it back on leaves the Dale-Fi waiting for play. Sounds off silences the chimes while the Dale-Fi plays.'],
+    ['Nothing else moved', 'Picking songs, autoplay, Next and Previous, the volume keys, AUTO and repeat on the Dinglezoons work as in 1.6.'],
+    ['The home-screen app', 'Repeat the first four checks in the game added to your Home Screen.'],
     ['Preview stays separate', 'Saves, guestbook scores and songs found here never show up in the live game, and the live game’s never show up here.'],
   ],
 };
