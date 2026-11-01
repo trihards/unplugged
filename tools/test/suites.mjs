@@ -1014,6 +1014,15 @@ const saves = {
 
 /* ======================= audio ======================= */
 const startMusic = async g => { await g.tap('[data-act="music"]'); await g.tap('[data-act="mplay"]'); await g.wait(400); await g.tap('#sheet [data-act="close"]'); };
+/* Press play on the Dale-Fi from anywhere (opens it, taps play, closes it). */
+const pressPlay = startMusic;
+/* A stand-in for Safari's navigator.audioSession, installed before the game loads; every type set is logged. */
+const SESSION = `(() => { const s = new EventTarget(); let t = 'auto'; s.state = 'active'; s.log = [];
+  Object.defineProperty(s, 'type', { get: () => t, set: v => { t = v; s.log.push(v); } });
+  Object.defineProperty(navigator, 'audioSession', { configurable: true, value: s }); })()`;
+/* Make the current AudioContext refuse to wake, as iOS can after a long time away: suspended, resume() never settles. */
+const STICK = "window.__oldAc = ac; ac.resume = () => new Promise(() => {}); ac.suspend()";
+const PLAYING = '[...window.__media].filter(el => !el.paused).length';
 const audio = {
   name: 'audio', about: 'Dale-Fi, mute, Guide Saffron\'s theme, leaving the app (songs stubbed; Chromium, not Safari)', where: 'desktop Chromium + iOS-rule emulation',
   tests: [
@@ -1093,12 +1102,76 @@ const audio = {
       await g.page.click('.stats'); await g.wait(400);
       eq(await g.run('musicPlaying()'), false, 'still paused');
     }),
-    tst('leaving the app pauses the music; coming back resumes it', {}, async g => {
+    tst('leaving the app pauses the music; coming back, it waits for Play and picks up at the same spot', {}, async g => {
       await g.start(2); await startMusic(g);
+      await g.run('M.audio.currentTime = 20'); await g.wait(200);
       await g.hidden(true); await g.wait(200);
       eq(await g.run(AUDIBLE), 0, 'silent while away');
       await g.hidden(false); await g.wait(600);
-      eq(await g.run('musicPlaying()'), true, 'back on return');
+      eq(await g.run('[musicPlaying(), M.want]'), [false, true], 'nothing starts by itself on return');
+      await g.page.click('.stats'); await g.wait(400);
+      eq(await g.run('musicPlaying()'), false, 'nor on the next ordinary tap');
+      await pressPlay(g); await g.wait(400);
+      const s = await g.run(`({ playing: musicPlaying(), cur: M.cur, t: M.audio.currentTime, audible: ${AUDIBLE}, players: ${PLAYING} })`);
+      ok(s.playing && s.cur === 's0' && s.t >= 20 && s.t < 24 && s.audible === 1 && s.players === 1, 'Play brings the same song back from where it was, once', s);
+    }),
+    tst('tapping the current song in the playlist after coming back also picks up at the same spot', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.run('M.audio.currentTime = 20'); await g.wait(200);
+      await g.hidden(true); await g.wait(100); await g.hidden(false); await g.wait(300);
+      await g.tap('[data-act="music"]'); await g.tap('#sheet [data-track="s0"]'); await g.wait(600);
+      const s = await g.run('({ playing: musicPlaying(), t: M.audio.currentTime })');
+      ok(s.playing && s.t >= 20 && s.t < 24, 'resumed, not restarted', s);
+    }),
+    tst('a deliberate pause, and Music off, stay that way through leaving and coming back', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await pressPlay(g);
+      await g.hidden(true); await g.wait(100); await g.hidden(false); await g.wait(400); await g.page.click('.stats'); await g.wait(400);
+      eq(await g.run('[musicPlaying(), M.want]'), [false, false], 'paused stays paused');
+      await pressPlay(g); await g.run('setMusic(false)');
+      await g.hidden(true); await g.wait(100); await g.hidden(false); await g.wait(400); await g.page.click('.stats'); await g.wait(400);
+      eq(await g.run(AUDIBLE), 0, 'Music off stays silent');
+    }),
+    tst('after a long time away the AudioContext won\'t wake: Play rebuilds the audio and the song plays from its spot', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.run('M.audio.currentTime = 20'); await g.wait(200);
+      await g.hidden(true); await g.wait(100); await g.run(STICK); await g.hidden(false); await g.wait(300);
+      eq(await g.run('ac.state'), 'suspended', 'stuck on return');
+      await g.tap('[data-act="music"]'); await g.wait(1100); // that tap asks it to wake; it doesn't
+      await g.tap('[data-act="mplay"]'); await g.wait(900);
+      const s = await g.run(`({ fresh: ac !== window.__oldAc, state: ac.state, old: window.__oldAc.state, playing: musicPlaying(), t: M.audio.currentTime, audible: ${AUDIBLE}, players: ${PLAYING} })`);
+      ok(s.fresh && s.state === 'running' && s.old === 'closed', 'a new, running AudioContext; the stuck one closed', s);
+      ok(s.playing && s.t >= 20 && s.t < 24 && s.audible === 1 && s.players === 1, 'one song playing, audibly, from where it was', s);
+      await g.tap('[data-act="mplay"]'); await g.wait(200); await g.tap('[data-act="mplay"]'); await g.wait(400);
+      eq(await g.run(`[musicPlaying(), ${PLAYING}, ac.state]`), [true, 1, 'running'], 'pause and play work normally after');
+    }),
+    tst('the AudioContext stuck right when Play is pressed: the silent song stops, the player is told, and the next tap brings it back', {}, async g => {
+      await g.start(2); await startMusic(g); await pressPlay(g);
+      await g.run(STICK); await g.wait(200);
+      await g.tap('[data-act="music"]'); await g.tap('[data-act="mplay"]'); await g.wait(1900);
+      eq(await g.run('[musicPlaying(), M.want]'), [false, true], 'no pretending to play silently');
+      ok((await g.page.textContent('#toasts')).includes('Tap play again to start the music.'), 'the existing hint shows');
+      await g.tap('[data-act="mplay"]'); await g.wait(700);
+      eq(await g.run(`[ac !== window.__oldAc, ac.state, musicPlaying(), ${AUDIBLE}, ${PLAYING}]`), [true, 'running', true, 1, 1], 'rebuilt and playing, once');
+    }),
+    tst('a refused Play: the next Play rebuilds the player and works', {}, async g => {
+      await g.start(2); await startMusic(g); await pressPlay(g);
+      await g.run('window.__oldEl = M.audio');
+      await g.page.evaluate(() => { window.__ios = { denyPlay: true }; });
+      await g.tap('[data-act="music"]'); await g.tap('[data-act="mplay"]'); await g.wait(300);
+      eq(await g.run('musicPlaying()'), false, 'refused');
+      await g.page.evaluate(() => { window.__ios = {}; });
+      await g.tap('[data-act="mplay"]'); await g.wait(600);
+      eq(await g.run(`[M.audio !== window.__oldEl, musicPlaying(), ${AUDIBLE}, ${PLAYING}]`), [true, true, 1, 1], 'a fresh player, playing, once');
+    }),
+    tst('recovery never loops: a context that stays stuck is rebuilt at most once per tap, never on its own', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.page.evaluate(() => { const C = window.AudioContext; window.__acs = 0; window.AudioContext = class extends C { constructor(...a) { super(...a); window.__acs++; window.__ac = this; this.resume = () => new Promise(() => {}); this.suspend(); } }; });
+      await g.run(STICK); await g.page.click('.stats'); await g.wait(4000);
+      eq(await g.run('window.__acs'), 0, 'no rebuild without a tap');
+      for (let i = 0; i < 4; i++) { await g.page.click('.stats'); await g.wait(400); }
+      ok((await g.run('window.__acs')) <= 1, 'at most one rebuild across quick taps', await g.run('window.__acs'));
+      ok((await g.run(PLAYING)) <= 1, 'and nothing playing twice', await g.run(PLAYING));
     }),
     tst('paying Dale off plays no song: the Dale-Fi carries on where it was', {}, async g => {
       await g.start(2); await startMusic(g);
@@ -1144,13 +1217,61 @@ const audio = {
       await g.page.click('.stats'); await g.wait(800);
       eq(await g.run('musicPlaying()'), true, 'Dale-Fi playing again');
     }),
-    tst('iOS refused play() on return mid check-in: recovers on the next tap', {}, async g => {
+    tst('iOS refused play() on return mid check-in: nothing is stuck, and Play brings the Dale-Fi back', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.run(ENC); await g.wait(400);
       await g.hidden(true); await g.page.evaluate(() => { window.__ios = { denyPlay: true }; }); await g.hidden(false); await g.wait(300);
       await g.page.evaluate(() => { window.__ios = {}; });
       await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]'); await g.page.click('.stats'); await g.wait(800);
-      eq(await g.run('musicPlaying()'), true, 'Dale-Fi playing again');
+      eq(await g.run('[musicPlaying(), T.on]'), [false, false], 'the Dale-Fi waits for Play; her theme isn\'t left hanging');
+      await pressPlay(g); await g.wait(400);
+      eq(await g.run(`[musicPlaying(), M.duck, ${AUDIBLE}]`), [true, 1, 1], 'Play brings it back at full volume');
+    }),
+    tst('external audio first: the audio session is ambient unless the player has the Dale-Fi playing', { init: SESSION }, async g => {
+      const type = () => g.run('navigator.audioSession.type');
+      eq(await type(), 'ambient', 'ambient from the start');
+      await g.start(2); await g.run('SND.tap()'); await g.wait(200);
+      eq(await type(), 'ambient', 'chimes leave it ambient');
+      await g.run(ENC); await g.wait(600);
+      eq(await g.run(`[navigator.audioSession.type, !T.el.paused]`), ['ambient', true], 'her theme plays without claiming anything when the Dale-Fi is off');
+      await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]'); await g.wait(300);
+      await startMusic(g);
+      eq(await type(), 'playback', 'pressing play claims it for the player\'s music');
+      await g.run(ENC); await g.wait(900);
+      eq(await g.run(`[navigator.audioSession.type, !T.el.paused, ${AUDIBLE}]`), ['playback', true, 1], 'her theme takes the Dale-Fi\'s place inside that claim');
+      await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]'); await g.wait(900);
+      eq(await g.run(`[navigator.audioSession.type, musicPlaying(), M.duck]`), ['playback', true, 1], 'and hands back');
+      await pressPlay(g);
+      eq(await type(), 'ambient', 'pausing gives it up');
+      await pressPlay(g); await g.hidden(true); await g.wait(100);
+      eq(await type(), 'ambient', 'leaving the game gives it up');
+      await g.hidden(false); await g.wait(400);
+      eq(await g.run('[navigator.audioSession.type, musicPlaying()]'), ['ambient', false], 'coming back doesn\'t take it back');
+      await pressPlay(g);
+      eq(await type(), 'playback', 'Play does');
+      await g.run('setMusic(false)');
+      eq(await type(), 'ambient', 'Music off gives it up');
+      await g.run('setMusic(true)'); await g.wait(300);
+      eq(await g.run('[navigator.audioSession.type, musicPlaying()]'), ['playback', true], 'Music back on is asking for the song again');
+      await g.run("S.cash = 100; endGame('time')"); await g.wait(700);
+      eq(await g.run('[navigator.audioSession.type, E.on]'), ['playback', true], 'a checkout song takes the Dale-Fi\'s place inside the claim');
+    }),
+    tst('external audio first: with the Dale-Fi off, checkout songs never claim the session', { init: SESSION }, async g => {
+      await g.start(2); await g.run("S.cash = 100; endGame('time')"); await g.wait(700);
+      eq(await g.run('[navigator.audioSession.type, E.on, navigator.audioSession.log.includes("playback")]'), ['ambient', true, false], 'ambient, and never playback');
+    }),
+    tst('another app interrupting the Dale-Fi: the game doesn\'t take it back by itself; Play does', { init: SESSION }, async g => {
+      await g.start(2); await startMusic(g);
+      await g.run("navigator.audioSession.state = 'interrupted'; navigator.audioSession.dispatchEvent(new Event('statechange')); M.audio.pause()"); await g.wait(200);
+      eq(await g.run('[navigator.audioSession.type, M.claim]'), ['ambient', false], 'claim given up');
+      await g.page.click('.stats'); await g.wait(400);
+      await g.run(ENC); await g.wait(600);
+      eq(await g.run('[musicPlaying(), navigator.audioSession.type]'), [false, 'ambient'], 'taps and Saffron don\'t restart it or claim the session');
+      await g.tap('[data-act="enchand"]'); await g.tap('[data-act="encdone"]'); await g.page.click('.stats'); await g.wait(600);
+      eq(await g.run('musicPlaying()'), false, 'nor does her leaving');
+      await g.run("navigator.audioSession.state = 'active'");
+      await pressPlay(g); await g.wait(300);
+      eq(await g.run('[musicPlaying(), navigator.audioSession.type]'), [true, 'playback'], 'Play brings it back');
     }),
   ],
 };
@@ -1405,7 +1526,7 @@ const dinglezoons = {
       await g.run("dzAuto('w1'); dzRepeat()"); await finish(g);
       eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'repeats the song you picked even with AUTO off');
     }),
-    tst('with repeat on: Saffron, an event song, mute and leaving the app behave as before', {}, async g => {
+    tst('with repeat on: Saffron, an event song, mute and leaving the app behave as without it', {}, async g => {
       await g.start(2); await g.run(OWN + '; DZ.rep = true; ' + SONGS(['w1'])); await dzPlay(g, 'w1'); await g.run('closeSheet(true)');
       await g.run(ENC); await g.wait(900);
       eq(await g.run(`[!T.el.paused, ${AUDIBLE}]`), [true, 1], 'only her theme audible');
@@ -1422,7 +1543,9 @@ const dinglezoons = {
       await g.hidden(true); await g.wait(200);
       eq(await g.run(AUDIBLE), 0, 'silent while away');
       await g.hidden(false); await g.wait(600);
-      eq(await g.run('[musicPlaying(), M.cur]'), [true, 'w1'], 'back on return');
+      eq(await g.run('[musicPlaying(), M.cur]'), [false, 'w1'], 'on return it waits for Play, on the same song');
+      await g.run("musicSheet()"); await g.tap('[data-act="mplay"]'); await g.wait(400);
+      eq(await g.run('[musicPlaying(), M.cur, DZ.rep]'), [true, 'w1', true], 'Play brings it back, repeat still on');
     }),
     tst('settings and ownership survive a reload and Continue; older saves load', {}, async g => {
       await g.start(2); await g.run(OWN + '; ' + SONGS(['w1']) + "; dzAuto('w1'); dzRepeat(); saveRun()");

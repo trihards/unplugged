@@ -94,6 +94,7 @@ export async function openGame(env, opts = {}) {
   page.on('pageerror', e => page.errors.push(String(e)));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) page.errors.push(m.text()); });
   await page.addInitScript(SHIM);
+  if (opts.init) await page.addInitScript(opts.init);
   if (opts.storage) await page.addInitScript(s => { if (!sessionStorage.getItem('__seeded')) { for (const [k, v] of Object.entries(s)) localStorage.setItem(k, v); sessionStorage.setItem('__seeded', '1'); } }, opts.storage);
   await page.route(/\.m4a(\?.*)?$/, route => {
     const name = new URL(route.request().url()).pathname.split('/').pop();
