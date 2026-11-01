@@ -840,7 +840,7 @@ function acMake() {
       if (me !== ac) return;
       if (me.state === 'running') { AW.tried = 0; AW.stale = false; }
       else if (me.state === 'interrupted' && M.claim && !document.hidden) { musicClaim(false); musicUI(); } // another app took the audio
-      else if (!document.hidden) acWake();
+      // Anything else (suspended) is never woken from here: that could race another app taking the audio. A tap wakes it.
     });
   } catch (e) { /* no state events */ }
   return ac;
@@ -850,9 +850,7 @@ function acMake() {
 function chime(notes, decay = 0.7, gain = 0.05) {
   if (!sfxOn || !granted()) return;
   try {
-    if (!acMake()) return;
-    acWake();
-    const t0 = ac.currentTime + 0.01;
+    if (!acMake() || ac.state !== 'running') return; // asleep: a tap wakes it, a chime never does = ac.currentTime + 0.01;
     for (const [f, at] of notes) {
       const o = ac.createOscillator(), g = ac.createGain();
       o.type = 'sine'; o.frequency.value = f;
@@ -1790,7 +1788,11 @@ function ensureAudio() {
   M.audio.addEventListener('pause', musicUI);
   M.audio.addEventListener('loadedmetadata', musicUI);
   /* Playing again with the claim given up can only be the system's doing (iOS resuming after a call): it's the player's music again. */
-  M.audio.addEventListener('play', e => { if (e.target === M.audio && M.want && !M.claim && musicOn && !M.held && !document.hidden) musicClaim(true); });
+  M.audio.addEventListener('play', e => {
+    if (e.target !== M.audio || !M.want || M.claim || !musicOn || M.held || document.hidden) return;
+    musicClaim(true); // iOS gave the audio back to us, so waking the context takes nothing from anyone
+    try { if (ac && ac.state === 'suspended') ac.resume().catch(() => {}); } catch (err) { /* ignore */ }
+  });
   /* Paused by something other than the game (iOS does this when another app's audio starts): the claim is gone. */
   M.audio.addEventListener('pause', e => { if (e.target === M.audio && M.claim && M.want && !M.held && !M.audio.ended && !document.hidden && Date.now() - M.ours > 400) { musicClaim(false); musicUI(); } });
   musicVol();
@@ -1808,13 +1810,13 @@ function musicRoute() {
   musicVol();
 }
 /* iOS can leave the AudioContext suspended or "interrupted" (calls, Siri, other apps, coming back to the tab).
-   While it is, every song is silent even though it's technically playing. Waking it needs a tap, so
-   this runs on every tap (tap = true); it's a no-op when the context is fine. Never wait on its promise: iOS can leave
-   it hanging. Without a tap it doesn't fight an interruption another app started. */
+   While it is, every song is silent even though it's technically playing. Only a tap wakes it (tap = true: a press of
+   play, or any tap while the player has the Dale-Fi playing); without one this does nothing, so the game never wakes
+   its audio on its own and can't race another app taking it. No-op when the context is fine. Never wait on its
+   promise: iOS can leave it hanging. */
 function acWake(tap) {
-  if (!ac || !granted() || ac.state === 'running') return;
-  if (tap && !AW.tried) AW.tried = Date.now();
-  if (!tap && sessionState() === 'interrupted') return;
+  if (!tap || !ac || !granted() || ac.state === 'running') return;
+  if (!AW.tried) AW.tried = Date.now();
   if (ac.state !== 'closed') { try { ac.resume().catch(() => {}); } catch (e) { /* ignore */ } }
 }
 /* Stuck: a tap asked the context to wake more than a second ago and it still hasn't (after a long time away iOS can
@@ -1847,7 +1849,6 @@ function acRebuild() {
 }
 /* play() that never throws: resolves to '' when the song starts, or the error's name when it doesn't. */
 function tryPlay(el) {
-  acWake();
   try { return Promise.resolve(el.play()).then(() => '', e => (e && e.name) || 'Error'); }
   catch (e) { return Promise.resolve((e && e.name) || 'Error'); }
 }
@@ -1879,7 +1880,10 @@ function musicClaim(on) {
   M.claim = !!on;
   sessionFit();
   if (on) return;
-  // Given up: everything the game was playing on that permission stops, and the AudioContext is put to sleep.
+  // Given up: everything the game was playing on that permission stops (the Dale-Fi too, if it's somehow still
+  // going), and the AudioContext is put to sleep.
+  clearTimeout(M.checkT);
+  if (musicPlaying()) { M.ours = Date.now(); M.audio.pause(); }
   clearTimeout(T.stopTimer); if (T.el) T.el.pause(); T.on = false; T.away = false;
   clearTimeout(E.stopTimer); if (E.el) E.el.pause(); E.on = false; E.retry = false;
   try { if (ac && ac.state === 'running') ac.suspend().catch(() => {}); } catch (e) { /* ignore */ }
@@ -2132,6 +2136,7 @@ function stepTo(list, i, d) {
 }
 /* A song ended on its own: repeat it if the Dinglezoons is set to, otherwise autoplay moves on. */
 function musicEnded() {
+  if (!M.claim) return musicUI(); // no autoplay or repeat on a permission that's gone
   if (dzOwned() && DZ.rep && M.loaded === M.cur && avail().includes(M.cur)) {
     try { M.audio.currentTime = 0; } catch (e) { /* not seekable yet */ }
     if (musicOn && !M.held && !document.hidden) tryPlay(M.audio).then(musicUI);
@@ -2163,7 +2168,7 @@ function musicStep(d, auto) {
   const list = avail();
   const i = Math.max(0, list.indexOf(M.cur));
   const was = musicPlaying() || auto || d > 0 || (d < 0 && eventPlaying());
-  if (!auto) { if (was) acRepair(); musicTakeover(); musicClaim(was); }
+  if (!auto) { if (was) acRepair(); if (was && !musicOn) setMusic(true, true); musicTakeover(); musicClaim(was); }
   if (!musicLoad(stepTo(list, i, auto ? 1 : d))) return;
   M.want = was;
   if (was && !auto) acWake(true);
@@ -2198,7 +2203,7 @@ function setMusic(on, quiet) {
   }
   musicUI();
 }
-function setSfx(on) { sfxOn = on; store.set('unpw.sfx', on); if (on) { acWake(); SND.tap(); } }
+function setSfx(on) { sfxOn = on; store.set('unpw.sfx', on); if (on) SND.tap(); }
 /* The Music and Sounds switches, as in Options and the in-game menu. */
 const audioToggles = () => `<div class="sheet-actions two toggles">
       <button type="button" class="btn soft news" role="switch" aria-checked="${musicOn}" data-act="musictog">Music<span class="ver">${musicOn ? 'On' : 'Off'}</span></button>

@@ -1210,6 +1210,27 @@ const audio = {
       await g.run('SND.bowl(); SND.tap()'); await g.wait(1200); await tapAt(g); await g.wait(300);
       eq(await g.run(FOCUSED), before, 'no AudioContext made, woken or rebuilt, nothing played');
     }),
+    tst('the game never wakes its audio by itself, even with the Dale-Fi playing: only a tap does', { init: FOCUS }, async g => {
+      await g.start(2); await startMusic(g); await g.wait(300);
+      const before = await g.run(FOCUSED);
+      await g.run('ac.suspend()'); await g.wait(800); // as iOS might, a moment before telling us another app took over
+      eq(await g.run(`[${FOCUSED}.resumes, ac.state]`), [before.resumes, 'suspended'], 'no resume() without a tap');
+      await g.run('SND.tap(); musicResume()'); await g.wait(300);
+      eq(await g.run(`${FOCUSED}.resumes`), before.resumes, 'nor from a chime or a resume');
+      await tapAt(g); await g.wait(300);
+      eq(await g.run('ac.state'), 'running', 'a tap while the player\'s music is on wakes it');
+    }),
+    tst('with the permission gone, a song ending starts nothing (no autoplay, no repeat)', { init: FOCUS }, async g => {
+      await g.start(2); await g.run(OWN + "; DZ.rep = true"); await startMusic(g);
+      await g.run("navigator.audioSession || 0; M.claim = false"); const before = await g.run(FOCUSED);
+      await g.run('M.audio.dispatchEvent(new Event("ended"))'); await g.wait(300);
+      eq(await g.run(`${FOCUSED}.plays`), before.plays, 'no play()');
+    }),
+    tst('Next with Music off turns Music on, as Play does', {}, async g => {
+      await g.start(2); await g.run("S.songs.push('w1')"); await startMusic(g);
+      await g.run('setMusic(false)'); await g.run('musicSheet()'); await g.tap('[data-act="mnext"]'); await g.wait(400);
+      eq(await g.run('[musicOn, M.claim, musicPlaying(), M.cur]'), [true, true, true, 'w1'], 'Music on, the next song playing');
+    }),
     tst('players let go by a rebuild never act up later', {}, async g => {
       await g.start(2); await startMusic(g); await g.run(ENC); await g.wait(400);
       await g.run('window.__oldT = T.el; acRebuild(); themeStart()'); await g.wait(300);
