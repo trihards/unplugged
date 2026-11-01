@@ -30,6 +30,17 @@ Grouped by topic. Labels are defined in `README.md`. Where a handoff brief in `h
 - **The Unprocessed Self** (The Low Maintenance Orchestra, Sunspill Records, 1977, funk; production credit TORiTiA): Dale-Fi song `w3`, a 45% find per Kitchen Garden visit (the Meditation Hall's odds). Card subtitle "45 · Sunspill Records · 1977 · Funk" (45 is the format). Hint "Some things grow better with a little funk." Discovery line and review are the approved copy. The sleeve's "A quieter kind of funk" against the review's "gloriously filthy" is intentional.
 - Calm moments on walks are time-neutral ("A deer walks right up to you.", "The fog lifts off the Pacific and you forget your inbox exists.").
 
+## Audio recovery and playback priority (owner handoff, 2026-11-01)
+
+**Approved in the handoff:** the player's external audio comes first; game audio never stops, takes over or ducks it; leaving the game still pauses and unloads the song; a Play press must always recover; no automatic reclaiming of audio focus on return; Saffron's theme keeps its role and still takes the Dale-Fi's place inside the game. No new controls, settings, assets or gameplay.
+
+**Proposed** (built in the preview, awaiting the owner):
+
+- **Coming back, the Dale-Fi waits for Play, everywhere.** It no longer restarts by itself on return, nor on the next ordinary tap; Play (or tapping the current song) picks up at the same spot. The browser can't tell whether the player started other audio meanwhile, so any automatic restart risks stopping it. Desktop got the same rule for consistency: a desktop browser doesn't stop other apps, but a restart would still play over another tab. Saffron's theme and a checkout song mid-play still pick up on return, without claiming the audio session.
+- **Audio session** (Safari 16.4 and later; ignored elsewhere): "ambient" unless the player has the Dale-Fi playing by their own choice, then "playback". Pausing, Music off, leaving the game or another app's interruption go back to ambient. **Trade-off:** on an iPhone, ambient audio follows the silent switch, so with the switch on and the Dale-Fi off, Saffron's theme and the checkout songs are now silent. iOS offers web pages no way to mix with other apps *and* ignore the silent switch. Pressing play on the Dale-Fi still stops other apps, like any music player, and still plays with the switch on.
+- **Handbook sentence** (The Dale-Fi): "It pauses whenever you leave the game and picks back up when you return." became "It pauses whenever you leave the game; when you're back, press play and it picks up where it left off." Wording needs the owner's approval before release.
+- **Version:** `GAME_VERSION` stays 1.6 in the preview (it changes only when a release ships). Beta's 1.6 Inspection Notes were replaced with this preview's checks. Whether this ships as 1.6.1 with a note from Saffron is the owner's call.
+
 ## Release 1.6: Dinglezoons (handoff `handoffs/2026-10-20/01_RELEASE_1_6_DINGLEZOONS.md`)
 
 **Shipped** 2026-10-27, after the owner's iPhone playtests of the preview and their go-ahead ("push 1.6"). The owner knows of a few small audio bugs and chose to test them in the live release instead of the preview (see `status.md`, Known issues).

@@ -18,7 +18,7 @@ As of 2026-10-27. Live version: **1.6** (deployed to GitHub Pages from `main`). 
 
 ## In progress
 
-Nothing. The next release starts from `main`; its preview replaces `/preview/` in place (see `decisions.md`, Process).
+**Audio recovery and playback priority** (branch `audio-recovery`, in `/preview/` for testing; the live game is unchanged). Fixes songs that wouldn't restart after time away, and makes the player's own audio come first: Saffron's theme, checkout songs and chimes no longer stop Spotify or Apple Music where Safari's audio session is supported. Coming back to the game, the Dale-Fi now waits for Play. Full automated suite passes; no physical-iPhone pass yet. Open for the owner: the handbook sentence, whether this ships as a numbered release with a note from Saffron, and the trade-offs in `decisions.md`.
 
 ## Approved and queued
 
@@ -31,7 +31,7 @@ Nothing. The next release starts from `main`; its preview replaces `/preview/` i
 | Issue | Status | Next action |
 | --- | --- | --- |
 | The trading test "circulation: buy out a spot…" fails now and then: its real `walk()` can roll a gossip crash that adds stock at the destination, tripping its "nothing moved" check. Seen once in the 1.6 work, then passed 3 of 3 reruns and a full run. Test-only; not caused by 1.6. | Flaky test. | Pin the walk's rolls with `g.rolls()` in the test. |
-| The owner reports a few small audio bugs in 1.6, not yet described. Shipped anyway on the owner's call, to test them in the live release instead of the preview. | Outstanding. | Owner describes them after testing the live build; fix in a follow-up. |
+| The owner reports a few small audio bugs in 1.6, now described as two: songs not restarting after time away, and Saffron's theme stopping music from other apps. Both addressed on `audio-recovery` (in preview); any others still undescribed. Shipped anyway on the owner's call, to test them in the live release instead of the preview. | Outstanding. | Owner describes them after testing the live build; fix in a follow-up. |
 | No systematic physical-iPhone pass is recorded for 1.6 beyond the owner's preview playtests. Unchecked on a device: repeat through a lock and Saffron's theme, AUTO in autoplay, thumb-sized keys, the green display and pixelated cover in daylight (`tools/test/README.md`, item 8); the live game's offline cache updates to `unplugged-1.6` and Gary's songs work in Airplane Mode; a pre-1.6 mute keeps Music and Sounds both off. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | No systematic physical-iPhone pass is recorded for 1.5 beyond the owner's preview playtest. Unchecked on a device: Radical Acceptance plays (volume buttons work) and its card fits at iPhone SE size; the live game's offline cache updates to `unplugged-1.5` and the new song and art work in Airplane Mode; mute stays muted after reopening; the guestbook reset leaves a saved retreat and the Dale-Fi collection in place; Beta and the PREVIEW tab clear the notch and home indicator. | Outstanding. | Run the README's manual iPhone checklist items that apply, when convenient. |
 | The morning notification says "Dale's meter ran all night: you owe $0." (styled as bad news at full zen) once you're square with Dale. Found in the 1.5 discovery and reproduced in Chromium; `rest()`. | Live since 1.4 at least. Not in the 1.5 brief, so not fixed. | Owner decides whether to fix and with what wording. |
