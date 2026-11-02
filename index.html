@@ -2179,16 +2179,18 @@ function musicStep(d, auto) {
   musicUI();
 }
 /* A song tapped in the playlist. While the player has the Dale-Fi playing, it plays that song (tapping the song
-   already playing pauses it). Otherwise it only becomes the selected song: nothing starts, nothing is claimed, Music
+   already playing pauses it; tapping it while it's stepped aside for her theme, or waiting after "Tap play again",
+   plays it, as in 1.6). Otherwise it only becomes the selected song: nothing starts, nothing is claimed, Music
    stays as it is. listen = true is Listen on a companion card, an explicit request: it jumps to the song and plays
    it, like Play (turning Music on, if it was off). */
 function musicPick(id, listen) {
   if (id === M.cur && (M.loaded === id || (!M.loaded && M.at && M.at.id === id)) && !E.on) {
     if (listen) return musicToggle(true);
-    if (anyPlaying()) musicToggle(false);
+    if (anyPlaying()) return musicToggle(false);
+    if (granted()) return musicToggle(true);
     return musicUI();
   }
-  if (!listen && !granted()) { musicLoad(id); return musicUI(); }
+  if (!listen && !granted()) { M.want = false; musicLoad(id); return musicUI(); } // as Next does: only the selection changes
   acRepair();
   if (!musicOn) setMusic(true, true);
   musicTakeover();
@@ -2912,7 +2914,7 @@ function handbookSheet() {
     sec('The Dale-Fi', `
       <p>The music-note icon in the header opens your player. Every retreat starts with the retreat's own spa track, and ${COLLECTIBLE.length - 1} more songs are out there. The player gives you a hint for most of the ones you haven't found. A dot on the icon means something new turned up. Tap a song's cover to read its companion card.</p>
       <p>Anything you've found on any retreat stays in your collection, which you can play from the welcome screen. Music keeps going while you walk and drops in volume while Guide Saffron is with you. If it's playing when you check out, checking out has songs of its own; the Dale-Fi steps aside for them and picks up where it left off afterwards. Any button on the Dale-Fi cuts them short. It pauses whenever you leave the game; when you're back, press play and it picks up where it left off. In the menu and in Options, <b>Music</b> switches the songs on and off and <b>Sounds</b> the chimes and other effects. Guide Saffron's theme, the checkout songs and the chimes only sound while the Dale-Fi is playing, so the game never cuts off music from another app. After a pause, Music off or leaving the game, nothing plays again until you press play.</p>
-      <p>From day ${DZ_DAY}, Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat and afterwards, on the results and the welcome screen, until you start your next retreat, which begins with the plain Dale-Fi again; your songs stay with you as always. It plays your songs plus two that come with it, from Gary's Cream of the Crop ’98 tape; they only play on a Dinglezoons and leave with it. It adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still plays it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
+      <p>From day ${DZ_DAY}, Dale sells a Dinglezoons from his van for ${fmt(DZ_PRICE)}. It's yours for the rest of that retreat and afterwards, on the results and the welcome screen, until you start your next retreat, which begins with the plain Dale-Fi again; your songs stay with you as always. It plays your songs plus two that come with it, from Gary's Cream of the Crop ’98 tape; they only play on a Dinglezoons and leave with it. It adds three things. Each song gets an <b>AUTO</b> switch: when a song ends, and when you press Next or Previous, the player goes to the nearest song with AUTO lit, passing over the rest; tapping a song still picks it. You can't switch off the last song that's still lit, and if none of the songs you have are lit, nothing is passed over. <b>Repeat</b> plays the current song again and again until you turn it off, whichever song you pick. And the display shows the cover of the song you're playing, pixelated; the companion cards keep the full picture.</p>`),
     sec('Saving, controls and a secret', `
       <p>Your retreat saves after every move. If you close the app, the welcome screen offers to continue. <b>Save and leave</b> in the menu takes you back to the welcome screen. Starting a new retreat replaces the saved one.</p>
       <p>On a keyboard: J or W opens the map, R or Z rests, V opens the van, M opens the Dale-Fi, and Esc closes things.</p>

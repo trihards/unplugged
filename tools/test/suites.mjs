@@ -1240,7 +1240,8 @@ const audio = {
       await g.start(2); await g.run(NAV_SONGS); await startMusic(g); await pressPlay(g); await g.wait(200);
       const before = await g.run(FOCUSED);
       await g.tap('[data-act="music"]'); await g.tap(sel); await g.wait(500);
-      eq(await g.run(`[M.cur, musicPlaying(), M.claim, ac.state, navigator.audioSession.type]`), [to, false, false, 'suspended', 'ambient'], 'selected, silent, asleep');
+      eq(await g.run(`[M.cur, musicPlaying(), M.claim, M.want, ac.state, navigator.audioSession.type]`), [to, false, false, false, 'suspended', 'ambient'], 'selected, silent, asleep');
+      eq([await g.page.textContent('#lcdNo'), (await g.page.textContent('#lcdTitle')).includes(await g.run(`TBYID['${to}'].title`)), await g.page.getAttribute('#mplay', 'aria-label')], [String(['s0', 'w1', 'w2'].indexOf(to) + 1).padStart(2, '0') + '/03', true, 'Play'], 'the player shows the selected song, ready to play');
       eq(await g.run(FOCUSED), before, 'no play(), resume() or new AudioContext');
       await g.tap('[data-act="mplay"]'); await g.wait(500);
       eq(await g.run('[M.cur, musicPlaying(), M.claim]'), [to, true, true], 'Play starts the selected song');
@@ -1266,6 +1267,27 @@ const audio = {
       eq(await g.run(`[M.cur, musicOn, musicPlaying(), M.claim, localStorage.getItem('unpw.music')]`), [to, false, false, false, 'false'], 'selected, Music still off');
       eq(await g.run(FOCUSED), before, 'no play(), resume() or new AudioContext');
     })),
+    ...[...NAVS, ['a tap on the selected song', '#sheet [data-track="s0"]', 's0']].map(([what, sel, to]) => tst(`${what} during Saffron's theme (the Dale-Fi stepped aside, the player's music on): plays that song, as in 1.6`, {}, async g => {
+      await g.start(2); await g.run(NAV_SONGS); await startMusic(g);
+      await g.run(ENC); await g.wait(700);
+      eq(await g.run('[T.on, M.held, musicPlaying()]'), [true, true, false], 'her theme has the Dale-Fi\'s place');
+      await g.run('musicSheet()'); await g.tap(sel); await g.wait(1000); // her theme fades out over 650 ms
+      eq(await g.run(`[M.cur, musicPlaying(), T.on, ${AUDIBLE}, ${PLAYING}]`), [to, true, false, 1, 1], 'the song plays, alone');
+    })),
+    ...NAVS.map(([what, sel, to]) => tst(`${what} during a checkout song (the player's music on): plays that song, as in 1.6`, {}, async g => {
+      await g.start(2); await g.run(NAV_SONGS + "; store.set('unpw.collected', ['s0', 'w1', 'w2'])"); await startMusic(g);
+      await g.run("S.cash = 100; endGame('time')"); await g.wait(700);
+      eq(await g.run('[E.on, avail()]'), [true, ['s0', 'w1', 'w2']], 'the checkout song plays; the player has the collection');
+      await g.run('musicSheet()'); await g.tap(sel); await g.wait(1000); // the checkout song fades out over 650 ms
+      eq(await g.run(`[M.cur, musicPlaying(), E.on, ${AUDIBLE}, ${PLAYING}]`), [to, true, false, 1, 1], 'the song plays, alone');
+    })),
+    tst('a tap on the selected song in the "Tap play again" state plays it', {}, async g => {
+      await g.start(2); await startMusic(g); await g.wait(300);
+      await g.run('M.ours = Date.now(); M.audio.pause(); AW.redo = false'); await g.wait(300); // stopped, the player's music still on
+      eq(await g.run('[musicPlaying(), M.claim]'), [false, true], 'waiting, permission kept');
+      await g.run('musicSheet()'); await g.tap('#sheet [data-track="s0"]'); await g.wait(500);
+      eq(await g.run('musicPlaying()'), true, 'plays');
+    }),
     tst('tapping the song that is playing pauses it; tapping it again while paused doesn\'t start it', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.tap('[data-act="music"]'); await g.tap('#sheet [data-track="s0"]'); await g.wait(300);
@@ -1611,7 +1633,7 @@ const dinglezoons = {
     tst('Gary’s songs play on through checkout and stop being playable when a new retreat starts, even mid-song', {}, async g => {
       await g.start(2); await g.run(atVan(1000) + '; buyDZ()'); await dzPlay(g, 'shoe');
       await g.run("closeSheet(true); S.day = S.days; endGame('time')"); await g.wait(400);
-      await g.tap('[data-act="welcome"]'); await g.wait(1300);
+      await g.tap('[data-act="welcome"]'); await g.page.waitForFunction(() => window.__U.run('musicPlaying()'), null, { timeout: 4000 }).catch(() => {});
       eq(await g.run('[M.cur, musicPlaying(), avail().includes("shoe")]'), ['shoe', true, true], 'after the checkout song, Side A is back on the welcome screen');
       await g.start(2); await g.wait(300);
       const s = await g.run('({ loaded: M.loaded, playing: musicPlaying(), avail: avail() })');
