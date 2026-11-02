@@ -1036,6 +1036,9 @@ const FOCUSED = '({ ...window.__focus, plays: window.__focus.plays.length })';
    the results screen, leaving the game and coming back. */
 const tapAt = (g, x = 190, y = 420) => g.page.mouse.click(x, y); // a thumb on whatever is on top
 const tapIf = async (g, sel) => { if (await g.page.$(sel)) await g.tap(sel); await g.wait(250); };
+const NAV_SONGS = "['w1', 'w2'].forEach(id => { if (!S.songs.includes(id)) S.songs.push(id); })";
+/* Next, Previous and a tap on another song in the list, each from the same starting song (s0), with the songs s0, w1, w2. */
+const NAVS = [['Next', '[data-act="mnext"]', 'w1'], ['Previous', '[data-act="mprev"]', 'w2'], ['a tap on another song', '#sheet [data-track="w2"]', 'w2']];
 const BUSY = async g => {
   await g.tap('[data-act="journey"]'); await g.tap('.node:not(.here):not(:disabled)'); await g.wait(400); await g.run("closeSheet(true); queue = []; $('#toasts').innerHTML = ''");
   await g.run(ENC); await g.wait(500); await tapAt(g);
@@ -1142,11 +1145,13 @@ const audio = {
       const s = await g.run(`({ playing: musicPlaying(), cur: M.cur, t: M.audio.currentTime, audible: ${AUDIBLE}, players: ${PLAYING} })`);
       ok(s.playing && s.cur === 's0' && s.t >= 20 && s.t < 24 && s.audible === 1 && s.players === 1, 'Play brings the same song back from where it was, once', s);
     }),
-    tst('tapping the current song in the playlist after coming back also picks up at the same spot', {}, async g => {
+    tst('tapping the current song in the playlist after coming back doesn\'t start it; Play picks up at the same spot', {}, async g => {
       await g.start(2); await startMusic(g);
       await g.run('M.audio.currentTime = 20'); await g.wait(200);
       await g.hidden(true); await g.wait(100); await g.hidden(false); await g.wait(300);
-      await g.tap('[data-act="music"]'); await g.tap('#sheet [data-track="s0"]'); await g.wait(600);
+      await g.tap('[data-act="music"]'); await g.tap('#sheet [data-track="s0"]'); await g.wait(400);
+      eq(await g.run('[musicPlaying(), M.cur]'), [false, 's0'], 'still waiting');
+      await g.tap('[data-act="mplay"]'); await g.wait(600);
       const s = await g.run('({ playing: musicPlaying(), t: M.audio.currentTime })');
       ok(s.playing && s.t >= 20 && s.t < 24, 'resumed, not restarted', s);
     }),
@@ -1226,10 +1231,56 @@ const audio = {
       await g.run('M.audio.dispatchEvent(new Event("ended"))'); await g.wait(300);
       eq(await g.run(`${FOCUSED}.plays`), before.plays, 'no play()');
     }),
-    tst('Next with Music off turns Music on, as Play does', {}, async g => {
-      await g.start(2); await g.run("S.songs.push('w1')"); await startMusic(g);
-      await g.run('setMusic(false)'); await g.run('musicSheet()'); await g.tap('[data-act="mnext"]'); await g.wait(400);
-      eq(await g.run('[musicOn, M.claim, musicPlaying(), M.cur]'), [true, true, true, 'w1'], 'Music on, the next song playing');
+    ...NAVS.map(([what, sel, to]) => tst(`${what} while the Dale-Fi plays: moves to that song and keeps playing`, { init: FOCUS }, async g => {
+      await g.start(2); await g.run(NAV_SONGS); await startMusic(g);
+      await g.tap('[data-act="music"]'); await g.tap(sel); await g.wait(500);
+      eq(await g.run(`[M.cur, musicPlaying(), M.claim, ${AUDIBLE}, ${PLAYING}]`), [to, true, true, 1, 1], 'the new song plays, once');
+    })),
+    ...NAVS.map(([what, sel, to]) => tst(`${what} while paused: only changes the song (no play, no AudioContext woken, no claim)`, { init: FOCUS + ';' + SESSION }, async g => {
+      await g.start(2); await g.run(NAV_SONGS); await startMusic(g); await pressPlay(g); await g.wait(200);
+      const before = await g.run(FOCUSED);
+      await g.tap('[data-act="music"]'); await g.tap(sel); await g.wait(500);
+      eq(await g.run(`[M.cur, musicPlaying(), M.claim, ac.state, navigator.audioSession.type]`), [to, false, false, 'suspended', 'ambient'], 'selected, silent, asleep');
+      eq(await g.run(FOCUSED), before, 'no play(), resume() or new AudioContext');
+      await g.tap('[data-act="mplay"]'); await g.wait(500);
+      eq(await g.run('[M.cur, musicPlaying(), M.claim]'), [to, true, true], 'Play starts the selected song');
+    })),
+    ...NAVS.map(([what, sel, to]) => tst(`${what} before the Dale-Fi was ever played: only changes the song, and no AudioContext exists`, { init: FOCUS }, async g => {
+      await g.start(2); await g.run(NAV_SONGS);
+      await g.tap('[data-act="music"]'); await g.tap(sel); await g.wait(500);
+      eq(await g.run(`[M.cur, musicPlaying(), M.claim, ${FOCUSED}]`), [to, false, false, { acs: 0, resumes: 0, plays: 0 }], 'selected; nothing made, woken or played');
+    })),
+    ...NAVS.map(([what, sel, to]) => tst(`${what} after another app takes over: only changes the song; the other app keeps the audio`, { init: FOCUS }, async g => {
+      await g.start(2); await g.run(NAV_SONGS); await startMusic(g); await g.wait(500);
+      await g.run('M.audio.pause()'); await g.wait(300); // as iOS does when Spotify starts
+      eq(await g.run('M.claim'), false, 'the claim is gone');
+      const before = await g.run(FOCUSED);
+      await g.tap('[data-act="music"]'); await g.tap(sel); await g.wait(500);
+      eq(await g.run(`[M.cur, musicPlaying(), M.claim, ac.state]`), [to, false, false, 'suspended'], 'selected, silent, asleep');
+      eq(await g.run(FOCUSED), before, 'no play(), resume() or new AudioContext');
+    })),
+    ...NAVS.map(([what, sel, to]) => tst(`${what} with Music off: only changes the song; Music stays off`, { init: FOCUS }, async g => {
+      await g.start(2); await g.run(NAV_SONGS); await startMusic(g); await g.run('setMusic(false)'); await g.wait(200);
+      const before = await g.run(FOCUSED);
+      await g.tap('[data-act="music"]'); await g.tap(sel); await g.wait(500);
+      eq(await g.run(`[M.cur, musicOn, musicPlaying(), M.claim, localStorage.getItem('unpw.music')]`), [to, false, false, false, 'false'], 'selected, Music still off');
+      eq(await g.run(FOCUSED), before, 'no play(), resume() or new AudioContext');
+    })),
+    tst('tapping the song that is playing pauses it; tapping it again while paused doesn\'t start it', {}, async g => {
+      await g.start(2); await startMusic(g);
+      await g.tap('[data-act="music"]'); await g.tap('#sheet [data-track="s0"]'); await g.wait(300);
+      eq(await g.run('[musicPlaying(), M.claim]'), [false, false], 'paused, as before');
+      await g.tap('#sheet [data-track="s0"]'); await g.wait(300);
+      eq(await g.run('musicPlaying()'), false, 'a tap is not Play');
+    }),
+    tst('Listen on a card is an explicit request: while paused, and with Music off, it jumps to the song and plays it', {}, async g => {
+      await g.start(2); await g.run(NAV_SONGS); await startMusic(g); await pressPlay(g);
+      await g.run("cardSheet('w2')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(500);
+      eq(await g.run('[M.cur, musicPlaying(), M.claim, sheetKind]'), ['w2', true, true, 'music'], 'paused: plays it and shows the player');
+      await g.run("setMusic(false); cardSheet('w1')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(500);
+      eq(await g.run('[M.cur, musicOn, musicPlaying()]'), ['w1', true, true], 'Music off: turns it on, like Play');
+      await g.run("closeSheet(true); musicToggle(false); cardSheet('w1')"); await g.tap('#sheet [data-act="cardplay"]'); await g.wait(500);
+      eq(await g.run('[M.cur, musicPlaying()]'), ['w1', true], 'the selected song, paused: plays it');
     }),
     tst('players let go by a rebuild never act up later', {}, async g => {
       await g.start(2); await startMusic(g); await g.run(ENC); await g.wait(400);
@@ -1373,7 +1424,9 @@ const SONGS = ids => `${JSON.stringify(ids)}.forEach(id => { if (!S.songs.includ
 const atVan = (cash, day = 3) => `S.loc = VAN_IX; S.day = ${day}; S.cash = ${cash}; render(); $('#toasts').innerHTML = ''`;
 /* Let the playing song reach its real end (the test songs are 60 seconds). */
 const finish = async g => { await g.run('M.audio.currentTime = M.audio.duration - 0.3'); await g.wait(1300); };
-const dzPlay = async (g, id = 's0') => { await g.run(`musicSheet(); musicPick('${id}')`); await g.wait(400); };
+/* Start a song from silence: pick it, then press play (picking alone only selects it while nothing plays). */
+const PLAY_SONG = id => `musicPick('${id}'); if (!musicPlaying()) musicToggle(true)`;
+const dzPlay = async (g, id = 's0') => { await g.run(`musicSheet(); ${PLAY_SONG(id)}`); await g.wait(400); };
 const dinglezoons = {
   name: 'dinglezoons', about: 'buying the Dinglezoons from Dale, AUTO switches, repeat, the pixelated cover', where: 'desktop Chromium, songs stubbed',
   tests: [
@@ -1443,7 +1496,7 @@ const dinglezoons = {
       eq(await g.page.textContent('#sheet .muted'), 'Your collection: 3 of 7 songs.', 'the count is still only songs found');
       await g.page.reload(); await g.page.waitForFunction(() => window.__U);
       eq(await g.run("[savedRun(), dzOwned(), avail()]"), [null, true, ['s0', 'w1', 'square', 'shoe', 'clam']], 'reopened after checkout, no retreat saved: still owned');
-      await g.run("musicSheet(); musicPick('shoe')"); await g.wait(400);
+      await g.run("musicSheet(); " + PLAY_SONG('shoe')); await g.wait(400);
       eq(await g.run('[M.cur, musicPlaying()]'), ['shoe', true], 'Gary’s songs play there');
       await g.run('closeSheet(true)'); await g.start(2); await g.wait(400);
       eq(await g.run("[dzOwned(), localStorage.getItem('unpw.dz'), avail(), collected()]"), [false, null, ['s0'], ['s0', 'w1', 'square']], 'a new retreat: plain Dale-Fi, no Gary, the collection (You’re Square too) untouched');

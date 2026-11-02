@@ -2164,19 +2164,31 @@ function musicFit() {
   const was = musicPlaying();
   if (musicLoad(M.cur) && was) tryPlay(M.audio).then(musicUI);
 }
+/* Next and Previous (and autoplay, auto = true). While the player has the Dale-Fi playing (granted, which covers a
+   song or her theme playing in its place), they move on and keep playing. Otherwise they only change the song: no
+   playback, no AudioContext, no claim, and Music stays as it is. Only Play (or Listen on a card) starts it. */
 function musicStep(d, auto) {
   const list = avail();
   const i = Math.max(0, list.indexOf(M.cur));
-  const was = musicPlaying() || auto || d > 0 || (d < 0 && eventPlaying());
-  if (!auto) { if (was) acRepair(); if (was && !musicOn) setMusic(true, true); musicTakeover(); musicClaim(was); }
+  const was = auto || granted();
+  if (!auto) { if (was) acRepair(); musicTakeover(); }
   if (!musicLoad(stepTo(list, i, auto ? 1 : d))) return;
   M.want = was;
   if (was && !auto) acWake(true);
   if (was) { if (auto) tryPlay(M.audio).then(musicUI); else musicGo(); }
   musicUI();
 }
-function musicPick(id) {
-  if (id === M.cur && (M.loaded === id || (!M.loaded && M.at && M.at.id === id)) && !E.on) return musicToggle();
+/* A song tapped in the playlist. While the player has the Dale-Fi playing, it plays that song (tapping the song
+   already playing pauses it). Otherwise it only becomes the selected song: nothing starts, nothing is claimed, Music
+   stays as it is. listen = true is Listen on a companion card, an explicit request: it jumps to the song and plays
+   it, like Play (turning Music on, if it was off). */
+function musicPick(id, listen) {
+  if (id === M.cur && (M.loaded === id || (!M.loaded && M.at && M.at.id === id)) && !E.on) {
+    if (listen) return musicToggle(true);
+    if (anyPlaying()) musicToggle(false);
+    return musicUI();
+  }
+  if (!listen && !granted()) { musicLoad(id); return musicUI(); }
   acRepair();
   if (!musicOn) setMusic(true, true);
   musicTakeover();
@@ -2822,7 +2834,7 @@ function modeSheet() {
 }
 /* Handbook sections the latest feature release changed get a quiet "New · vX.Y" or "Updated · vX.Y" beside the heading.
    Replace this with each feature release; marks only show while version matches GAME_VERSION, so stale ones never linger. */
-const HB_MARKS = { version: '1.6', updated: ['The Dale-Fi'], added: [] };
+const HB_MARKS = { version: '1.6', updated: ['The Dale-Fi', 'Guide Saffron'], added: [] };
 function handbookSheet() {
   const mark = title => HB_MARKS.version !== GAME_VERSION ? '' : HB_MARKS.added.includes(title) ? `New · v${GAME_VERSION}` : HB_MARKS.updated.includes(title) ? `Updated · v${GAME_VERSION}` : '';
   const sec = (title, body, open) => `<details class="hb"${open ? ' open' : ''}><summary>${title}${mark(title) ? `<span class="hbmark">${mark(title)}</span>` : ''}</summary><div class="hbb">${body}</div></details>`;
@@ -3051,7 +3063,7 @@ function act(a, el) {
     case 'music': return musicSheet();
     case 'buycd': { const from = sheetKind; buyCD(); if (sheetKind === 'card') return; return from === 'van' ? vanSheet() : musicSheet(); }
     case 'card': return cardSheet(el.dataset.id);
-    case 'cardplay': if (el.dataset.id !== M.cur || !musicPlaying()) musicPick(el.dataset.id); return musicSheet(); // picks it like the playlist, but never pauses it
+    case 'cardplay': if (el.dataset.id !== M.cur || !musicPlaying()) musicPick(el.dataset.id, true); return musicSheet(); // jumps to it and plays it, but never pauses it
     case 'mplay': return musicToggle();
     case 'mprev': return musicStep(-1);
     case 'mnext': return musicStep(1);
@@ -3165,7 +3177,8 @@ const INSPECT = {
     ['Coming back after a while', 'Play a song, then leave the game for several minutes (another app, another tab, or lock the phone). Come back: nothing plays, not even mid check-in. Press play once: the same song carries on from about where it was.'],
     ['Play always plays', 'Whenever you press play, you hear the song. If it can’t start, “Tap play again to start the music.” appears and the next press plays it.'],
     ['Music and Sounds', 'Music off stays off, and turning it back on leaves the Dale-Fi waiting for play. Sounds off silences the chimes while the Dale-Fi plays.'],
-    ['Nothing else moved', 'Picking songs, autoplay, Next and Previous, the volume keys, AUTO and repeat on the Dinglezoons work as in 1.6.'],
+    ['Choosing without playing', 'With the Dale-Fi paused, or after another app took over: Next, Previous and tapping a song in the list only change the song, and the other app plays on. Play starts it; so does Listen on a song’s card. While the Dale-Fi plays, Next, Previous and tapping a song move on and keep playing.'],
+    ['Nothing else moved', 'Autoplay, the volume keys, AUTO and repeat on the Dinglezoons work as in 1.6.'],
     ['The home-screen app', 'Repeat the first four checks in the game added to your Home Screen.'],
     ['Preview stays separate', 'Saves, guestbook scores and songs found here never show up in the live game, and the live game’s never show up here.'],
   ],

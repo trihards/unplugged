@@ -18,7 +18,7 @@ As of 2026-10-27. Live version: **1.6** (deployed to GitHub Pages from `main`). 
 
 ## In progress
 
-**Audio recovery and playback priority** (branch `audio-recovery`, in `/preview/`; the live game is unchanged; not to ship until verified on an iPhone). The first preview failed the owner's iPhone test: Saffron's theme still stopped Spotify, because Safari's "ambient" session didn't protect it. Revised: the game makes no sound at all, and holds no running AudioContext, unless the player has pressed play on the Dale-Fi and nothing has taken the audio since. Also fixes songs that wouldn't restart after time away. Full automated suite passes; awaiting the owner's iPhone test (README checklist item 5 first). Open for the owner: the handbook wording, the version, and the silent-without-the-Dale-Fi trade-off in `decisions.md`.
+**Audio recovery and playback priority** (branch `audio-recovery`, in `/preview/`; the live game is unchanged; not to ship until verified on an iPhone). The first preview failed the owner's iPhone test: Saffron's theme still stopped Spotify, because Safari's "ambient" session didn't protect it. Revised: the game makes no sound at all, and holds no running AudioContext, unless the player has pressed play on the Dale-Fi and nothing has taken the audio since. Also fixes songs that wouldn't restart after time away. Full automated suite passes; awaiting the owner's iPhone test (README checklist item 5 first). Since then: Next, Previous and tapping a song only change the song unless the Dale-Fi is already playing (owner's correction); the handbook wording is approved. Open: 1.6.1 and Saffron's note, after the iPhone test.
 
 ## Approved and queued
 
